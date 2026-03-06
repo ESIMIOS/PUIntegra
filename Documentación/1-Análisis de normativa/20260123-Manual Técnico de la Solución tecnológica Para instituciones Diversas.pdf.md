@@ -209,9 +209,6 @@ Además, impone requisitos administrativos y de identidad institucional:
 7. La operación productiva depende tanto de validaciones técnicas como de requisitos administrativos y de seguridad.
 
 
-Y si quieres una versión más “documental” para dejarla en el MD ya integrada, con encabezado y explicación, quedaría así:
-
-```md
 ## Diagrama de secuencia del flujo completo de un caso
 
 El siguiente diagrama representa el ciclo completo de un caso desde el reporte inicial de desaparición hasta la desactivación del monitoreo en una institución diversa. Se incluyen las tres fases de búsqueda previstas en el Manual Técnico: búsqueda para completar datos básicos, búsqueda histórica y búsqueda continua.
