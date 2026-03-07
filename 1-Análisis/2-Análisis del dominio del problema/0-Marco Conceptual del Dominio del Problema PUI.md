@@ -1,4 +1,4 @@
-# Marco Conceptual del Dominio  
+# Marco Conceptual del Dominio del Problema  
 ## Plataforma Única de Identidad (PUI)  
 ### Integración de Instituciones Diversas
 
@@ -6,11 +6,15 @@
 
 # 1. Propósito del documento
 
-El presente documento describe el **marco conceptual del dominio** asociado a la interacción entre las **instituciones diversas** y la **Plataforma Única de Identidad (PUI)** dentro del Sistema Nacional de Identificación de Personas.
+El presente documento describe el **marco conceptual del dominio del problema** asociado a la operación de la **Plataforma Única de Identidad (PUI)** y a su interacción con las **instituciones diversas** dentro del Sistema Nacional de Identificación de Personas.
 
-El objetivo de este documento es establecer un **lenguaje ubicuo** que permita comprender los conceptos, actores, roles, entidades, identificadores, relaciones y reglas presentes en la normativa que regula la operación de la PUI.
+El objetivo de este documento es establecer un **lenguaje ubicuo** que permita comprender los conceptos, actores, roles, entidades, identificadores, relaciones y reglas que aparecen en la normativa que regula la operación de la PUI.
 
-Este documento **no constituye una especificación técnica ni una guía de desarrollo de software**. Su finalidad es describir el dominio conceptual derivado de la normativa aplicable.
+El contenido se basa en los instrumentos normativos y técnicos emitidos por las autoridades competentes, y busca proporcionar una referencia conceptual común para interpretar el funcionamiento del sistema desde una perspectiva institucional y normativa.
+
+Este documento **no constituye una especificación técnica ni una guía para el desarrollo de software**. Los elementos descritos corresponden al **dominio del problema**, es decir, a los conceptos que existen en el contexto regulatorio y operativo de la plataforma.
+
+Los componentes tecnológicos, mecanismos de interoperabilidad, interfaces de comunicación y demás elementos de implementación pertenecen al **dominio de la solución**, y por lo tanto se encuentran fuera del alcance de este documento.
 
 ---
 
