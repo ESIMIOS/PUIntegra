@@ -45,21 +45,32 @@ openspec init
 ## Project structure
 ```
 PUIntegra/
-├── AGENTS.md                    ← agent instructions (all agents)
-├── openspec/changes/            ← OpenSpec SDD artifacts per feature
-├── firebase/                    ← Firebase config by component
-│   ├── AGENTS.md
-│   ├── firestore/specs/         ← collection & security specs
-│   ├── auth/specs/              ← roles & auth flow specs
-│   ├── functions/specs/         ← trigger & endpoint specs
-│   └── storage/specs/           ← bucket & access specs
+├── 1-Análisis/                  ← project analysis and domain research
+├── AGENTS.md                    ← agent instructions (core SDD rules)
+├── openspec/
+│   ├── changes/                 ← ephemeral SDD artifacts (current delta)
+│   ├── specs/                   ← high-level system specs
+│   └── config.yaml              ← OpenSpec agent configuration
+├── firebase/                    ← Firebase configuration and rules
+│   ├── AGENTS.md                ← Firebase-specific agent instructions
+│   ├── firestore/specs/         ← database & security specs
+│   ├── auth/specs/              ← identity & auth flow specs
+│   ├── functions/specs/         ← backend trigger & endpoint specs
+│   └── storage/specs/           ← bucket & access rules specs
 └── packages/
-    ├── shared/                  ← Zod schemas (source of truth)
-    ├── api/                     ← Cloud Functions + Hono
-    └── web/                     ← Vue 3 + Pinia
+    ├── shared/                  ← Zod schemas & shared logic (source of truth)
+    ├── api/                     ← Cloud Functions + Hono backend
+    └── web/                     ← Vue 3 + Pinia + Vite frontend
 ```
 
 ## Documentation
-- [AGENTS.md](./AGENTS.md) — agent instructions and SDD rules
-- [firebase/AGENTS.md](./firebase/AGENTS.md) — Firebase-specific rules
-- [openspec/changes/add-user-schema](./openspec/changes/add-user-schema/) — first feature spec
+### Agent Context & Rules
+- [AGENTS.md](./AGENTS.md) — Core agent instructions and SDD workflow rules.
+- [firebase/AGENTS.md](./firebase/AGENTS.md) — Specific rules for Firebase security and implementation.
+
+### System Specs (Permanent)
+- **Shared Schemas**: `packages/shared/src/schemas/` — The system's type contract.
+- **Service Specs**: `firebase/*/specs/` — Documented behavior for each Firebase service.
+
+### Research & Analysis
+- [1-Análisis](./1-Análisis/) — Business requirements, domain analysis, and design assets.
