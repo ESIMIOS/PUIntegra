@@ -96,13 +96,18 @@ Before proposing any change, verify locally:
 
 If any gate fails, fix it before presenting the change.
 
-## PR conventions
-- Title format: <type>(<scope>): <description>
-  Types: feat | fix | refactor | test | chore | docs
-  Scopes: shared | api | web | firebase | ci
-- Every PR that touches packages/shared requires architecture review
-- Every PR must include tests for new behavior
-- Do not bundle unrelated changes in a single PR
+## Git & PR Conventions
+All commits and PR titles MUST follow the [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/) specification.
+
+- **Format:** `<type>(<scope>): <description>`
+- **Types:** `feat` | `fix` | `refactor` | `test` | `chore` | `docs` | `style` | `ci`
+- **Scopes:** `shared` | `api` | `web` | `firebase` | `ci` | `deps`
+- **Rules:**
+  - Description must be in lowercase and without a period at the end.
+  - Every PR that touches `packages/shared` requires architecture review.
+  - Every PR must include tests for new behavior.
+  - Do not bundle unrelated changes in a single PR or commit.
+
 
 ## When in doubt
 Ask before generating. A clarifying question takes 10 seconds.
