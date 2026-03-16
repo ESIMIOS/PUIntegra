@@ -1,0 +1,27 @@
+{
+  "name": "@puintegra/web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc && vite build",
+    "typecheck": "vue-tsc --noEmit",
+    "test": "vitest run",
+    "lint": "eslint src/**/*.{ts,vue}"
+  },
+  "dependencies": {
+    "@puintegra/shared": "workspace:*",
+    "firebase": "^10.12.0",
+    "pinia": "^2.1.7",
+    "vue": "^3.4.27",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.0.4",
+    "typescript": "^5.4.5",
+    "vite": "^5.2.11",
+    "vitest": "^1.6.0",
+    "vue-tsc": "^2.0.19"
+  }
+}

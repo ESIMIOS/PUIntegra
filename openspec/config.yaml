@@ -1,0 +1,22 @@
+schema: spec-driven
+
+context: |
+  # PUIntegra Context
+  Tech stack: Node.js 20, pnpm workspaces, Firebase, Vue 3, TypeScript.
+  SDD Pattern: 
+    - Shared Zod schemas are the source of truth for all types.
+    - Contracts (shared) -> Tests -> Implementation.
+    - Permanent specs live in distributed `specs/` folders (firebase/*/specs/, packages/shared/src/schemas/).
+    - Implementation follows Task-first order.
+
+rules:
+  proposal:
+    - Must mention which Zod schemas in packages/shared are affected.
+    - Must state if Firebase security rules are affected.
+  design:
+    - All types must be inferred from Zod (no manual TS interfaces).
+    - Must explicitly link to permanent specs in firebase/*/specs/ or packages/shared/src/schemas/.
+  tasks:
+    - Task 1 must always be writing tests.
+    - Include a Quality Gates section (typecheck, lint, test).
+

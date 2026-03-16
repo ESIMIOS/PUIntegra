@@ -1,0 +1,9 @@
+{
+  "providers": ["email-password"],
+  "mfa": false,
+  "passwordPolicy": {
+    "minLength": 8,
+    "requireUppercase": true,
+    "requireNumeric": true
+  }
+}

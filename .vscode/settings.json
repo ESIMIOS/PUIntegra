@@ -1,0 +1,12 @@
+{
+    "github.copilot.exclude": [
+        "**/node_modules/**",
+        "**/dist/**",
+        "**/build/**",
+        "**/out/**",
+        "**/coverage/**",
+        "**/.vscode/**",
+        "**/.git/**",
+        "**/*.pdf"
+    ]
+}
