@@ -45,7 +45,7 @@ openspec init
 ## Project structure
 ```
 PUIntegra/
-├── 1-Análisis/                  ← project analysis and domain research
+├── 1-Análisis/                  ← project analysis and domain research (Human only)
 ├── AGENTS.md                    ← agent instructions (core SDD rules)
 ├── openspec/
 │   ├── changes/                 ← ephemeral SDD artifacts (current delta)
@@ -73,4 +73,4 @@ PUIntegra/
 - **Service Specs**: `firebase/*/specs/` — Documented behavior for each Firebase service.
 
 ### Research & Analysis
-- [1-Análisis](./1-Análisis/) — Business requirements, domain analysis, and design assets.
+- [1-Análisis](./1-Análisis/) — Business requirements, domain analysis, and design assets (Human only).

@@ -81,6 +81,9 @@ without explicit human approval. Flag and stop.
 NEVER access .env files or hardcode credentials of any kind.
 Use process.env with documented variable names only.
 
+NEVER access or read the `1-Análisis/` directory.
+This folder is strictly for human analysis and must not be included in agent context.
+
 ## Testing rules
 - Write the Vitest test BEFORE the implementation (TDD)
 - Schema tests live in packages/shared/tests/ — run them first
