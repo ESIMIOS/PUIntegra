@@ -6,7 +6,7 @@ AGENTS.md, Zod schemas, and Firebase.
 ## Stack
 - **Monorepo**: pnpm workspaces
 - **Backend**: Node.js 20 + TypeScript + Cloud Functions + Hono
-- **Frontend**: Vue 3 + Vite + Pinia + TypeScript
+- **Frontend**: Vue 3 + vue-router + Vite + Pinia + TypeScript + SPA + Vuetify
 - **Shared contract**: Zod schemas in `packages/shared`
 - **Firebase**: Firestore, Auth, Cloud Functions, Storage
 - **Testing**: Vitest + Firebase Emulator Suite
