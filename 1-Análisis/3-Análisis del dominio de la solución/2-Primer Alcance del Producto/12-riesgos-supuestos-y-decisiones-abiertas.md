@@ -31,11 +31,13 @@ Los siguientes supuestos se consideran aceptados para poder leer el alcance 1 co
 | `SUP-10` | El backend es responsable de sostener validaciones, mutaciones, automatizaciones y trazabilidad críticas. | El alcance no confía estas reglas exclusivamente al cliente. |
 | `SUP-11` | El alcance 1 no implementa artefactos ni automatizaciones de Storage. | El uso de archivos en respuestas a solicitudes de búsqueda queda diferido a los alcances 3 y 4. |
 | `SUP-12` | El dashboard institucional ya tiene criterio de cálculo funcional cerrado. | La vista debe tomar el 100% de solicitudes como universo, distribuir por estatus y fase, y resumir por estatus de fase con cantidad y porcentaje. |
-| `SUP-12A` | El dashboard institucional debe mostrar además errores de sincronización PUI de `Findings`. | La operación del MVP debe poder visualizar fallos de interoperabilidad futura mediante agrupación por `HTTPResponseCode`. |
+| `SUP-12A` | El dashboard institucional debe mostrar además el estado de sincronización PUI de `Findings`. | La operación del MVP debe poder visualizar la distribución de hallazgos por `PUISyncStatus` como lectura principal de interoperabilidad futura. |
 | `SUP-13` | Las interfaces de búsqueda de logs deben ser uniformes en todo el producto. | La variación entre vistas de logs se resuelve por filtros fijos de contexto, no por experiencias radicalmente distintas. |
 | `SUP-14` | El dominio `/error` del alcance 1 queda acotado a tres estados explícitos. | La experiencia de error del MVP se limita, por el momento, a `403`, `404` y `500`. |
 | `SUP-15` | Los intentos de sincronización de `Findings` con la PUI conservan evidencia append-only de respuesta. | El MVP debe poder registrar fecha, código HTTP y payload completo de la respuesta de la PUI para cada intento. |
 | `SUP-16` | La vigencia operativa de una institución dentro del SaaS se expresa mediante `planStatus`. | El estado institucional no debe inferirse solo por fechas de plan o por lectura informal del backoffice. |
+| `SUP-17` | `SYSTEM_ADMINISTRATOR` comparte el mismo modelo de permisos y contexto, usando `SYSTEM_RFC` como valor reservado. | El proveedor SaaS no requiere un mecanismo paralelo de acceso para operar su backoffice dentro del alcance 1. |
+| `SUP-18` | Cuando una búsqueda de logs de backoffice parta de un correo para actividad de cuenta, el sistema debe resolverlo primero a `userId`. | El filtro por correo no obliga a convertir `Logs` en una colección indexada primariamente por correo. |
 
 ## 12.3 Riesgos principales del alcance 1
 

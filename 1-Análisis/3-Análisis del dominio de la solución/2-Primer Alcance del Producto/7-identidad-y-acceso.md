@@ -21,6 +21,7 @@ El modelo de identidad y acceso del alcance 1 debe distinguir claramente entre c
 | Cuenta y permiso | La cuenta no crea el permiso; el permiso habilitante debe existir previamente. |
 | Cuenta y usuario | La autenticación debe tener representación operativa dentro del sistema, no quedarse solo en el proveedor de identidad; en el alcance 1 la relación es `1:1` entre cuenta de Firebase Auth y documento en `Users`. |
 | Usuario y permisos | Un usuario puede relacionarse con múltiples permisos sobre una o varias instituciones. |
+| Permisos del proveedor y contexto sistémico | Los permisos de `SYSTEM_ADMINISTRATOR` también deben modelarse en `Permissions`, usando `SYSTEM_RFC` como contexto reservado del proveedor SaaS. |
 | Permisos y sesión | La sesión efectiva se resuelve contra un único contexto institución/rol activo. |
 | Cuenta y correo | El correo es obligatorio, único por cuenta e inmutable como identidad operativa base del acceso. |
 
@@ -87,8 +88,8 @@ Los hooks y triggers de autenticación del alcance 1 deben cubrir dos momentos d
 
 | Hook o validación previa | Momento de ejecución | Resultado esperado | Observaciones |
 |---|---|---|---|
-| `IDA-HK-01` Validación previa de creación de cuenta | Antes de materializar el alta técnica de la cuenta. | Se permite crear la cuenta solo si existe al menos un `Permission` activo para el correo. | Debe impedir que Firebase Auth por sí solo bypassee la gobernanza institucional del producto. |
-| `IDA-HK-02` Validación previa de inicio de sesión | Antes de consolidar el ingreso técnico al sistema. | Se bloquea o condiciona el acceso cuando la cuenta ya no tiene permisos vigentes o cuando la habilitación de seguridad aún no está completa. | Debe distinguir autenticación técnica de sesión operativa habilitada. |
+| `IDA-HK-01` Validación previa de creación de cuenta | Antes de materializar el alta técnica de la cuenta. | Se permite crear la cuenta solo si existe al menos un `Permission` activo para el correo. | Debe impedir que Firebase Auth por sí solo bypassee la gobernanza institucional del producto y apoyarse en la consulta operativa `email + status`. |
+| `IDA-HK-02` Validación previa de inicio de sesión | Antes de consolidar el ingreso técnico al sistema. | Se bloquea o condiciona el acceso cuando la cuenta ya no tiene permisos vigentes o cuando la habilitación de seguridad aún no está completa. | Debe distinguir autenticación técnica de sesión operativa habilitada y apoyarse en la consulta operativa `email + status`. |
 
 ## 7.3.2 Triggers posteriores de autenticación
 

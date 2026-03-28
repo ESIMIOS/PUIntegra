@@ -93,3 +93,6 @@
 | Evento de log | Cuándo aplica |
 |---|---|
 | `INSTITUTION_SEARCH_REQUEST_MATCH_FOUND` | Al registrar un hallazgo o coincidencia relevante asociada a una solicitud. |
+| `PUI_FINDING_SYNC_SUCCESS` | Cuando un intento de sincronización de `Findings` concluye exitosamente con la PUI. |
+| `PUI_FINDING_SYNC_ERROR` | Cuando un intento de sincronización de `Findings` falla o devuelve error desde la PUI. |
+| `PUI_FINDING_SYNC_RESCHEDULE` | Cuando un fallo de sincronización obliga a reprogramar `PUISyncScheduleDate` para un nuevo intento. |

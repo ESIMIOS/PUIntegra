@@ -8,7 +8,7 @@
 | Aspecto | Definición |
 |---|---|
 | Propósito | Relacionar institución, correo y rol, mostrando además el estado vigente del acceso y su historial. |
-| Propiedad | Pertenece al dominio de acceso institucional asociado al `RFC` y, cuando exista, al `userId` relacionado. |
+| Propiedad | Pertenece al dominio de acceso institucional asociado al `RFC` y, cuando exista, al `userId` relacionado, incluyendo el contexto sistémico reservado `SYSTEM_RFC` para el proveedor SaaS. |
 | Papel dentro del alcance 1 | Gobernar creación de cuenta, selección de contexto y autorización efectiva sobre instituciones. |
 
 ## Estructura de datos
@@ -48,9 +48,11 @@
 |---|---|
 | Relación `Users 1:N Permissions` | Un mismo usuario puede acumular múltiples permisos sobre una o varias instituciones. |
 | Relación `Institutions 1:N Permissions` | Una misma institución puede tener múltiples permisos asociados a distintos correos, usuarios o roles. |
+| `SYSTEM_ADMINISTRATOR` dentro del mismo modelo de permisos | Los permisos del proveedor SaaS también deben registrarse en `Permissions`, usando `SYSTEM_RFC` como `RFC` reservado de contexto sistémico. |
 | Un registro por institución-correo-rol | La unicidad del permiso se resuelve por la combinación `RFC` + `email` + `role`. |
 | No eliminación ordinaria | Los permisos no deben eliminarse; deben actualizarse y conservar historial. |
 | Creación de cuenta dependiente de permiso | Un permiso activo es condición previa para crear cuenta. |
+| Consulta operativa de autenticación | Las validaciones previas de alta e inicio de sesión deben poder resolverse consultando permisos por `email` + `status`. |
 | UI orientada por `RFC` | La lectura administrativa de permisos dentro del alcance 1 se resuelve principalmente consultando por institución. |
 | Validación backend de unicidad | La unicidad de `RFC` + `email` + `role` debe verificarse al crear o actualizar el permiso; no debe confiarse al cliente. |
 | Mutabilidad acotada | Dentro del alcance, al editar un permiso solo deben mutar los campos permitidos de acceso, especialmente rol y estado. |
@@ -64,7 +66,9 @@
 |---|---|
 | `RFC` | Consultar permisos por institución. |
 | `email` | Consultar permisos asociados a un correo. |
+| `email` + `status` | Resolver altas e inicios de sesión sobre permisos vigentes asociados al correo. |
 | `userId` | Consultar permisos asociados a un usuario operativo ya materializado. |
+| `userId` + `status` | Resolver contextos activos posteriores sobre permisos vigentes de un usuario operativo. |
 | `RFC` + `email` + `role` | Verificar unicidad funcional de la combinación autorizada. |
 
 ## Eventos de log asociados

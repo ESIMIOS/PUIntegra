@@ -51,6 +51,7 @@
 | Enriquecimiento contextual mínimo | Deben incluir `RFC` cuando el evento se relacione con una institución y correo o referencia equivalente cuando se relacione con cuenta de usuario. |
 | Origen explícito | Toda mutación relevante debe quedar atribuida a un `LOG_ORIGIN`. |
 | Correlación técnica opcional | Cuando el evento derive de una ejecución trazable de backend, debe incluir `originTraceId` para correlacionarlo con artefactos técnicos y otros logs funcionales de la misma ejecución. |
+| Resolución de filtro por correo | Cuando una búsqueda de logs de backoffice parta de un correo para actividad de cuenta, el sistema debe resolver primero `email -> userId` y ejecutar la consulta principal sobre `userId`, no sobre un índice primario por correo en `Logs`. |
 | Soporte de búsqueda operativa | La colección debe permitir filtrado por categoría, ventana temporal y texto sobre campos indexados. |
 
 ## Índices

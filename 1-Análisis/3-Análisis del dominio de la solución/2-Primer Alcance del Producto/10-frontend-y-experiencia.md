@@ -44,7 +44,7 @@ Las rutas internas del alcance 1 deben interpretarse como vistas funcionales den
 | `/auth/logout` | Autenticación | Mostrar confirmación de cierre de sesión y ofrecer navegación posterior. | Usuarios con sesión abierta o cerrándose. | No | Debe cerrar sesión si está abierta y resolver continuidad de navegación. |
 | `/app/institutions` | Aplicación institucional | Listar instituciones donde la persona usuaria tiene permisos, mostrando RFC, nombre, rol, correo y estado del permiso. | `INSTITUTION_ADMIN`, `INSTITUTION_OPERATOR`. | No | Funciona como punto de selección de contexto institucional. |
 | `/app/[RFC]` | Aplicación institucional | Resolver el contenedor de navegación de una institución específica. | `INSTITUTION_ADMIN`, `INSTITUTION_OPERATOR`. | No | Debe redirigir a la vista por default de la institución. |
-| `/app/[RFC]/dashboard` | Aplicación institucional | Mostrar el resumen operativo institucional, incluyendo distribución de solicitudes por estatus, fase, estatus por fase y errores de sincronización PUI de hallazgos. | `INSTITUTION_ADMIN`, `INSTITUTION_OPERATOR`. | Sí, bajo `/app/[RFC]`. | Debe tomar el 100% de las solicitudes de la institución como universo objetivo y privilegiar lectura sintética y visual. |
+| `/app/[RFC]/dashboard` | Aplicación institucional | Mostrar el resumen operativo institucional, incluyendo distribución de solicitudes por estatus, fase, estatus por fase y estado de sincronización PUI de hallazgos. | `INSTITUTION_ADMIN`, `INSTITUTION_OPERATOR`. | Sí, bajo `/app/[RFC]`. | Debe tomar el 100% de las solicitudes de la institución como universo objetivo y privilegiar lectura sintética y visual. |
 | `/app/[RFC]/admin` | Aplicación institucional | Contener la administración institucional. | `INSTITUTION_ADMIN`. | No | No debe estar disponible para `INSTITUTION_OPERATOR`. |
 | `/app/[RFC]/admin/plan` | Aplicación institucional | Mostrar el plan comercial vigente de la institución. | `INSTITUTION_ADMIN`. | Sí, bajo `/app/[RFC]/admin`. | Es la vista inicial del dominio administrativo institucional. |
 | `/app/[RFC]/admin/contacts` | Aplicación institucional | Mostrar los contactos institucionales. | `INSTITUTION_ADMIN`. | No | Debe distinguir contactos legales y técnicos. |
@@ -60,7 +60,7 @@ Las rutas internas del alcance 1 deben interpretarse como vistas funcionales den
 | `/admin/institutions/[RFC]/requests/[FUB]` | Backoffice del proveedor | Mostrar el detalle de una solicitud específica desde backoffice. | `SYSTEM_ADMINISTRATOR`. | No | Debe servir supervisión y trazabilidad. |
 | `/admin/institutions/[RFC]/plan` | Backoffice del proveedor | Mostrar el detalle del plan institucional. | `SYSTEM_ADMINISTRATOR`. | No | Permite supervisión comercial y operativa. |
 | `/admin/institutions/[RFC]/contacts` | Backoffice del proveedor | Mostrar contactos institucionales. | `SYSTEM_ADMINISTRATOR`. | No | Funciona como vista transversal de revisión. |
-| `/admin/logs` | Backoffice del proveedor | Mostrar logs globales del sistema. | `SYSTEM_ADMINISTRATOR`. | No | Debe permitir visión global y además filtrar por `RFC`, `userId` o correo, categoría, origen y tiempo. |
+| `/admin/logs` | Backoffice del proveedor | Mostrar logs globales del sistema. | `SYSTEM_ADMINISTRATOR`. | No | Debe permitir visión global y además filtrar por `RFC`, `userId`, categoría, origen y tiempo; cuando la búsqueda se inicie por correo para actividad de cuenta, el sistema debe resolver primero `email -> userId`. |
 | `/account/settings` | Cuenta personal | Mostrar configuración personal y seguridad de cuenta, permitiendo editar `displayName`, icono emoji, contraseña y factores `TOTP` administrables por la propia persona usuaria. | `INSTITUTION_ADMIN`, `INSTITUTION_OPERATOR`, `SYSTEM_ADMINISTRATOR`. | Sí, bajo `/account`. | Debe estar desacoplada del contexto institucional activo y distinguir claramente perfil de seguridad. |
 | `/account/logs` | Cuenta personal | Mostrar logs relacionados con la cuenta personal. | `INSTITUTION_ADMIN`, `INSTITUTION_OPERATOR`, `SYSTEM_ADMINISTRATOR`. | No | Debe aplicar filtro fijo por `userId` y permitir filtros adicionales por categoría, origen y tiempo. |
 | `/error/404` | Error y restricciones | Resolver rutas no encontradas. | Todos los roles y estados de sesión. | No | Es la salida de navegación inválida por inexistencia. |
@@ -77,7 +77,7 @@ La vista `/app/[RFC]/dashboard` ya no debe leerse como un tablero abstracto, sin
 | Gráfica por estatus general | Debe distribuir ese universo según `SEARCH_REQUEST_STATUS`, distinguiendo al menos `ACTIVE` y `REVOKED`. |
 | Gráfica por fase | Debe distribuir el subconjunto de solicitudes activas según `SEARCH_REQUEST_PHASE`, distinguiendo `SEARCH_REQUEST_BASIC_DATA`, `SEARCH_REQUEST_CONTINUOUS` y `SEARCH_REQUEST_HISTORICAL`. |
 | Tabla resumen por fase y estatus de fase | Debe mostrar, para las solicitudes activas, el valor en cantidad y porcentaje de `SEARCH_REQUEST_PHASE_STATUS` por cada `SEARCH_REQUEST_PHASE`. |
-| Gráfica o tabla de errores de sincronización PUI | Debe mostrar los hallazgos con `FINDING_PUI_SYNC_STATUS = ERROR`, agrupables al menos por `HTTPResponseCode`, para facilitar lectura operativa de fallos de interoperabilidad. |
+| Gráfica o tabla de sincronización PUI de hallazgos | Debe mostrar la distribución o conteo de hallazgos por `FINDING_PUI_SYNC_STATUS`, para facilitar lectura operativa del estado de interoperabilidad futura. |
 
 ### 10.3.2 Precisión funcional de búsquedas de logs en UI
 
@@ -87,7 +87,7 @@ Las interfaces de búsqueda de logs deben ser uniformes en su estructura, varian
 |---|---|
 | Filtro fijo institucional | En logs institucionales, la búsqueda debe quedar siempre restringida al `RFC` de la institución activa. |
 | Filtro fijo de cuenta | En logs de cuenta, la búsqueda debe quedar siempre restringida al `userId` de la persona usuaria autenticada. |
-| Alcance de `SYSTEM_ADMINISTRATOR` | Puede consultar todos los logs y además filtrar por `RFC`, `userId` o correo. |
+| Alcance de `SYSTEM_ADMINISTRATOR` | Puede consultar todos los logs y además filtrar por `RFC` o `userId`; cuando la búsqueda de actividad de cuenta parta de un correo, el sistema debe resolver primero `email -> userId`. |
 | Filtros comunes | Todas las vistas de logs deben permitir filtrar por categoría, origen y ventana temporal. |
 | Ventana temporal relativa | Debe admitir al menos `10 minutos`, `1 hora`, `1 día`, `esta semana`, `semana pasada`, `este mes` y `mes pasado`. |
 | Ventana temporal absoluta | Debe admitir fecha y hora inicial y final. |
