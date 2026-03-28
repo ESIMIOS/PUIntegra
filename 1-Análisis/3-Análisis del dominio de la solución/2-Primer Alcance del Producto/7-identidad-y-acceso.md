@@ -41,6 +41,8 @@ Firebase Auth es el mecanismo de autenticación del alcance 1, pero su uso queda
 
 Para materializar `MFA` obligatorio y hooks previos de validación sobre altas e inicios de sesión, el alcance 1 debe asumirse sobre `Firebase Authentication with Identity Platform` habilitado.
 
+Dentro del alcance 1, el segundo factor obligatorio debe resolverse mediante `TOTP`. El uso de `SMS` como factor operativo queda fuera de este alcance.
+
 | Regla | Enunciado normativo | Implicación para el alcance 1 |
 |---|---|---|
 | `IDA-FA-01` | La autenticación del producto debe resolverse mediante Firebase Auth. | El acceso al sistema se apoya en un proveedor de identidad gestionado, no en credenciales propias del SaaS. |
@@ -48,7 +50,7 @@ Para materializar `MFA` obligatorio y hooks previos de validación sobre altas e
 | `IDA-FA-03` | Solo puede existir una cuenta por correo dentro del sistema. | La identidad autenticable debe ser única y no duplicarse. |
 | `IDA-FA-04` | La creación de cuenta solo es válida si existe al menos un permiso activo asociado al correo en `Permissions`. | El alta de cuenta depende de gobernanza institucional previa. |
 | `IDA-FA-05` | El correo de la cuenta no debe cambiarse como parte de la operación ordinaria del alcance. | La identidad base de acceso debe mantenerse estable para consistencia de permisos y trazabilidad. |
-| `IDA-FA-06` | El uso de MFA es obligatorio para las cuentas autenticadas del sistema. | La autenticación debe exigir un segundo factor conforme al alcance definido. |
+| `IDA-FA-06` | El uso de MFA es obligatorio para las cuentas autenticadas del sistema y su implementación en el alcance 1 debe resolverse mediante `TOTP`. | La autenticación debe exigir un segundo factor conforme al alcance definido, evitando dependencia operativa de `SMS` en el MVP. |
 | `IDA-FA-07` | El inicio de sesión mediante proveedor social solo es admisible cuando el correo autenticado esté autorizado dentro del sistema. | Un mecanismo de login externo no sustituye la validación institucional del correo. |
 | `IDA-FA-08` | La recuperación de contraseña debe poder iniciarse sin revelar si un correo existe o no. | El flujo de recuperación debe preservar seguridad y evitar enumeración de cuentas. |
 | `IDA-FA-09` | La cuenta debe verificar su correo antes de consolidar la habilitación de `MFA` y de abrir sesión operativa completa. | La activación de seguridad no debe recaer sobre correos no verificados. |
@@ -72,7 +74,7 @@ La autenticación del alcance 1 no debe leerse como un único instante de login,
 | Permiso habilitante previo | Existe al menos un `Permission` activo para el correo. | La gobernanza institucional antecede al alta técnica de la cuenta. |
 | Creación de cuenta | La persona crea una cuenta autenticable válida. | Todavía no equivale a sesión operativa completa. |
 | Verificación de correo | La cuenta confirma control sobre su correo. | Refuerza identidad base antes de consolidar seguridad adicional. |
-| Inscripción inicial de `MFA` | La cuenta registra al menos un segundo factor. | El alcance 1 no considera completa la seguridad sin este paso. |
+| Inscripción inicial de `MFA` | La cuenta registra al menos un factor `TOTP`. | El alcance 1 no considera completa la seguridad sin este paso. |
 | Resolución de sesión operativa | El producto hidrata `Users`, permisos vigentes y contexto seleccionable. | La sesión operativa solo existe cuando autenticación, autorización y contexto quedan alineados. |
 
 ---
@@ -121,8 +123,8 @@ Los eventos de identidad y acceso deben quedar explícitamente clasificados en l
 | `USER_ACCOUNT_PASSWORD_RECOVERY_REQUEST` | Solicitud de recuperación de contraseña | Cuando un usuario inicia el proceso de recuperación. | Debe existir sin comprometer privacidad sobre la existencia de la cuenta. |
 | `USER_ACCOUNT_PASSWORD_UPDATE` | Actualización de contraseña | Cuando una contraseña se actualiza exitosamente. | Representa un cambio sensible de credencial. |
 | `USER_ACCOUNT_EMAIL_VERIFICATION` | Verificación de correo | Cuando una cuenta confirma exitosamente su correo. | Marca la consolidación del identificador base de acceso. |
-| `USER_ACCOUNT_MFA_REGISTER` | Registro de MFA | Cuando una cuenta registra exitosamente su segundo factor. | Representa fortalecimiento del perfil de seguridad. |
-| `USER_ACCOUNT_MFA_UNENROLL` | Baja de un factor MFA | Cuando una cuenta elimina un segundo factor previamente inscrito. | Debe tratarse como evento sensible de seguridad. |
+| `USER_ACCOUNT_MFA_REGISTER` | Registro de MFA | Cuando una cuenta registra exitosamente un factor `TOTP`. | Representa fortalecimiento del perfil de seguridad. |
+| `USER_ACCOUNT_MFA_UNENROLL` | Baja de un factor MFA | Cuando una cuenta elimina un factor `TOTP` previamente inscrito. | Debe tratarse como evento sensible de seguridad. |
 | `USER_ACCOUNT_SETTINGS_UPDATE` | Actualización de configuración personal | Cuando el usuario cambia los datos permitidos de su cuenta. | Corresponde al dominio `/account` y no debe confundirse con configuración institucional. |
 
 ## 7.4.1 Criterios mínimos de lectura para logs de identidad y acceso
