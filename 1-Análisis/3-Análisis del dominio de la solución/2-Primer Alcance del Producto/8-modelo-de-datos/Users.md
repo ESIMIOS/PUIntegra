@@ -15,7 +15,7 @@
 
 | Campo | Significado |
 |---|---|
-| `userId` | Identificador único del usuario dentro del sistema. |
+| `userId` | Identificador único del documento en la colección `Users`; coincide con el `uid` de Firebase Auth. |
 | `name` | Nombre visible del usuario. |
 | `email` | Correo electrónico de la cuenta autenticable. |
 | `phone` | Teléfono del usuario. |
@@ -43,9 +43,11 @@
 
 | Regla | Implicación |
 |---|---|
+| Cardinalidad `1:1` con Firebase Auth | Cada cuenta autenticable del sistema debe corresponder a un único documento en `Users`, y viceversa. |
 | Un registro por correo | No deben existir múltiples registros de `Users` para un mismo correo. |
 | Creación derivada de cuenta | El registro debe originarse cuando una cuenta se crea válidamente dentro del sistema. |
 | Representación operativa obligatoria | La autenticación no debe quedarse solo en Firebase Auth; debe existir su contraparte en `Users`. |
+| `email` como identificador funcional visible | Aunque `userId` sea el identificador único del documento en la colección, el correo sigue siendo la referencia visible en UI y la base de relación con `Permissions`. |
 | Edición personal acotada | Los cambios personales del alcance se concentran en datos como nombre visible y `emojiIcon`. |
 | Atribución mínima de mutaciones | Toda entrada de `updates[]` debe indicar `updateOrigin` y conservar identidad de la persona que realizó el cambio cuando esa atribución exista. |
 | Historial append-only de cambios | Los elementos de `updates[]` solo deben añadirse y no reescribirse ni eliminarse. |

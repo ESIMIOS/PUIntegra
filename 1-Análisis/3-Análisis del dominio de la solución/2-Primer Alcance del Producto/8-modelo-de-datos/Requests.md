@@ -17,7 +17,7 @@
 |---|---|
 | `FUB` | Identificador transversal principal de la solicitud. |
 | `CURP` | Identificador de la persona asociada a la solicitud. |
-| `requestId` | Identificador único interno de la solicitud dentro del sistema. |
+| `requestId` | Identificador único del documento en la colección `Requests`. |
 | `RFC` | Institución responsable de atender la solicitud. |
 | `missingDate` | Fecha asociada al caso o desaparición. |
 | `searchRequestStatus` | Estado general vigente de la solicitud. |
@@ -59,9 +59,10 @@
 | Regla | Implicación |
 |---|---|
 | Entidad operativa del MVP | `Requests` debe existir y poder usarse dentro del alcance 1 aunque la recepción formal desde la PUI se habilite después. |
+| Relación `Institutions 1:N Requests` | Una institución diversa puede tener múltiples solicitudes de búsqueda relacionadas dentro del SaaS. |
 | Estado y fases explícitos | La solicitud debe poder leerse tanto por estado general como por estado de cada fase. |
-| `requestId` como identificador único interno | La unicidad técnica del registro debe descansar en `requestId` y no en `FUB`. |
-| `FUB` como correlación funcional no necesariamente única | `FUB` debe conservarse como identificador funcional del caso, pero no debe asumirse como único global dentro del SaaS porque puede repetirse entre instituciones distintas. |
+| `requestId` como identificador único de colección | La unicidad técnica del registro debe descansar en `requestId` y no en `FUB`. |
+| `FUB` único por institución | `FUB` debe conservarse como identificador funcional del caso y puede usarse para acceder a una solicitud dentro del contexto de un `RFC`, aunque pueda repetirse entre instituciones distintas. |
 | Correlación transversal | `FUB`, `CURP` y `RFC` deben permitir relacionar la solicitud con hallazgos y logs. |
 | No depende de interoperabilidad real para existir | La operatividad interna precede a la integración externa. |
 | Atribución mínima de mutaciones | Toda entrada de `updates[]` debe indicar `updateOrigin` y conservar identidad de la persona que realizó el cambio cuando esa atribución exista. |
@@ -74,7 +75,7 @@
 | `requestId` | Ubicar y validar unicidad interna de la solicitud. |
 | `RFC` | Consultar solicitudes por institución. |
 | `CURP` | Consultar solicitudes por persona relacionada. |
-| `FUB` | Consultar solicitudes por caso específico. |
+| `RFC` + `FUB` | Consultar una solicitud específica por caso dentro del contexto institucional. |
 
 ## Eventos de log asociados
 

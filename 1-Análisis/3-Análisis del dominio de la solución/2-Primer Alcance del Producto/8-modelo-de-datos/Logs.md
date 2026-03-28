@@ -57,11 +57,13 @@
 
 | Índice | Finalidad |
 |---|---|
-| `RFC` | Consultar logs por institución. |
-| `category` | Filtrar logs por categoría funcional. |
-| `origin` | Filtrar logs por origen del evento. |
-| `originTraceId` | Correlacionar eventos funcionales con una misma ejecución técnica. |
-| `userId` | Consultar logs por usuario relacionado. |
+| `RFC` + `createdAt` | Consultar logs institucionales dentro de ventanas temporales. |
+| `RFC` + `category` + `createdAt` | Filtrar logs institucionales por categoría y tiempo. |
+| `RFC` + `origin` + `createdAt` | Filtrar logs institucionales por origen y tiempo. |
+| `userId` + `createdAt` | Consultar logs de cuenta dentro de ventanas temporales. |
+| `userId` + `category` + `createdAt` | Filtrar logs de cuenta por categoría y tiempo. |
+| `userId` + `origin` + `createdAt` | Filtrar logs de cuenta por origen y tiempo. |
+| `originTraceId` + `createdAt` | Correlacionar eventos funcionales con una misma ejecución técnica. |
 
 ## Eventos de log asociados
 

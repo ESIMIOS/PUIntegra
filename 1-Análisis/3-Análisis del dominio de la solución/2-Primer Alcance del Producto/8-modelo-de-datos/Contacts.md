@@ -54,6 +54,7 @@
 
 | Regla | Implicación |
 |---|---|
+| Relación `Institutions 1:N Contacts` | Una institución puede mantener múltiples contactos institucionales asociados. |
 | Contactos no son roles operativos | Su existencia no concede acceso al sistema. |
 | Tipología cerrada | El tipo debe resolverse mediante `INSTITUTION_CONTACT_TYPE`. |
 | Propiedad institucional explícita | Todo contacto debe quedar asociado a una institución concreta mediante `RFC`. |

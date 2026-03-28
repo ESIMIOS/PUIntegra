@@ -19,7 +19,7 @@ El modelo de identidad y acceso del alcance 1 debe distinguir claramente entre c
 | Relación | Regla analítica |
 |---|---|
 | Cuenta y permiso | La cuenta no crea el permiso; el permiso habilitante debe existir previamente. |
-| Cuenta y usuario | La autenticación debe tener representación operativa dentro del sistema, no quedarse solo en el proveedor de identidad. |
+| Cuenta y usuario | La autenticación debe tener representación operativa dentro del sistema, no quedarse solo en el proveedor de identidad; en el alcance 1 la relación es `1:1` entre cuenta de Firebase Auth y documento en `Users`. |
 | Usuario y permisos | Un usuario puede relacionarse con múltiples permisos sobre una o varias instituciones. |
 | Permisos y sesión | La sesión efectiva se resuelve contra un único contexto institución/rol activo. |
 | Cuenta y correo | El correo es obligatorio, único por cuenta e inmutable como identidad operativa base del acceso. |
@@ -87,7 +87,7 @@ Los hooks y triggers de autenticación del alcance 1 deben cubrir dos momentos d
 
 | Hook o validación previa | Momento de ejecución | Resultado esperado | Observaciones |
 |---|---|---|---|
-| `IDA-HK-01` Validación previa de creación de cuenta | Antes de materializar el alta técnica de la cuenta. | Se permite crear la cuenta solo si existe al menos un `Permission` activo para el correo. | Debe impedir que Firebase Auth por sí solo bypassée la gobernanza institucional del producto. |
+| `IDA-HK-01` Validación previa de creación de cuenta | Antes de materializar el alta técnica de la cuenta. | Se permite crear la cuenta solo si existe al menos un `Permission` activo para el correo. | Debe impedir que Firebase Auth por sí solo bypassee la gobernanza institucional del producto. |
 | `IDA-HK-02` Validación previa de inicio de sesión | Antes de consolidar el ingreso técnico al sistema. | Se bloquea o condiciona el acceso cuando la cuenta ya no tiene permisos vigentes o cuando la habilitación de seguridad aún no está completa. | Debe distinguir autenticación técnica de sesión operativa habilitada. |
 
 ## 7.3.2 Triggers posteriores de autenticación
@@ -100,6 +100,8 @@ Los hooks y triggers de autenticación del alcance 1 deben cubrir dos momentos d
 | `IDA-TR-04` Trazabilidad de cierre de sesión | Cierre de sesión. | Se registra la salida del usuario del sistema. | Debe distinguirse del simple vencimiento técnico de una sesión. |
 | `IDA-TR-05` Trazabilidad de recuperación de contraseña | Solicitud de recuperación y cambio exitoso de contraseña. | Se registran los eventos relevantes de recuperación y actualización de credenciales. | No debe exponerse información sensible en la evidencia. |
 | `IDA-TR-06` Trazabilidad de alta de MFA | Registro exitoso del segundo factor. | Se registra el evento de inscripción de MFA. | Refuerza trazabilidad de seguridad de la cuenta. |
+| `IDA-TR-07` Trazabilidad de verificación de correo | Verificación exitosa del correo. | Se registra el evento de confirmación de correo de la cuenta. | Debe poder correlacionarse con el endurecimiento de seguridad y la habilitación de la sesión operativa. |
+| `IDA-TR-08` Trazabilidad de baja de MFA | Eliminación exitosa de un factor `TOTP`. | Se registra el evento de baja del factor. | Debe tratarse como evento sensible de seguridad. |
 
 ## 7.3.3 Restricciones sobre hooks y triggers de identidad
 
@@ -123,7 +125,7 @@ Los eventos de identidad y acceso deben quedar explícitamente clasificados en l
 | `USER_ACCOUNT_PASSWORD_RECOVERY_REQUEST` | Solicitud de recuperación de contraseña | Cuando un usuario inicia el proceso de recuperación. | Debe existir sin comprometer privacidad sobre la existencia de la cuenta. |
 | `USER_ACCOUNT_PASSWORD_UPDATE` | Actualización de contraseña | Cuando una contraseña se actualiza exitosamente. | Representa un cambio sensible de credencial. |
 | `USER_ACCOUNT_EMAIL_VERIFICATION` | Verificación de correo | Cuando una cuenta confirma exitosamente su correo. | Marca la consolidación del identificador base de acceso. |
-| `USER_ACCOUNT_MFA_REGISTER` | Registro de MFA | Cuando una cuenta registra exitosamente un factor `TOTP`. | Representa fortalecimiento del perfil de seguridad. |
+| `USER_ACCOUNT_MFA_ENROLL` | Registro de MFA | Cuando una cuenta registra exitosamente un factor `TOTP`. | Representa fortalecimiento del perfil de seguridad. |
 | `USER_ACCOUNT_MFA_UNENROLL` | Baja de un factor MFA | Cuando una cuenta elimina un factor `TOTP` previamente inscrito. | Debe tratarse como evento sensible de seguridad. |
 | `USER_ACCOUNT_SETTINGS_UPDATE` | Actualización de configuración personal | Cuando el usuario cambia los datos permitidos de su cuenta. | Corresponde al dominio `/account` y no debe confundirse con configuración institucional. |
 

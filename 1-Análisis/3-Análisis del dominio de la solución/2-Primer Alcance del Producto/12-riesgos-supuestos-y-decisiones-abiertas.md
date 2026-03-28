@@ -31,8 +31,11 @@ Los siguientes supuestos se consideran aceptados para poder leer el alcance 1 co
 | `SUP-10` | El backend es responsable de sostener validaciones, mutaciones, automatizaciones y trazabilidad críticas. | El alcance no confía estas reglas exclusivamente al cliente. |
 | `SUP-11` | El alcance 1 no implementa artefactos ni automatizaciones de Storage. | El uso de archivos en respuestas a solicitudes de búsqueda queda diferido a los alcances 3 y 4. |
 | `SUP-12` | El dashboard institucional ya tiene criterio de cálculo funcional cerrado. | La vista debe tomar el 100% de solicitudes como universo, distribuir por estatus y fase, y resumir por estatus de fase con cantidad y porcentaje. |
+| `SUP-12A` | El dashboard institucional debe mostrar además errores de sincronización PUI de `Findings`. | La operación del MVP debe poder visualizar fallos de interoperabilidad futura mediante agrupación por `HTTPResponseCode`. |
 | `SUP-13` | Las interfaces de búsqueda de logs deben ser uniformes en todo el producto. | La variación entre vistas de logs se resuelve por filtros fijos de contexto, no por experiencias radicalmente distintas. |
 | `SUP-14` | El dominio `/error` del alcance 1 queda acotado a tres estados explícitos. | La experiencia de error del MVP se limita, por el momento, a `403`, `404` y `500`. |
+| `SUP-15` | Los intentos de sincronización de `Findings` con la PUI conservan evidencia append-only de respuesta. | El MVP debe poder registrar fecha, código HTTP y payload completo de la respuesta de la PUI para cada intento. |
+| `SUP-16` | La vigencia operativa de una institución dentro del SaaS se expresa mediante `planStatus`. | El estado institucional no debe inferirse solo por fechas de plan o por lectura informal del backoffice. |
 
 ## 12.3 Riesgos principales del alcance 1
 
@@ -51,6 +54,7 @@ Los siguientes riesgos no invalidan el alcance 1, pero sí pueden comprometer su
 | `RSG-09` | Crecimiento prematuro de alcance por querer anticipar toda la integración futura con la PUI | Puede volver inmanejable el MVP y retrasar validación real del producto. | Seguir delimitando el alcance 1 como base operativa preparada, no como solución final completa. |
 | `RSG-10` | Dependencia excesiva del cliente para reglas críticas | Puede permitir inconsistencias entre UI, datos y trazabilidad. | Reservar al backend la autoridad sobre validaciones, mutaciones y evidencia relevante. |
 | `RSG-11` | Subestimación del costo operativo asociado a `Identity Platform` | Puede volver engañosa la lectura económica del MVP si se asume que toda autenticación avanzada conserva el mismo costo base. | Mantener explícito que `MFA` obligatorio con `TOTP` reduce la dependencia de costos variables por mensaje, pero no elimina la necesidad de evaluar el costo general de `Identity Platform`. |
+| `RSG-12` | Saturación operativa por reintentos de sincronización PUI mal programados | Puede generar ruido excesivo en logs, presión innecesaria sobre la PUI y evidencia poco útil para soporte. | Gobernar los reintentos mediante `PUISyncScheduleDate`, registrar evidencia por intento y evitar ejecución continua sin programación explícita. |
 
 ## 12.4 Decisiones abiertas del alcance
 

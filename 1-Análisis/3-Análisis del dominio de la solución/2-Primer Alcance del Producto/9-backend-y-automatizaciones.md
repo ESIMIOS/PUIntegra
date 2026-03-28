@@ -42,6 +42,7 @@ Las funciones HTTP representan operaciones de negocio invocadas de forma deliber
 | Semántica HTTP de mutación | Las funciones orientadas a creación o mutación de estado deben modelarse preferentemente mediante `POST`. |
 | Autorización | Deben validar contexto activo, rol y pertenencia institucional cuando la operación lo requiera. |
 | Mutación | Deben crear o actualizar entidades conforme a las reglas del alcance y al uso de `updates[]`. |
+| Notificaciones derivadas de permisos | Deben disparar el envío de correo cuando la operación de otorgamiento de permiso así lo requiera por rol y dominio otorgante. |
 | Trazabilidad | Deben registrar su origen sistémico y dejar evidencia suficiente en `Logs`. |
 
 ### 9.3.2 Firebase Auth blocking functions
@@ -75,6 +76,7 @@ Las funciones disparadas por cambios en Firestore deben encargarse de automatiza
 | Naturaleza | Deben reaccionar a mutaciones relevantes del dominio y no duplicar innecesariamente lógica del cliente. |
 | Consistencia de entidades | Deben conservar relaciones entre `Users`, `Permissions`, `Institutions`, `Requests`, `Findings`, `Contacts` y `Logs`. |
 | Historial embebido | Deben respetar la semántica append-only de `updates[]` y su atribución mínima. |
+| Reintentos de sincronización con PUI | Deben intentar sincronizar `Findings` solo cuando `now >= PUISyncScheduleDate`, registrar la respuesta en `responses[]`, reprogramar el siguiente intento en caso de fallo y limpiar `PUISyncScheduleDate` cuando ya no exista intento pendiente. |
 | Trazabilidad | Deben registrar el origen sistémico de la automatización cuando produzcan efectos observables. |
 
 ## 9.4 Relación entre funciones, datos y logs
@@ -85,6 +87,7 @@ Las Cloud Functions del alcance 1 no deben tratarse como piezas aisladas. Cada t
 |---|---|
 | Función → dato vigente | La mutación principal debe dejar el estado actual correcto en la entidad correspondiente. |
 | Función → historial embebido | Cuando la entidad sea mutable, la transición debe reflejarse en `updates[]` con atribución mínima suficiente. |
+| Función → evidencia de sincronización PUI | Cuando exista intento de sincronización de `Findings`, el backend debe conservar `PUISyncStatus`, `PUISyncScheduleDate` y una entrada append-only en `responses[]`. |
 | Función → log | Toda operación relevante debe dejar evidencia transversal en `Logs`. |
 | Función → correlación técnica | Cuando exista identificador de ejecución trazable, los logs funcionales derivados deben compartir `originTraceId` para permitir depuración profunda y reconstrucción de la cadena de efectos. |
 | Función → contexto | La mutación y su evidencia deben conservar institución, rol, identidad u origen sistémico cuando aplique. |
@@ -96,6 +99,7 @@ Las Cloud Functions del alcance 1 no deben tratarse como piezas aisladas. Cada t
 | Origen reconocible | Ninguna automatización debe producir cambios huérfanos de `UPDATE_ORIGIN` o `LOG_ORIGIN` cuando aplique. |
 | Correlación entre trazabilidad funcional y técnica | Las automatizaciones trazables deben poder propagar un `originTraceId` común hacia los logs funcionales que produzcan. |
 | No dependencia del cliente para reglas críticas | Validaciones, consistencia y trazabilidad relevantes no deben delegarse exclusivamente al frontend. |
+| Programación explícita de reintentos PUI | La lógica de reintento de sincronización no debe depender de la UI; debe gobernarse desde backend mediante `PUISyncScheduleDate`. |
 | Semántica consistente de interfaces HTTP | Las operaciones de lectura deben privilegiar `GET` idempotente y las operaciones que generan mutación deben privilegiar `POST`, con separación clara entre identificadores en URL y variabilidad de consulta en `query params`. |
 | Consumo selectivo de capacidades nativas de Auth | Login, logout, recuperación y actualización de credenciales no deben reimplementarse innecesariamente en backend cuando Firebase Auth ya provee el mecanismo base. |
 | Uso explícito de `Identity Platform` donde aplique | `MFA` obligatorio y validaciones bloqueantes previas deben asumirse como parte del stack efectivo del alcance 1. |

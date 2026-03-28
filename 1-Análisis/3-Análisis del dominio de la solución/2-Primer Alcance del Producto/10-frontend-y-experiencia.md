@@ -44,7 +44,7 @@ Las rutas internas del alcance 1 deben interpretarse como vistas funcionales den
 | `/auth/logout` | Autenticación | Mostrar confirmación de cierre de sesión y ofrecer navegación posterior. | Usuarios con sesión abierta o cerrándose. | No | Debe cerrar sesión si está abierta y resolver continuidad de navegación. |
 | `/app/institutions` | Aplicación institucional | Listar instituciones donde la persona usuaria tiene permisos, mostrando RFC, nombre, rol, correo y estado del permiso. | `INSTITUTION_ADMIN`, `INSTITUTION_OPERATOR`. | No | Funciona como punto de selección de contexto institucional. |
 | `/app/[RFC]` | Aplicación institucional | Resolver el contenedor de navegación de una institución específica. | `INSTITUTION_ADMIN`, `INSTITUTION_OPERATOR`. | No | Debe redirigir a la vista por default de la institución. |
-| `/app/[RFC]/dashboard` | Aplicación institucional | Mostrar el resumen operativo institucional, incluyendo distribución de solicitudes por estatus, fase y estatus por fase. | `INSTITUTION_ADMIN`, `INSTITUTION_OPERATOR`. | Sí, bajo `/app/[RFC]`. | Debe tomar el 100% de las solicitudes de la institución como universo objetivo y privilegiar lectura sintética y visual. |
+| `/app/[RFC]/dashboard` | Aplicación institucional | Mostrar el resumen operativo institucional, incluyendo distribución de solicitudes por estatus, fase, estatus por fase y errores de sincronización PUI de hallazgos. | `INSTITUTION_ADMIN`, `INSTITUTION_OPERATOR`. | Sí, bajo `/app/[RFC]`. | Debe tomar el 100% de las solicitudes de la institución como universo objetivo y privilegiar lectura sintética y visual. |
 | `/app/[RFC]/admin` | Aplicación institucional | Contener la administración institucional. | `INSTITUTION_ADMIN`. | No | No debe estar disponible para `INSTITUTION_OPERATOR`. |
 | `/app/[RFC]/admin/plan` | Aplicación institucional | Mostrar el plan comercial vigente de la institución. | `INSTITUTION_ADMIN`. | Sí, bajo `/app/[RFC]/admin`. | Es la vista inicial del dominio administrativo institucional. |
 | `/app/[RFC]/admin/contacts` | Aplicación institucional | Mostrar los contactos institucionales. | `INSTITUTION_ADMIN`. | No | Debe distinguir contactos legales y técnicos. |
@@ -77,6 +77,7 @@ La vista `/app/[RFC]/dashboard` ya no debe leerse como un tablero abstracto, sin
 | Gráfica por estatus general | Debe distribuir ese universo según `SEARCH_REQUEST_STATUS`, distinguiendo al menos `ACTIVE` y `REVOKED`. |
 | Gráfica por fase | Debe distribuir el subconjunto de solicitudes activas según `SEARCH_REQUEST_PHASE`, distinguiendo `SEARCH_REQUEST_BASIC_DATA`, `SEARCH_REQUEST_CONTINUOUS` y `SEARCH_REQUEST_HISTORICAL`. |
 | Tabla resumen por fase y estatus de fase | Debe mostrar, para las solicitudes activas, el valor en cantidad y porcentaje de `SEARCH_REQUEST_PHASE_STATUS` por cada `SEARCH_REQUEST_PHASE`. |
+| Gráfica o tabla de errores de sincronización PUI | Debe mostrar los hallazgos con `FINDING_PUI_SYNC_STATUS = ERROR`, agrupables al menos por `HTTPResponseCode`, para facilitar lectura operativa de fallos de interoperabilidad. |
 
 ### 10.3.2 Precisión funcional de búsquedas de logs en UI
 

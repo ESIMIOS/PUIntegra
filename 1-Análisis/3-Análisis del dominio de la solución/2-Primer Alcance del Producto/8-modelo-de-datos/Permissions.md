@@ -15,7 +15,7 @@
 
 | Campo | Significado |
 |---|---|
-| `permissionId` | Identificador único del permiso. |
+| `permissionId` | Identificador único del documento en la colección `Permissions`. |
 | `RFC` | Institución sobre la que el permiso aplica. |
 | `email` | Correo al que se habilita el permiso. |
 | `userId` | Referencia al usuario operativo cuando la cuenta ya existe. |
@@ -46,10 +46,15 @@
 
 | Regla | Implicación |
 |---|---|
+| Relación `Users 1:N Permissions` | Un mismo usuario puede acumular múltiples permisos sobre una o varias instituciones. |
+| Relación `Institutions 1:N Permissions` | Una misma institución puede tener múltiples permisos asociados a distintos correos, usuarios o roles. |
 | Un registro por institución-correo-rol | La unicidad del permiso se resuelve por la combinación `RFC` + `email` + `role`. |
 | No eliminación ordinaria | Los permisos no deben eliminarse; deben actualizarse y conservar historial. |
 | Creación de cuenta dependiente de permiso | Un permiso activo es condición previa para crear cuenta. |
+| UI orientada por `RFC` | La lectura administrativa de permisos dentro del alcance 1 se resuelve principalmente consultando por institución. |
+| Validación backend de unicidad | La unicidad de `RFC` + `email` + `role` debe verificarse al crear o actualizar el permiso; no debe confiarse al cliente. |
 | Mutabilidad acotada | Dentro del alcance, al editar un permiso solo deben mutar los campos permitidos de acceso, especialmente rol y estado. |
+| Notificación por correo al otorgar permiso | Cuando `SYSTEM_ADMINISTRATOR` otorgue `INSTITUTION_ADMIN` o `SYSTEM_ADMINISTRATOR`, y cuando `INSTITUTION_ADMIN` otorgue `INSTITUTION_OPERATOR`, el sistema debe enviar un correo al `email` autorizado como parte del caso de uso. |
 | Atribución mínima de mutaciones | Toda entrada de `updates[]` debe indicar `updateOrigin` y conservar identidad de la persona que realizó el cambio cuando esa atribución exista. |
 | Historial append-only de cambios | Los elementos de `updates[]` solo deben añadirse y no reescribirse ni eliminarse. |
 
@@ -59,6 +64,8 @@
 |---|---|
 | `RFC` | Consultar permisos por institución. |
 | `email` | Consultar permisos asociados a un correo. |
+| `userId` | Consultar permisos asociados a un usuario operativo ya materializado. |
+| `RFC` + `email` + `role` | Verificar unicidad funcional de la combinación autorizada. |
 
 ## Eventos de log asociados
 
