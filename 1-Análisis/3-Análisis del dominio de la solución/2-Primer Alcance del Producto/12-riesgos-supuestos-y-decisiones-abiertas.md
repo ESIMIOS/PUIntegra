@@ -21,7 +21,7 @@ Los siguientes supuestos se consideran aceptados para poder leer el alcance 1 co
 |---|---|---|
 | `SUP-01` | La interoperabilidad formal con la PUI todavía no existe, pero el producto debe operar internamente `Requests` y `Findings`. | El MVP se valida por su operación interna, no por integración externa productiva. |
 | `SUP-02` | La incorporación inicial de instituciones depende del dominio del proveedor SaaS. | El producto no contempla autoaprovisionamiento institucional libre en este alcance. |
-| `SUP-03` | La autenticación se resuelve mediante Firebase Auth con MFA obligatorio. | El alcance no introduce un mecanismo propio de autenticación independiente. |
+| `SUP-03` | La autenticación se resuelve mediante Firebase Auth con `MFA` obligatorio, lo que implica asumir `Firebase Authentication with Identity Platform` como parte efectiva del stack del alcance. | El alcance no introduce un mecanismo propio de autenticación independiente, pero sí asume las capacidades ampliadas necesarias para `MFA` y validaciones bloqueantes. |
 | `SUP-04` | El correo es la identidad operativa base de acceso y correlación con permisos. | La gobernanza de acceso depende de la estabilidad del correo como identificador. |
 | `SUP-05` | Una persona usuaria puede tener múltiples permisos, pero solo un contexto institución/rol activo por sesión. | La experiencia se construye sobre una única resolución operativa vigente a la vez. |
 | `SUP-06` | El historial funcional relevante se conserva dentro de cada entidad mutable mediante `updates[]`. | El alcance no introduce una colección genérica transversal de actualizaciones como fuente primaria de historial. |
@@ -50,14 +50,11 @@ Los siguientes riesgos no invalidan el alcance 1, pero sí pueden comprometer su
 | `RSG-08` | Divergencia entre backoffice del proveedor y operación institucional | Puede mezclar visibilidades, permisos y responsabilidades de dominios distintos. | Mantener separados `/admin`, `/app` y sus reglas de acceso. |
 | `RSG-09` | Crecimiento prematuro de alcance por querer anticipar toda la integración futura con la PUI | Puede volver inmanejable el MVP y retrasar validación real del producto. | Seguir delimitando el alcance 1 como base operativa preparada, no como solución final completa. |
 | `RSG-10` | Dependencia excesiva del cliente para reglas críticas | Puede permitir inconsistencias entre UI, datos y trazabilidad. | Reservar al backend la autoridad sobre validaciones, mutaciones y evidencia relevante. |
+| `RSG-11` | Subestimación del costo operativo asociado a `Identity Platform` y al uso de factores que se cobran por mensaje | Puede volver engañosa la lectura económica del MVP si se asume que toda autenticación avanzada conserva el mismo costo base. | Mantener explícito que `MFA` obligatorio y factores telefónicos pueden introducir costo variable por uso y deben evaluarse desde planeación operativa. |
 
 ## 12.4 Decisiones abiertas del alcance
 
-Las siguientes decisiones no impiden cerrar el análisis actual, pero conviene resolverlas antes de profundizar en implementación detallada o en alcances posteriores.
-
-| ID | Decisión abierta | Por qué sigue abierta | Momento sugerido de cierre |
-|---|---|---|---|
-| `DCA-05` | Discusión técnica detallada sobre contratos de autenticación, sesión y cuenta | Ya existe convención analítica general, pero falta una conversación técnica más fina para traducirla a contratos concretos de implementación. | Después de cerrar por completo el nivel analítico de frontend, backend y flujos de acceso. |
+Por el momento, el alcance 1 ya no conserva decisiones abiertas de primer nivel que bloqueen la precisión analítica del MVP.
 
 ## 12.5 Criterios de lectura de riesgos, supuestos y decisiones
 
@@ -74,4 +71,4 @@ Las siguientes decisiones no impiden cerrar el análisis actual, pero conviene r
 |---|---|
 | El alcance 1 ya tiene decisiones estructurales sólidas. | La mayoría de los elementos críticos del MVP ya no deben tratarse como pendientes conceptuales. |
 | Los riesgos del MVP se concentran más en coherencia y ejecución que en falta de modelo. | El trabajo posterior debe enfocarse en aterrizar correctamente lo ya definido. |
-| La decisión abierta restante es técnica y de precisión, no de identidad del producto. | El producto ya tiene forma operativa suficiente para seguir avanzando hacia especificación técnica más fina. |
+| Las decisiones abiertas de primer nivel han quedado resueltas. | El producto ya tiene forma operativa suficiente para seguir avanzando hacia especificación técnica más fina sin depender de pendientes analíticos mayores. |

@@ -22,7 +22,7 @@ Las rutas de primer nivel del producto deben leerse como dominios de navegación
 | Layout o dominio | Path raíz | Propósito dentro del alcance 1 | Roles habilitados | Observaciones |
 |---|---|---|---|---|
 | Sitio público | `/site` | Presentar información pública, comercial e introductoria del producto. | `ANONYMOUS` y usuarios fuera de una sesión operativa. | Su vista por default es `/site/home`. |
-| Autenticación | `/auth` | Resolver ingreso, creación de cuenta, recuperación de contraseña y salida de sesión. | `ANONYMOUS` y usuarios fuera de una sesión operativa. | Su vista por default es `/auth/login`. |
+| Autenticación | `/auth` | Resolver ingreso, creación de cuenta, verificación de correo, recuperación o restablecimiento de contraseña, bootstrap de seguridad y salida de sesión. | `ANONYMOUS` y usuarios fuera de una sesión operativa. | Su vista por default es `/auth/login`. |
 | Aplicación institucional | `/app` | Sostener la operación institucional cotidiana sobre dashboard, solicitudes, permisos, contactos, configuración y logs. | `INSTITUTION_ADMIN`, `INSTITUTION_OPERATOR`. | Requiere contexto institucional activo y permiso habilitante. |
 | Backoffice del proveedor | `/admin` | Sostener la supervisión global del SaaS y la administración multiinstitución. | `SYSTEM_ADMINISTRATOR`. | Corresponde al dominio operativo del proveedor. |
 | Cuenta personal | `/account` | Permitir configuración personal y consulta de actividad propia del usuario autenticado. | `INSTITUTION_ADMIN`, `INSTITUTION_OPERATOR`, `SYSTEM_ADMINISTRATOR`. | Es un dominio transversal a la operación autenticada. |
@@ -36,8 +36,11 @@ Las rutas internas del alcance 1 deben interpretarse como vistas funcionales den
 |---|---|---|---|---|---|
 | `/site/home` | Sitio público | Mostrar en una sola página información del sistema, casos de uso, precios, información del producto, contacto y acceso a login. | `ANONYMOUS` y usuarios fuera de sesión operativa. | Sí, bajo `/site`. | Es la entrada pública principal del producto. |
 | `/auth/login` | Autenticación | Permitir ingreso con Firebase Auth y MFA. | `ANONYMOUS` y usuarios fuera de sesión operativa. | Sí, bajo `/auth`. | Debe aplicar protección contra abuso por intentos repetidos. |
-| `/auth/create-account` | Autenticación | Permitir creación de cuenta. | `ANONYMOUS` con permiso activo asociado al correo. | No | Solo debe habilitarse cuando exista al menos un permiso activo asociado al correo. |
+| `/auth/create-account` | Autenticación | Permitir creación de cuenta. | `ANONYMOUS` con permiso activo asociado al correo. | No | Solo debe habilitarse cuando exista al menos un permiso activo asociado al correo y no debe considerarse completo mientras falten verificación de correo o inscripción inicial de `MFA`. |
+| `/auth/verify-email` | Autenticación | Resolver la confirmación de correo derivada de action links de Firebase Auth. | Cuentas recién creadas o pendientes de verificación. | No | Debe consolidar el paso de verificación sin abrir por sí mismo la sesión operativa final. |
 | `/auth/forgot-password` | Autenticación | Permitir solicitar recuperación o cambio de contraseña. | `ANONYMOUS` y usuarios fuera de sesión operativa. | No | No debe confirmar si el correo existe o no. |
+| `/auth/reset-password` | Autenticación | Permitir completar el restablecimiento de contraseña derivado de action links de Firebase Auth. | Usuarios que llegan desde un enlace válido de recuperación. | No | Debe completar el cambio de contraseña dentro de la experiencia del producto. |
+| `/auth/security-setup` | Autenticación | Completar la habilitación mínima de seguridad de la cuenta, incluyendo verificación pendiente e inscripción inicial de `MFA`. | Usuarios autenticados cuya cuenta aún no alcanza el nivel de seguridad requerido. | No | Debe existir antes de abrir acceso operativo pleno a `/app`, `/admin` o `/account`. |
 | `/auth/logout` | Autenticación | Mostrar confirmación de cierre de sesión y ofrecer navegación posterior. | Usuarios con sesión abierta o cerrándose. | No | Debe cerrar sesión si está abierta y resolver continuidad de navegación. |
 | `/app/institutions` | Aplicación institucional | Listar instituciones donde la persona usuaria tiene permisos, mostrando RFC, nombre, rol, correo y estado del permiso. | `INSTITUTION_ADMIN`, `INSTITUTION_OPERATOR`. | No | Funciona como punto de selección de contexto institucional. |
 | `/app/[RFC]` | Aplicación institucional | Resolver el contenedor de navegación de una institución específica. | `INSTITUTION_ADMIN`, `INSTITUTION_OPERATOR`. | No | Debe redirigir a la vista por default de la institución. |
@@ -58,7 +61,7 @@ Las rutas internas del alcance 1 deben interpretarse como vistas funcionales den
 | `/admin/institutions/[RFC]/plan` | Backoffice del proveedor | Mostrar el detalle del plan institucional. | `SYSTEM_ADMINISTRATOR`. | No | Permite supervisión comercial y operativa. |
 | `/admin/institutions/[RFC]/contacts` | Backoffice del proveedor | Mostrar contactos institucionales. | `SYSTEM_ADMINISTRATOR`. | No | Funciona como vista transversal de revisión. |
 | `/admin/logs` | Backoffice del proveedor | Mostrar logs globales del sistema. | `SYSTEM_ADMINISTRATOR`. | No | Debe permitir visión global y además filtrar por `RFC`, `userId` o correo, categoría, origen y tiempo. |
-| `/account/settings` | Cuenta personal | Mostrar configuración personal y permitir edición de `displayName` e icono emoji. | `INSTITUTION_ADMIN`, `INSTITUTION_OPERATOR`, `SYSTEM_ADMINISTRATOR`. | Sí, bajo `/account`. | Debe estar desacoplada del contexto institucional activo. |
+| `/account/settings` | Cuenta personal | Mostrar configuración personal y seguridad de cuenta, permitiendo editar `displayName`, icono emoji, contraseña y factores `MFA` administrables por la propia persona usuaria. | `INSTITUTION_ADMIN`, `INSTITUTION_OPERATOR`, `SYSTEM_ADMINISTRATOR`. | Sí, bajo `/account`. | Debe estar desacoplada del contexto institucional activo y distinguir claramente perfil de seguridad. |
 | `/account/logs` | Cuenta personal | Mostrar logs relacionados con la cuenta personal. | `INSTITUTION_ADMIN`, `INSTITUTION_OPERATOR`, `SYSTEM_ADMINISTRATOR`. | No | Debe aplicar filtro fijo por `userId` y permitir filtros adicionales por categoría, origen y tiempo. |
 | `/error/404` | Error y restricciones | Resolver rutas no encontradas. | Todos los roles y estados de sesión. | No | Es la salida de navegación inválida por inexistencia. |
 | `/error/403` | Error y restricciones | Resolver accesos incompatibles entre ruta, rol o contexto. | Todos los roles y estados de sesión. | No | Es la salida de navegación prohibida. |
@@ -104,6 +107,18 @@ El alcance 1 debe sostener un dominio de error acotado y explícito.
 
 Por el momento, el alcance 1 debe limitarse a estos tres estados de error.
 
+### 10.3.4 Precisión funcional de `/account/settings`
+
+La vista `/account/settings` no debe limitarse a perfil liviano. Debe agrupar, dentro de una única experiencia de cuenta, la configuración personal y las operaciones de seguridad que pertenecen a la persona usuaria autenticada.
+
+| Subárea funcional | Alcance dentro del MVP | Observaciones |
+|---|---|---|
+| Perfil personal | Edición de `displayName` e icono emoji. | Corresponde a configuración visible de la cuenta y no requiere contexto institucional activo. |
+| Identidad base | Consulta de correo y estado de verificación. | El correo debe tratarse como identidad base no editable en la operación ordinaria del alcance. |
+| Verificación de correo | Reenvío o relectura del estado de verificación cuando aplique. | No debe confundirse con recuperación de contraseña. |
+| Contraseña | Cambio de contraseña desde sesión autenticada. | Debe tratarse como operación sensible de seguridad y no como simple dato de perfil. |
+| `MFA` | Consulta, alta y baja de factores administrables por la propia cuenta. | Debe distinguir inscripción inicial obligatoria de administración posterior de factores. |
+
 ## 10.4 Route guards
 
 Los guards de navegación del alcance 1 deben sostener coherencia entre sesión, rol, contexto institucional y ruta solicitada.
@@ -116,6 +131,7 @@ Los guards de navegación del alcance 1 deben sostener coherencia entre sesión,
 | Contexto institucional activo | La navegación dentro de `/app/[RFC]` debe validar que la persona usuaria tenga permiso habilitante sobre la institución solicitada. |
 | Cambio de ruta | En cada cambio de ruta debe verificarse si el rol vigente y la institución activa siguen autorizando la vista solicitada. |
 | Default interno | Cuando un subdominio marque una vista como `default`, la navegación al contenedor debe redirigir o cargar esa vista por default. |
+| Bootstrap de seguridad obligatorio | Si la cuenta aún no verifica correo o no ha inscrito el `MFA` mínimo requerido, el producto debe dirigir la experiencia hacia `/auth/security-setup` antes de habilitar operación plena. |
 | Cambio de contexto institución/rol | El producto debe ofrecer un mecanismo explícito para cambiar el contexto activo de sesión. |
 | Relectura desde `/account` | El cambio de contexto debe ser posible aun cuando la persona usuaria se encuentre en el dominio `/account`. |
 
@@ -125,7 +141,7 @@ La capa de estado del frontend debe sostener, como mínimo, la identidad autenti
 
 | Store | Propósito analítico | Estado que debe sostener | Observaciones |
 |---|---|---|---|
-| `authStore` | Sostener el estado de autenticación y la información mínima de la cuenta operativa. | Sesión autenticada, identidad básica, estado de acceso y continuidad de la cuenta en frontend. | Corresponde al store relacionado con autenticación. |
+| `authStore` | Sostener el estado de autenticación y la información mínima de la cuenta operativa. | Sesión autenticada, identidad básica, estado de acceso, bootstrap de seguridad pendiente o completo y continuidad de la cuenta en frontend. | Corresponde al store relacionado con autenticación. |
 | `institutionStore` | Sostener el contexto institucional activo de la sesión. | Institución activa, rol activo y selección operativa vigente. | Corresponde al store relacionado con institución activa. |
 
 ## 10.6 Stack

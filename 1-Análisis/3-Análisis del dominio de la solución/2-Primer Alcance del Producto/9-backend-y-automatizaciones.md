@@ -16,12 +16,13 @@ El backend del alcance 1 no debe entenderse solo como una capa técnica de expos
 
 ## 9.2 Tipos de Cloud Functions requeridos
 
-El alcance 1 requiere tres familias de Cloud Functions, diferenciadas por el tipo de evento que las activa y por la responsabilidad operativa que asumen.
+El alcance 1 requiere cuatro familias de Cloud Functions, diferenciadas por el tipo de evento que las activa y por la responsabilidad operativa que asumen.
 
 | Tipo de Cloud Function | Disparador principal | Responsabilidad dentro del alcance 1 | Relación normativa |
 |---|---|---|---|
 | HTTP API calls | Llamadas HTTP controladas por el producto | Materializar comandos operativos explícitos iniciados por UI o procesos del sistema. | Deben sostener reglas de autorización, mutación controlada y generación de logs. |
-| Firebase Auth triggers | Eventos de creación, actualización o baja técnica de cuentas | Mantener consistencia entre autenticación, `Users`, permisos y eventos de identidad. | Deben traducir eventos de Auth a estado operativo del producto. |
+| Firebase Auth blocking functions | Eventos previos a creación de cuenta o consolidación de inicio de sesión | Validar gobernanza de acceso antes de que Firebase Auth consolide el evento. | Deben impedir altas o accesos incompatibles con `Permissions` o con el bootstrap de seguridad requerido. |
+| Firebase Auth triggers | Eventos posteriores de creación, actualización o baja técnica de cuentas | Mantener consistencia entre autenticación, `Users`, permisos y eventos de identidad. | Deben traducir eventos de Auth a estado operativo del producto. |
 | Firestore triggers | Eventos de escritura relevantes sobre colecciones del sistema | Completar automatizaciones derivadas de cambios de datos, normalización, enriquecimiento y trazabilidad. | Deben preservar consistencia entre entidades y evitar escrituras huérfanas de contexto. |
 
 Las automatizaciones asociadas a Storage quedan fuera del alcance 1 y se reservan para los alcances 3 y 4, cuando existan archivos o artefactos enviados como parte de la respuesta a solicitudes de búsqueda.
@@ -43,7 +44,18 @@ Las funciones HTTP representan operaciones de negocio invocadas de forma deliber
 | Mutación | Deben crear o actualizar entidades conforme a las reglas del alcance y al uso de `updates[]`. |
 | Trazabilidad | Deben registrar su origen sistémico y dejar evidencia suficiente en `Logs`. |
 
-### 9.3.2 Firebase Auth triggers
+### 9.3.2 Firebase Auth blocking functions
+
+Las funciones bloqueantes de Firebase Auth deben ejecutar validaciones previas al alta o al inicio de sesión, antes de que el evento técnico quede consolidado.
+
+| Criterio | Exigencia |
+|---|---|
+| Naturaleza | Deben expresar reglas previas del producto y no simple enriquecimiento posterior. |
+| Validación previa de cuenta | Deben impedir la creación de cuentas sin `Permission` activo para el correo autenticado. |
+| Validación previa de acceso | Deben impedir o condicionar el ingreso cuando el permiso habilitante ya no es válido o cuando la habilitación mínima de seguridad aún no está completa. |
+| Dependencia de plataforma | Deben entenderse como capacidad asociada a `Firebase Authentication with Identity Platform`. |
+
+### 9.3.3 Firebase Auth triggers
 
 Las funciones disparadas por Firebase Auth deben materializar la traducción entre una cuenta autenticable y su representación operativa en el SaaS.
 
@@ -54,7 +66,7 @@ Las funciones disparadas por Firebase Auth deben materializar la traducción ent
 | Consistencia de identidad | Deben preservar unicidad lógica de la cuenta por correo y su trazabilidad de acceso. |
 | Evidencia operativa | Deben producir eventos de log de cuenta, autenticación, recuperación y seguridad cuando aplique. |
 
-### 9.3.3 Firestore triggers
+### 9.3.4 Firestore triggers
 
 Las funciones disparadas por cambios en Firestore deben encargarse de automatizaciones derivadas del modelo de datos.
 
@@ -85,6 +97,8 @@ Las Cloud Functions del alcance 1 no deben tratarse como piezas aisladas. Cada t
 | Correlación entre trazabilidad funcional y técnica | Las automatizaciones trazables deben poder propagar un `originTraceId` común hacia los logs funcionales que produzcan. |
 | No dependencia del cliente para reglas críticas | Validaciones, consistencia y trazabilidad relevantes no deben delegarse exclusivamente al frontend. |
 | Semántica consistente de interfaces HTTP | Las operaciones de lectura deben privilegiar `GET` idempotente y las operaciones que generan mutación deben privilegiar `POST`, con separación clara entre identificadores en URL y variabilidad de consulta en `query params`. |
+| Consumo selectivo de capacidades nativas de Auth | Login, logout, recuperación y actualización de credenciales no deben reimplementarse innecesariamente en backend cuando Firebase Auth ya provee el mecanismo base. |
+| Uso explícito de `Identity Platform` donde aplique | `MFA` obligatorio y validaciones bloqueantes previas deben asumirse como parte del stack efectivo del alcance 1. |
 | Seguridad de datos sensibles | Secretos y datos sensibles no deben exponerse en claro durante automatizaciones ni en su evidencia. |
 | Preparación para interoperabilidad futura | El backend debe dejar preparado el producto para integrar PUI después, sin requerir rehacer el modelo operativo interno. |
 

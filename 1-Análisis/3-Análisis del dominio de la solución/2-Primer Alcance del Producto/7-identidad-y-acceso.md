@@ -39,6 +39,8 @@ El modelo de identidad y acceso del alcance 1 debe distinguir claramente entre c
 
 Firebase Auth es el mecanismo de autenticación del alcance 1, pero su uso queda gobernado por reglas del dominio del producto.
 
+Para materializar `MFA` obligatorio y hooks previos de validación sobre altas e inicios de sesión, el alcance 1 debe asumirse sobre `Firebase Authentication with Identity Platform` habilitado.
+
 | Regla | Enunciado normativo | Implicación para el alcance 1 |
 |---|---|---|
 | `IDA-FA-01` | La autenticación del producto debe resolverse mediante Firebase Auth. | El acceso al sistema se apoya en un proveedor de identidad gestionado, no en credenciales propias del SaaS. |
@@ -49,6 +51,8 @@ Firebase Auth es el mecanismo de autenticación del alcance 1, pero su uso queda
 | `IDA-FA-06` | El uso de MFA es obligatorio para las cuentas autenticadas del sistema. | La autenticación debe exigir un segundo factor conforme al alcance definido. |
 | `IDA-FA-07` | El inicio de sesión mediante proveedor social solo es admisible cuando el correo autenticado esté autorizado dentro del sistema. | Un mecanismo de login externo no sustituye la validación institucional del correo. |
 | `IDA-FA-08` | La recuperación de contraseña debe poder iniciarse sin revelar si un correo existe o no. | El flujo de recuperación debe preservar seguridad y evitar enumeración de cuentas. |
+| `IDA-FA-09` | La cuenta debe verificar su correo antes de consolidar la habilitación de `MFA` y de abrir sesión operativa completa. | La activación de seguridad no debe recaer sobre correos no verificados. |
+| `IDA-FA-10` | Los flujos de verificación de correo y restablecimiento de contraseña deben resolverse mediante action links compatibles con el dominio del producto. | El producto debe poder recibir y completar esos flujos dentro de su propia experiencia. |
 
 ## 7.2.1 Reglas de acceso derivadas de autenticación
 
@@ -59,11 +63,32 @@ Firebase Auth es el mecanismo de autenticación del alcance 1, pero su uso queda
 | Rol activo e institución activa gobiernan la experiencia | Las vistas y acciones deben evaluarse contra el contexto activo, no solo contra el estado autenticado. |
 | `ANONYMOUS` solo opera en dominios públicos o de acceso | `/site` y `/auth` son los dominios coherentes con ausencia de sesión operativa. |
 
+## 7.2.2 Bootstrap de seguridad de la cuenta
+
+La autenticación del alcance 1 no debe leerse como un único instante de login, sino como una secuencia mínima de habilitación segura.
+
+| Etapa | Resultado esperado | Lectura analítica |
+|---|---|---|
+| Permiso habilitante previo | Existe al menos un `Permission` activo para el correo. | La gobernanza institucional antecede al alta técnica de la cuenta. |
+| Creación de cuenta | La persona crea una cuenta autenticable válida. | Todavía no equivale a sesión operativa completa. |
+| Verificación de correo | La cuenta confirma control sobre su correo. | Refuerza identidad base antes de consolidar seguridad adicional. |
+| Inscripción inicial de `MFA` | La cuenta registra al menos un segundo factor. | El alcance 1 no considera completa la seguridad sin este paso. |
+| Resolución de sesión operativa | El producto hidrata `Users`, permisos vigentes y contexto seleccionable. | La sesión operativa solo existe cuando autenticación, autorización y contexto quedan alineados. |
+
 ---
 
-# 7.3 Triggers de autenticación
+# 7.3 Hooks y triggers de autenticación
 
-Los triggers de autenticación del alcance 1 deben traducir eventos de identidad en consistencia operativa y trazabilidad dentro del producto.
+Los hooks y triggers de autenticación del alcance 1 deben cubrir dos momentos distintos: validación previa de eventos críticos de Auth y reacción posterior para consistencia operativa y trazabilidad dentro del producto.
+
+## 7.3.1 Hooks bloqueantes de autenticación
+
+| Hook o validación previa | Momento de ejecución | Resultado esperado | Observaciones |
+|---|---|---|---|
+| `IDA-HK-01` Validación previa de creación de cuenta | Antes de materializar el alta técnica de la cuenta. | Se permite crear la cuenta solo si existe al menos un `Permission` activo para el correo. | Debe impedir que Firebase Auth por sí solo bypassée la gobernanza institucional del producto. |
+| `IDA-HK-02` Validación previa de inicio de sesión | Antes de consolidar el ingreso técnico al sistema. | Se bloquea o condiciona el acceso cuando la cuenta ya no tiene permisos vigentes o cuando la habilitación de seguridad aún no está completa. | Debe distinguir autenticación técnica de sesión operativa habilitada. |
+
+## 7.3.2 Triggers posteriores de autenticación
 
 | Trigger o automatización asociada | Disparador conceptual | Resultado esperado | Observaciones |
 |---|---|---|---|
@@ -74,13 +99,13 @@ Los triggers de autenticación del alcance 1 deben traducir eventos de identidad
 | `IDA-TR-05` Trazabilidad de recuperación de contraseña | Solicitud de recuperación y cambio exitoso de contraseña. | Se registran los eventos relevantes de recuperación y actualización de credenciales. | No debe exponerse información sensible en la evidencia. |
 | `IDA-TR-06` Trazabilidad de alta de MFA | Registro exitoso del segundo factor. | Se registra el evento de inscripción de MFA. | Refuerza trazabilidad de seguridad de la cuenta. |
 
-## 7.3.1 Restricciones sobre triggers de identidad
+## 7.3.3 Restricciones sobre hooks y triggers de identidad
 
 | Restricción | Alcance analítico |
 |---|---|
-| Un trigger de autenticación no debe sustituir la validación de permisos. | Automatiza consistencia, pero no crea autoridad operativa por sí mismo. |
-| Los triggers deben producir datos atribuibles y trazables. | Toda mutación derivada de Auth debe quedar vinculada a un `LOG_ORIGIN` correspondiente. |
-| Los triggers no deben exponer secretos ni credenciales en claro. | La trazabilidad de identidad debe respetar la política de datos sensibles del alcance. |
+| Un trigger posterior no debe sustituir la validación previa de permisos. | La consistencia post-evento no reemplaza la gobernanza previa del acceso. |
+| Los hooks y triggers deben producir datos atribuibles y trazables. | Toda mutación derivada de Auth debe quedar vinculada a un `LOG_ORIGIN` correspondiente. |
+| Los hooks y triggers no deben exponer secretos ni credenciales en claro. | La trazabilidad de identidad debe respetar la política de datos sensibles del alcance. |
 
 ---
 
@@ -95,7 +120,9 @@ Los eventos de identidad y acceso deben quedar explícitamente clasificados en l
 | `USER_ACCOUNT_LOGOUT` | Cierre de sesión | Cuando una cuenta cierra sesión. | Permite reconstruir trazabilidad de acceso y salida. |
 | `USER_ACCOUNT_PASSWORD_RECOVERY_REQUEST` | Solicitud de recuperación de contraseña | Cuando un usuario inicia el proceso de recuperación. | Debe existir sin comprometer privacidad sobre la existencia de la cuenta. |
 | `USER_ACCOUNT_PASSWORD_UPDATE` | Actualización de contraseña | Cuando una contraseña se actualiza exitosamente. | Representa un cambio sensible de credencial. |
+| `USER_ACCOUNT_EMAIL_VERIFICATION` | Verificación de correo | Cuando una cuenta confirma exitosamente su correo. | Marca la consolidación del identificador base de acceso. |
 | `USER_ACCOUNT_MFA_REGISTER` | Registro de MFA | Cuando una cuenta registra exitosamente su segundo factor. | Representa fortalecimiento del perfil de seguridad. |
+| `USER_ACCOUNT_MFA_UNENROLL` | Baja de un factor MFA | Cuando una cuenta elimina un segundo factor previamente inscrito. | Debe tratarse como evento sensible de seguridad. |
 | `USER_ACCOUNT_SETTINGS_UPDATE` | Actualización de configuración personal | Cuando el usuario cambia los datos permitidos de su cuenta. | Corresponde al dominio `/account` y no debe confundirse con configuración institucional. |
 
 ## 7.4.1 Criterios mínimos de lectura para logs de identidad y acceso
@@ -118,4 +145,5 @@ La identidad y acceso del alcance 1 no debe leerse como una simple configuració
 | Firebase Auth es infraestructura de autenticación, no modelo completo de acceso. | Las reglas finales de operación dependen también de `Users`, `Permissions` y contexto activo. |
 | La cuenta no basta para operar. | Se requiere permiso habilitante y contexto institución/rol. |
 | La trazabilidad de identidad es parte del MVP. | Los eventos de acceso, recuperación, MFA y configuración personal deben quedar registrados. |
+| `Identity Platform` pasa a ser prerrequisito del alcance. | El `MFA` obligatorio y la validación previa de altas e inicios de sesión ya no deben leerse como optativos. |
 | La seguridad de identidad afecta frontend, backend y datos. | Las decisiones de acceso y evidencia deben ser coherentes entre dominios de navegación, logs y modelo de datos. |
