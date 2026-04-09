@@ -1,14 +1,24 @@
 # PUIntegra
 
-MVP evaluating a Spec-Driven Development (SDD) workflow using OpenSpec,
-AGENTS.md, Zod schemas, and Firebase.
+PUIntegra is a SaaS for diverse institutions that need to prepare, operate,
+and progressively evolve their integration with the Plataforma Única de
+Identidad (PUI).
+
+The current first scope focuses on delivering the operational MVP of the
+product: institutional administration, identity and access, permissions,
+contacts, internal requests and findings management, provider backoffice,
+and auditability.
+
+This repository also evaluates a Spec-Driven Development (SDD) workflow using
+OpenSpec, AGENTS.md, Zod schemas, and Firebase.
 
 ## Stack
 - **Monorepo**: pnpm workspaces
 - **Backend**: Node.js 20 + TypeScript + Cloud Functions + Hono
-- **Frontend**: Vue 3 + Vite + Pinia + TypeScript
+- **Frontend**: Vue 3 + vue-router + Vite + Pinia + TypeScript + WebApp/PWA + Vuetify
+- **Web delivery**: Firebase Hosting
 - **Shared contract**: Zod schemas in `packages/shared`
-- **Firebase**: Firestore, Auth, Cloud Functions, Storage
+- **Firebase**: Hosting, Firestore, Auth, Cloud Functions
 - **Testing**: Vitest + Firebase Emulator Suite
 - **CI**: GitHub Actions + SonarCloud + CodeQL
 

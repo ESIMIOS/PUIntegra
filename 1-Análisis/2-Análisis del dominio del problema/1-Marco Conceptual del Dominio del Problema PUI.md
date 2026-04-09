@@ -184,6 +184,7 @@ El dominio de las instituciones diversas comprende elementos relacionados con:
 | REF-01 | Decreto por el que se reforman diversas disposiciones de la Ley General en Materia de Desaparición Forzada | Decreto | Congreso de la Unión | 16 julio 2025 |
 | REF-02 | Lineamientos para el Desarrollo y Operación de la Plataforma Única de Identidad | Lineamientos | Secretaría de Gobernación / RENAPO | 27 noviembre 2025 |
 | REF-03 | Manual Técnico de la Solución Tecnológica para Instituciones Diversas | Manual técnico | Secretaría de Gobernación / RENAPO | 23 enero 2026 |
+| REF-04 | Actualización del Protocolo Homologado para la Búsqueda de Personas Desaparecidas y No Localizadas | Lineamiento PNB | Secretaría de Gobernación / RENAPO | 25 marzo 2026 |
 
 ---
 
@@ -199,6 +200,7 @@ El dominio de las instituciones diversas comprende elementos relacionados con:
 | Identificación mediante CURP | Lineamientos y manual técnico |
 | Procesos de búsqueda | Lineamientos PUI |
 | Protección de datos | Lineamientos PUI |
+| Búsqueda exhaustiva | Lineamientos PNB |
 
 ---
 

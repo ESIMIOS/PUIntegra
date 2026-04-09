@@ -1,15 +1,16 @@
 # firebase/ — Agent Context
 
-This folder contains ALL Firebase configuration for PUIntegra.
-It is organized one subfolder per Firebase component.
+This area contains Firebase component configuration and specs for PUIntegra.
+Repository-level Firebase orchestration also exists in the root `firebase.json`.
 Each component has a specs/ subfolder that defines intent before config is written.
 
 ## Structure
 firebase/
   firestore/specs/    → collection design, security model decisions
-  auth/specs/         → roles, custom claims, authentication flows
+  auth/specs/         → authentication flows and access decisions
   functions/specs/    → trigger specs, HTTP endpoint contracts
   storage/specs/      → bucket structure, path conventions, access rules
+root firebase.json    → Hosting, emulator, and project-level Firebase wiring
 
 ## Spec-first rule for Firebase
 The SDD flow for any Firebase change is:
