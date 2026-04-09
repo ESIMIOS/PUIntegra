@@ -1,5 +1,5 @@
 # 8.6 `Contacts`
-## Contactos institucionales de tipo legal y técnico
+## Contactos institucionales de tipo legal, técnico y de búsqueda inmediata
 
 ---
 
@@ -7,7 +7,7 @@
 
 | Aspecto | Definición |
 |---|---|
-| Propósito | Representar personas de contacto institucional de tipo legal o técnico. |
+| Propósito | Representar personas de contacto institucional de tipo legal, técnico o de búsqueda inmediata. |
 | Propiedad | Pertenece a la institución cuyo `RFC` coincide con el registro. |
 | Papel dentro del alcance 1 | Mantener información institucional de referencia sin convertirla en acceso operativo al sistema. |
 

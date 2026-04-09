@@ -36,5 +36,5 @@ Para cada colección se documentan, según corresponda:
 | `8.3` | `Requests` | Modelar solicitudes de búsqueda operadas internamente por la institución. | [Requests.md](./Requests.md) |
 | `8.4` | `Findings` | Modelar hallazgos relacionados con solicitudes y preparados para interoperabilidad futura. | [Findings.md](./Findings.md) |
 | `8.5` | `Institutions` | Representar la institución diversa activa dentro del SaaS y su configuración principal. | [Institutions.md](./Institutions.md) |
-| `8.6` | `Contacts` | Representar contactos institucionales de tipo legal y técnico. | [Contacts.md](./Contacts.md) |
+| `8.6` | `Contacts` | Representar contactos institucionales de tipo legal, técnico y de búsqueda inmediata. | [Contacts.md](./Contacts.md) |
 | `8.7` | `Logs` | Consolidar la bitácora de auditoría del sistema, cuentas y operación institucional. | [Logs.md](./Logs.md) |

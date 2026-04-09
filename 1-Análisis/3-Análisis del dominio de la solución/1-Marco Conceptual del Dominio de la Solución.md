@@ -194,7 +194,7 @@ Los roles del sistema corresponden a perfiles de acceso y operación definidos p
 | `INSTITUTION_OPERATOR` | Responsable de la operación diaria sobre solicitudes, estados, fases y trazabilidad |
 | `SYSTEM_ADMINISTRATOR` | Usuario interno del proveedor SaaS con visibilidad transversal del sistema |
 
-Los contactos institucionales de tipo **Técnico** y **Legal** no son roles operativos del sistema. Son datos institucionales informativos.
+Los contactos institucionales de tipo **Técnico**, **Legal** y **Búsqueda inmediata** no son roles operativos del sistema. Son datos institucionales informativos.
 
 ## 9.1 Regla clave de sesión
 

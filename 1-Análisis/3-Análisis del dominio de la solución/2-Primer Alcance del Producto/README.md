@@ -191,7 +191,7 @@ Su desarrollo detallado se encuentra en [8-modelo-de-datos/README.md](./8-modelo
 | `8.3` | [Requests](./8-modelo-de-datos/Requests.md) | Modelar solicitudes de búsqueda operadas internamente por la institución. |
 | `8.4` | [Findings](./8-modelo-de-datos/Findings.md) | Modelar hallazgos relacionados con solicitudes y preparados para interoperabilidad futura. |
 | `8.5` | [Institutions](./8-modelo-de-datos/Institutions.md) | Representar la institución diversa activa dentro del SaaS y su configuración principal. |
-| `8.6` | [Contacts](./8-modelo-de-datos/Contacts.md) | Representar contactos institucionales de tipo legal y técnico. |
+| `8.6` | [Contacts](./8-modelo-de-datos/Contacts.md) | Representar contactos institucionales de tipo legal, técnico y de búsqueda inmediata. |
 | `8.7` | [Logs](./8-modelo-de-datos/Logs.md) | Consolidar la bitácora de auditoría del sistema, cuentas y operación institucional. |
 
 ---
