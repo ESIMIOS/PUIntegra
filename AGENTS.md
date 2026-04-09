@@ -1,14 +1,21 @@
 # PUIntegra — Agent Context
 
 ## Project overview
-PUIntegra is a fullstack MVP evaluating a Spec-Driven Development (SDD)
-workflow. Every agent working on this repo must follow the SDD rules below.
+PUIntegra is a SaaS for diverse institutions that need to prepare, operate,
+and progressively evolve their integration with the Plataforma Única de
+Identidad (PUI).
+
+This repository implements the first product scope as an operational MVP and
+also evaluates a Spec-Driven Development (SDD) workflow. Every agent working
+on this repo must follow the SDD rules below.
 
 ## Stack
 - Runtime:    Node.js 20 + TypeScript 5 (strict)
 - Monorepo:   pnpm workspaces
 - Backend:    Cloud Functions for Firebase + Hono router
-- Frontend:   Vue 3 + Vite + Pinia
+- Frontend:   Vue 3 + vue-router + Vite + Pinia
+- Delivery:   Firebase Hosting
+- App model:  WebApp with PWA behavior
 - Shared:     Zod schemas — single source of truth for all types
 - Testing:    Vitest + Firebase Emulator Suite
 - CI:         GitHub Actions + SonarCloud + CodeQL
@@ -16,9 +23,9 @@ workflow. Every agent working on this repo must follow the SDD rules below.
 ## Monorepo structure
 packages/shared/   → Zod schemas, inferred TS types, pure utils
 packages/api/      → Cloud Functions, Hono routes, Firestore services
-packages/web/      → Vue 3 components, composables, Pinia stores
-firebase/          → Firebase config organized by component (firestore, auth, functions, storage)
-openspec/          → OpenSpec SDD artifacts (changes, archive)
+packages/web/      → Vue 3 views, components, composables, Pinia stores
+firebase/          → Firebase config and specs by component (hosting, firestore, auth, functions, storage)
+openspec/          → OpenSpec artifacts (changes, archive, specs)
 
 ## Commands
 pnpm install                          install all workspaces
@@ -60,6 +67,10 @@ The SDD workflow distinguishes between **Change Artifacts** and **Live Specs**:
    - **Rule:** Any change initiated in `openspec/` that modifies system behavior MUST update the corresponding permanent spec file as part of its implementation tasks.
    - **Source of truth:** For the *entire system architecture* at any given moment.
 
+If implementation changes behavior described in `firebase/*/specs/` or other
+live specs referenced by an approved OpenSpec change, update those permanent
+specs in the same task.
+
 
 ## Absolute constraints
 
@@ -75,14 +86,19 @@ These files are the contract of the system. Propose changes, don't apply them.
 NEVER use it.skip, it.todo, test.skip, or test.todo.
 If you don't know how to test something, ask instead of skipping.
 
-NEVER touch firebase/firestore/firestore.rules or any Firebase Auth logic
-without explicit human approval. Flag and stop.
+NEVER touch firebase/firestore/firestore.rules without explicit human approval.
+NEVER modify Firebase Auth security posture, providers, MFA policy, blocking
+functions behavior, or production auth configuration without explicit human
+approval. Flag and stop.
 
 NEVER access .env files or hardcode credentials of any kind.
 Use process.env with documented variable names only.
 
-NEVER access or read the `1-Análisis/` directory, except when specifically required on a case-by-case basis.
-This folder is strictly for human analysis and must not be included in agent context.
+NEVER access or read the `1-Análisis/` directory by default.
+Exception: read only the minimum required files when a task explicitly asks for
+conceptual validation, product-document alignment, or documentation review.
+This folder is strictly for human analysis and must not be included in agent
+context unnecessarily.
 
 ## Testing rules
 - Write the Vitest test BEFORE the implementation (TDD)
