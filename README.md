@@ -55,7 +55,7 @@ openspec init
 ## Project structure
 ```
 PUIntegra/
-├── 1-Análisis/                  ← project analysis and domain research (Human only)
+├── 1-Análisis/                  ← analysis corpus with section-based agent access policy
 ├── AGENTS.md                    ← agent instructions (core SDD rules)
 ├── openspec/
 │   ├── changes/                 ← ephemeral SDD artifacts (current delta)
@@ -83,4 +83,7 @@ PUIntegra/
 - **Service Specs**: `firebase/*/specs/` — Documented behavior for each Firebase service.
 
 ### Research & Analysis
-- [1-Análisis](./1-Análisis/) — Business requirements, domain analysis, and design assets (Human only).
+- [1-Análisis](./1-Análisis/) — Analysis corpus with section-based access rules:
+- `1-Bases documentales` and `2-Análisis del dominio del problema`: not read by agents unless explicitly requested.
+- `3-Análisis del dominio de la solución`: may be used by orchestrator/planning agents as big-picture context and stage framing.
+- Canonical index for solution-domain context: [1-Marco Conceptual del Dominio de la Solución](./1-Análisis/3-Análisis%20del%20dominio%20de%20la%20solución/1-Marco%20Conceptual%20del%20Dominio%20de%20la%20Solución.md).

@@ -13,6 +13,16 @@ Define project-wide engineering documentation and code conventions that apply ac
 ## Language policy
 
 - Persistent specs are written in English.
+  This includes:
+  - `openspec/specs/*`
+  - `packages/*/specs/*`
+  - `firebase/*/specs/*`
+- Ephemeral change artifacts may be written in English or Spanish, but each
+  change folder must use one language consistently across
+  `proposal.md`, `design.md`, and `tasks.md`:
+  - `openspec/changes/*`
+- Analysis corpus under `1-Análisis/*` may be written in Spanish and is not
+  governed by the persistent-spec language requirement.
 - Code symbols, file names, route names, and technical identifiers use English conventions.
 - UI labels/copy default to Spanish unless a package spec defines explicit English term exceptions.
 

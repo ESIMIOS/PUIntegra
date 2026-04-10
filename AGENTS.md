@@ -94,11 +94,16 @@ approval. Flag and stop.
 NEVER access .env files or hardcode credentials of any kind.
 Use process.env with documented variable names only.
 
-NEVER access or read the `1-Análisis/` directory by default.
-Exception: read only the minimum required files when a task explicitly asks for
-conceptual validation, product-document alignment, or documentation review.
-This folder is strictly for human analysis and must not be included in agent
-context unnecessarily.
+`1-Análisis` access policy:
+- `1-Análisis/1-Bases documentales`: normative source documents. NEVER read by
+  default. Access only when explicitly asked or human confirmation required when agents need to clarify conceptual aspects.
+- `1-Análisis/2-Análisis del dominio del problema`: problem-domain analysis.
+  NEVER read by default. Access only when explicitly asked or human confirmation required when agents need to clarify conceptual aspects.
+- `1-Análisis/3-Análisis del dominio de la solución`: conceptual and
+  technology-agnostic solution-domain analysis, including sprint planning.
+  This area MAY be read by orchestrator/planning agents to understand the
+  product big picture. The canonical index is
+  `1-Análisis/3-Análisis del dominio de la solución/1-Marco Conceptual del Dominio de la Solución.md`.
 
 ## Testing rules
 - Write the Vitest test BEFORE the implementation (TDD)
