@@ -1,0 +1,33 @@
+import { z } from 'zod';
+
+export const SYSTEM_RFC = 'IEC120914FV8';
+
+export const ROLE = {
+  ANONYMOUS: 'ANONYMOUS',
+  INSTITUTION_ADMIN: 'INSTITUTION_ADMIN',
+  INSTITUTION_OPERATOR: 'INSTITUTION_OPERATOR',
+  SYSTEM_ADMINISTRATOR: 'SYSTEM_ADMINISTRATOR'
+} as const;
+
+export const roleValues = [
+  ROLE.ANONYMOUS,
+  ROLE.INSTITUTION_ADMIN,
+  ROLE.INSTITUTION_OPERATOR,
+  ROLE.SYSTEM_ADMINISTRATOR
+] as const;
+
+export const authenticatedRoleValues = [
+  ROLE.INSTITUTION_ADMIN,
+  ROLE.INSTITUTION_OPERATOR,
+  ROLE.SYSTEM_ADMINISTRATOR
+] as const;
+
+export const institutionRoleValues = [
+  ROLE.INSTITUTION_ADMIN,
+  ROLE.INSTITUTION_OPERATOR
+] as const;
+
+export const systemRoleValues = [ROLE.SYSTEM_ADMINISTRATOR] as const;
+
+export const RoleSchema = z.enum(roleValues);
+export const AuthenticatedRoleSchema = z.enum(authenticatedRoleValues);
