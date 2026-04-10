@@ -8,6 +8,9 @@
  * - 0.0.1	(2026-04-10)	Versión inicial del archivo.	@tirsomartinezreyes
  */
 
+import { webSystemMessages } from '@/shared/constants/systemMessages';
+import { logSystemMessageError } from '@/shared/logging/systemLogger';
+
 /**
  * @description Registra el service worker al cargar la página cuando el navegador lo soporta.
  */
@@ -20,7 +23,7 @@ export function registerServiceWorker() {
     try {
       await navigator.serviceWorker.register('/sw.js');
     } catch (error) {
-      console.warn('No se pudo registrar el service worker', error);
+      logSystemMessageError(webSystemMessages.serviceWorkerRegistrationFailed, error);
     }
   });
 }

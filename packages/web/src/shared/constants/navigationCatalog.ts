@@ -289,14 +289,23 @@ const pageContentIndex = Object.fromEntries(
     ])
 ) as Record<PageId, PageContent>;
 
+/**
+ * @description Retorna el contenido de página centralizado para un identificador de navegación.
+ */
 export function getPageContent(pageId: PageId): PageContent {
   return pageContentIndex[pageId];
 }
 
+/**
+ * @description Determina si un valor desconocido corresponde a un `PageId` válido del catálogo.
+ */
 export function isPageId(value: unknown): value is PageId {
   return typeof value === 'string' && value in pageContentIndex;
 }
 
+/**
+ * @description Construye los links navegables de un dominio aplicando reglas de disponibilidad por contexto.
+ */
 export function buildNavigationLinks(
   domain: NavigationDomain,
   context: NavigationContext

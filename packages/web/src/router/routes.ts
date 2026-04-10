@@ -60,6 +60,9 @@ const institutionRoles = [...institutionRoleValues];
 const systemRoles = [...systemRoleValues];
 const authenticatedRoles = [...authenticatedRoleValues];
 
+/**
+ * @description Construye metadata de ruta enriquecida con título y descripción del catálogo de navegación.
+ */
 function createPageRouteMeta(pageId: PageId, meta: Record<string, unknown>) {
   const pageContent = getPageContent(pageId);
   return createRouteMeta({

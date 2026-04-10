@@ -8,6 +8,15 @@ export default [
   {
     ignores: ['dist/**', 'coverage/**', 'public/sw.js']
   },
+  {
+    files: ['scripts/**/*.mjs'],
+    languageOptions: {
+      globals: {
+        console: 'readonly',
+        process: 'readonly'
+      }
+    }
+  },
   js.configs.recommended,
   ...vuePlugin.configs['flat/recommended'],
   {
@@ -27,7 +36,7 @@ export default [
     rules: {
       'no-undef': 'off',
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
-      'no-console': ['error', { allow: ['warn', 'error'] }],
+      'no-console': ['error', { allow: ['warn', 'error', 'info', 'debug'] }],
       'vue/max-attributes-per-line': 'off',
       'vue/singleline-html-element-content-newline': 'off'
     }

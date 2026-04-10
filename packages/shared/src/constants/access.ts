@@ -1,5 +1,3 @@
-import { z } from 'zod';
-
 export const SYSTEM_RFC = 'IEC120914FV8';
 
 export const ROLE = {
@@ -28,6 +26,3 @@ export const institutionRoleValues = [
 ] as const;
 
 export const systemRoleValues = [ROLE.SYSTEM_ADMINISTRATOR] as const;
-
-export const RoleSchema = z.enum(roleValues);
-export const AuthenticatedRoleSchema = z.enum(authenticatedRoleValues);

@@ -8,7 +8,8 @@
     "build": "vue-tsc --noEmit && vite build",
     "typecheck": "vue-tsc --noEmit",
     "test": "vitest run",
-    "lint": "eslint ."
+    "lint:jsdoc": "node ./scripts/check-jsdoc.mjs",
+    "lint": "pnpm run lint:jsdoc && eslint ."
   },
   "dependencies": {
     "@puintegra/shared": "workspace:*",

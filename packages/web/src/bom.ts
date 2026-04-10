@@ -36,6 +36,12 @@ export { default as PagePlaceholder } from '@/components/shared/PagePlaceholder.
 
 export { useMockSession } from '@/composables/useMockSession';
 export { useRouteNavigation } from '@/composables/useRouteNavigation';
+export {
+  logSystemMessage,
+  logSystemMessageVerbose,
+  logSystemMessageWarning,
+  logSystemMessageError
+} from '@/shared/logging/systemLogger';
 
 export { createAppVuetify } from '@/plugins/vuetify';
 export { createAppRouter } from '@/router/createRouter';

@@ -57,10 +57,22 @@ Define project-wide engineering documentation and code conventions that apply ac
 
 - Domain string literals (roles, statuses, permissions, etc.) must be declared once in a single shared constant source.
 - Zod schemas, subset lists, and inferred types must be derived from that constant source.
+- Responsibility split must be explicit:
+  - constants define the domain vocabulary (canonical values used by business logic),
+  - schemas validate unknown/runtime inputs against that vocabulary.
+- Do not place runtime validation logic in constant files.
+- For structured technical logs/messages:
+  - `code` and `key` use stable technical identifiers (English-style naming),
+  - human-readable `message` text defaults to Spanish unless a package spec defines an exception.
+- As a coding preference, avoid direct raw-string comparisons in consumer code whenever a stable constant, enum-derived value, or typed lookup map exists.
+- This applies to constrained domains such as role/status/severity/domain, and to any other repeated semantic token.
 - Avoid duplicating raw string literals across arrays, schemas, and consumer modules.
 - If a subset is required for readability/auditability, define it explicitly from the source constant, not by retyping literals.
 - In consumer packages, avoid unnecessary local type aliases when the type can be directly derived from shared exported constants or schemas.
 - Do not use arbitrary primitive types (for example `string`) for constrained domain inputs when a schema/enum-derived type exists. Function params, store actions, and route metadata must use the constrained type.
+- Keep related files paired by naming and proximity to reduce cognitive load:
+  - `src/constants/<entity>.ts`
+  - `src/schemas/<entity>.schema.ts`
 
 ## Spec maintenance model
 

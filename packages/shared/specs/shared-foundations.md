@@ -16,10 +16,16 @@ Define persistent rules for `packages/shared` as the system-wide contract packag
 - Schema files follow `<entity>.schema.ts`.
 - Types are inferred from Zod schemas (`z.infer`), never handwritten.
 - Any change in `src/schemas` requires explicit human approval before implementation.
+- Constants and schemas belong to the same domain concept but different responsibilities:
+  - `src/constants/*`: canonical domain values for business logic.
+  - `src/schemas/*`: runtime validation contracts for unknown/dynamic inputs.
 
 ## Constant and role modeling guideline
 
 - Keep role/status string literals in one constant source file (for example `src/constants/access.ts`).
 - Build `RoleSchema`, `AuthenticatedRoleSchema`, and role subsets from that source.
+- Keep access artifacts paired and discoverable:
+  - constants: `src/constants/access.ts`
+  - schemas: `src/schemas/access.schema.ts`
 - Do not retype role literals in multiple arrays/schemas.
 - Prefer explicit derived subsets (auditable) over opaque transformations when the subset is part of the domain contract.
