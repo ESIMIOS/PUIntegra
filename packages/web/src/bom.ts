@@ -12,7 +12,15 @@
  * OPENSOURCE
  * Dependencias de terceros usadas por el producto.
  */
-export { computed, createApp, ref, watchEffect } from 'vue';
+export {
+  computed,
+  createApp,
+  onMounted,
+  onUnmounted,
+  ref,
+  watch,
+  watchEffect
+} from 'vue';
 export type { DefineComponent } from 'vue';
 
 export { createPinia, defineStore } from 'pinia';
@@ -31,16 +39,21 @@ export * as vuetifyDirectives from 'vuetify/directives';
  * PRODUCT
  * Dependencias compartidas internas del producto web.
  */
+export { default as InactivityWarningModal } from '@/components/auth/InactivityWarningModal.vue';
 export { default as MockSessionSwitcher } from '@/components/dev/MockSessionSwitcher.vue';
 export { default as PagePlaceholder } from '@/components/shared/PagePlaceholder.vue';
 
+export { useAuthStore } from '@/stores/authStore';
+export { useInstitutionStore } from '@/stores/institutionStore';
 export { useMockSession } from '@/composables/useMockSession';
 export { useRouteNavigation } from '@/composables/useRouteNavigation';
+export { useSessionInactivity } from '@/composables/useSessionInactivity';
+
 export {
   logSystemMessage,
+  logSystemMessageError,
   logSystemMessageVerbose,
-  logSystemMessageWarning,
-  logSystemMessageError
+  logSystemMessageWarning
 } from '@/shared/logging/systemLogger';
 
 export { createAppVuetify } from '@/plugins/vuetify';
@@ -49,46 +62,45 @@ export { createAppRouter } from '@/router/createRouter';
 export { createRouteMeta, mergeRouteMeta } from '@/router/metaSchema';
 
 export {
-  SYSTEM_RFC,
+  AuthenticatedRoleSchema,
   ROLE,
-  roleValues,
+  RoleSchema,
   authenticatedRoleValues,
   institutionRoleValues,
+  roleValues,
   systemRoleValues,
-  RoleSchema,
-  AuthenticatedRoleSchema
+  SYSTEM_RFC,
+  SECONDS_TO_CLOSE_SESSION_FOR_INACTIVITY,
+  SECONDS_TO_SHOW_INACTIVITY_ALERT
 } from '@shared';
 
 export {
   DOMAIN,
-  domainValues,
+  DomainSchema,
   domainLabels,
   domainOptions,
   domainShell,
-  DomainSchema
+  domainValues
 } from '@/shared/constants/domains';
 
 export {
-  DEFAULT_RFC,
   DEFAULT_FUB,
-  routePaths,
-  allDocumentedPaths
+  DEFAULT_RFC,
+  allDocumentedPaths,
+  routePaths
 } from '@/shared/constants/routePaths';
 
 export {
-  defaultNavigationContext,
-  navigationCatalog,
   buildNavigationLinks,
+  defaultNavigationContext,
+  getPageContent,
   isPageId,
-  getPageContent
+  navigationCatalog
 } from '@/shared/constants/navigationCatalog';
 export type {
-  NavigationDomain,
   NavigationContext,
+  NavigationDomain,
   NavigationLink,
-  PageId,
-  PageContent
+  PageContent,
+  PageId
 } from '@/shared/constants/navigationCatalog';
-
-export { useAuthStore } from '@/stores/authStore';
-export { useInstitutionStore } from '@/stores/institutionStore';

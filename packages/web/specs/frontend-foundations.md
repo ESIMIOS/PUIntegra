@@ -70,6 +70,15 @@ Define the baseline webapp architecture for local development and navigable skel
 - The detailed mock behavior contract lives in [`mock-mode.md`](./mock-mode.md).
 - This file only preserves the architectural relationship: guards and routes depend on mock state to enable local browsable navigation.
 
+## Shared state and testing patterns
+### Shared composable state (Singletons)
+- By default, Vue 3 `ref()` defined inside a composable function scope is unique to each component instance.
+- **Requirement**: For global state (for example session timers or global notifications), define the state variables **outside** the exported function scope to ensure a singleton instance across the application.
+
+### Testing composables with lifecycle hooks
+- Composables using `onMounted` or `onUnmounted` require an active component context to be tested reliably.
+- **Requirement**: Use a `withSetup` helper or a dummy test component to provide the necessary Vue application context for lifecycle hooks during Vitest execution.
+
 ## Non-goals in this phase
 
 - No real Firebase/Auth/API data operations.

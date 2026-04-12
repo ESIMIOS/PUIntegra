@@ -78,4 +78,8 @@ Define project-wide engineering documentation and code conventions that apply ac
 
 - `openspec/changes/*`: transactional change artifacts.
 - `openspec/specs/*` and `packages/*/specs/*`: persistent live specs.
-- Package specs should link to this document instead of duplicating common standards.
+## Technical anti-patterns
+### Circular dependencies (Internal imports)
+- **Problem**: Importing from centralized re-exporters (`bom.ts`, `index.ts`) within the same package or components that are re-exported by that file.
+- **Consequence**: Module evaluation cycles lead to `undefined` values at runtime, breaking state and constants.
+- **Rule**: NEVER import from a package's central re-exporter or index file from within the same package. Always use direct paths (for example `@/stores/authStore` or `../utils/foo`) for internal dependencies.

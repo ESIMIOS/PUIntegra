@@ -3,12 +3,13 @@
  * @package web
  * @name AppRoot.vue
  * @version 0.0.1
- * @description Componente raíz que renderiza el router y el switcher mock en desarrollo.
+ * @description Componente raíz que gestiona el layout global, inactividad y router.
  * @author @tirsomartinezreyes
  * @changelog
+ * - 0.0.2  (2026-04-12)  Integración de InactivityWarningModal.  @antigravity
  * - 0.0.1	(2026-04-10)	Versión inicial del archivo.	@tirsomartinezreyes
  */
-import { MockSessionSwitcher } from '@/bom';
+import { MockSessionSwitcher, InactivityWarningModal } from '@/bom';
 
 const showMockPanel = import.meta.env.DEV;
 </script>
@@ -16,6 +17,7 @@ const showMockPanel = import.meta.env.DEV;
 <template>
   <v-app>
     <router-view />
+    <InactivityWarningModal />
     <MockSessionSwitcher v-if="showMockPanel" />
   </v-app>
 </template>

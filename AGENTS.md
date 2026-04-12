@@ -43,6 +43,11 @@ Use OpenSpec slash commands to drive every feature:
   /opsx:apply             implement tasks from tasks.md
   /opsx:archive           archive completed change
 
+**Archiving Rule**: 
+- NEVER archive a change folder without explicit human approval.
+- Every change folder MUST be prefixed with a three-digit serial number (for example `001-feature-name`, `002-fix-name`) before archiving.
+- The standard archive location is `openspec/changes/archive/`.
+
 Before generating any code, you MUST:
 1. Read the relevant Zod schema in packages/shared/src/schemas/
 2. Confirm the type you need already exists
@@ -70,6 +75,8 @@ The SDD workflow distinguishes between **Change Artifacts** and **Live Specs**:
 If implementation changes behavior described in `firebase/*/specs/` or other
 live specs referenced by an approved OpenSpec change, update those permanent
 specs in the same task.
+
+**Always sync progress**: Update the `tasks.md` file in the current change folder continuously. Do not rely on internal agent task lists; the on-disk `tasks.md` is the only source of truth for the implementation status.
 
 
 ## Absolute constraints
@@ -132,6 +139,20 @@ All commits and PR titles MUST follow the [Conventional Commits 1.0.0](https://w
   - Every PR must include tests for new behavior.
   - Do not bundle unrelated changes in a single PR or commit.
 
+
+## Technical Gotchas & Anti-Patterns
+Detailed engineering standards and architectural patterns are documented in the following live specs:
+- **Global Standards**: [`openspec/specs/engineering-standards.md`](openspec/specs/engineering-standards.md) (Circular dependencies, JSDoc, etc.)
+- **Frontend Patterns**: [`packages/web/specs/frontend-foundations.md`](packages/web/specs/frontend-foundations.md) (Singleton composables, testing hooks, etc.)
+
+## Knowledge Persistence
+When a technical lesson, "gotcha", or architectural pattern is identified during a task, you should **propose** its persistence in the relevant **Live Specs directory** based on its concern:
+- **Global Coding Standards**: `openspec/specs/` directory.
+- **Frontend/Web Patterns**: `packages/web/specs/` directory.
+- **Project Structure & Agent Rules**: Update this file (`AGENTS.md`).
+- **Ephemeral Change Context**: Document in the corresponding `openspec/changes/<feature>/` folder.
+
+**CRITICAL**: NEVER modify persistent live specs or this file (`AGENTS.md`) without explicit human approval of the proposal. Always promote lessons learned to the relevant spec once approved to prevent future regressions.
 
 ## When in doubt
 Ask before generating. A clarifying question takes 10 seconds.

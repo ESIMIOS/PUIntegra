@@ -8,9 +8,21 @@
  * @changelog
  * - 0.0.1	(2026-04-10)	Versión inicial del archivo.	@tirsomartinezreyes
  */
-import { computed, ref, watchEffect, DOMAIN, domainValues, domainOptions, z, ROLE, roleValues, RoleSchema, DEFAULT_RFC, DEFAULT_FUB, buildNavigationLinks, useMockSession } from '@/bom'
+import { computed, ref, watchEffect } from 'vue'
+import { z } from 'zod'
+import { ROLE, roleValues, RoleSchema } from '@shared'
+import {
+  DOMAIN,
+  domainValues,
+  domainOptions,
+} from '@/shared/constants/domains'
+import { DEFAULT_RFC, DEFAULT_FUB } from '@/shared/constants/routePaths'
+import { buildNavigationLinks } from '@/shared/constants/navigationCatalog'
+import { useMockSession } from '@/composables/useMockSession'
+import { useSessionInactivity } from '@/composables/useSessionInactivity'
 
 const { roleModel, securityModel, rfcModel } = useMockSession()
+const { secondsRemaining, isAlerting } = useSessionInactivity()
 
 const roleOptions = [...roleValues]
 
@@ -70,6 +82,15 @@ const contextualLinks = computed(() => {
       <v-select v-model="roleSelectModel" :items="roleOptions" label="Rol activo" density="compact" hide-details />
       <v-switch v-model="securityModel" color="orange" label="Requiere security setup" hide-details density="compact" />
       <v-text-field :model-value="rfcModel" label="RFC activo" readonly density="compact" hide-details />
+      <div v-if="isAuthenticated" class="mt-2">
+        <v-chip
+          :color="isAlerting ? 'error' : 'info'"
+          size="small"
+          label
+        >
+          Session ends in: {{ secondsRemaining }}s
+        </v-chip>
+      </div>
       <v-divider class="my-3" />
       <div class="d-flex flex-wrap ga-2">
         <v-btn

@@ -1,3 +1,13 @@
+/**
+ * @package shared
+ * @name access.ts
+ * @version 0.0.1
+ * @description Define los roles del sistema y constantes de acceso global.
+ * @author @antigravity
+ * @changelog
+ * - 0.0.1	(2026-04-12)	Versión inicial con roles y constantes de sesión.	@antigravity
+ */
+
 export const SYSTEM_RFC = 'IEC120914FV8';
 
 export const ROLE = {
@@ -26,3 +36,6 @@ export const institutionRoleValues = [
 ] as const;
 
 export const systemRoleValues = [ROLE.SYSTEM_ADMINISTRATOR] as const;
+
+export const SECONDS_TO_CLOSE_SESSION_FOR_INACTIVITY = 60;
+export const SECONDS_TO_SHOW_INACTIVITY_ALERT = 50;

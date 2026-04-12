@@ -1,6 +1,6 @@
 # PUIntegra
 
-PUIntegra is a SaaS for diverse institutions that need to prepare, operate,
+PUIntegra is a SaaS for diverse institutions in Mexico that need to prepare, operate,
 and progressively evolve their integration with the Plataforma Única de
 Identidad (PUI).
 
@@ -84,6 +84,6 @@ PUIntegra/
 
 ### Research & Analysis
 - [1-Análisis](./1-Análisis/) — Analysis corpus with section-based access rules:
-- `1-Bases documentales` and `2-Análisis del dominio del problema`: not read by agents unless explicitly requested.
+- `1-Bases documentales` and `2-Análisis del dominio del problema`: not read by agents unless explicitly requested or in cases where regulatory context is required.
 - `3-Análisis del dominio de la solución`: may be used by orchestrator/planning agents as big-picture context and stage framing.
 - Canonical index for solution-domain context: [1-Marco Conceptual del Dominio de la Solución](./1-Análisis/3-Análisis%20del%20dominio%20de%20la%20solución/1-Marco%20Conceptual%20del%20Dominio%20de%20la%20Solución.md).
