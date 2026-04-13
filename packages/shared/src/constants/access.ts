@@ -37,5 +37,5 @@ export const institutionRoleValues = [
 
 export const systemRoleValues = [ROLE.SYSTEM_ADMINISTRATOR] as const;
 
-export const SECONDS_TO_CLOSE_SESSION_FOR_INACTIVITY = 60;
-export const SECONDS_TO_SHOW_INACTIVITY_ALERT = 50;
+export const SECONDS_TO_CLOSE_SESSION_FOR_INACTIVITY = 300;
+export const SECONDS_TO_SHOW_INACTIVITY_ALERT = 30;

@@ -9,7 +9,7 @@
 
 ## 2. Frontend foundation implementation
 - Create Vite entrypoints (`index.html`, `src/main.ts`) and app composition layer.
-- Wire Pinia, router, Vuetify, and minimal service worker registration.
+- Wire Pinia, router, Vuestic UI, and minimal service worker registration.
 - Implement route registry and all documented paths.
 - Implement contextual layouts and placeholder pages.
 - Implement `authStore`, `institutionStore`, and mock session/context composables.

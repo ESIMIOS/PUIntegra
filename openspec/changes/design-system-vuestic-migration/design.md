@@ -46,7 +46,7 @@ The project has an established brand identity (Azul PUIntegra `#0B1F4C`, Verde a
 
 **Choice**: Create a reusable `DashboardShell.vue` component used by both `AppLayout` and `AdminLayout`.
 
-**Rationale**: Both domains require the same structural pattern — collapsible sidebar + top bar + breadcrumb area + main content. They differ only by accent color and navigation items. A shared shell component avoids duplication and ensures consistent UX. Domain-specific configuration (menu items, accent color) is passed as props driven by the existing `domainShell` constants.
+**Rationale**: Both domains require the same structural pattern — persistent sidebar + top bar + session context + main content. A shared shell component avoids duplication and ensures consistent UX. Domain-specific configuration (menu items, subtle accent color, session context) is passed as props driven by the existing `domainShell` constants and session stores.
 
 **Alternatives considered**:
 - *Fully independent layouts*: More flexible but duplicates ~80% of code and risks drift.
@@ -72,11 +72,11 @@ The project has an established brand identity (Azul PUIntegra `#0B1F4C`, Verde a
 
 **Choice**: Replace the current `domainShell.appBarColor` Vuetify color strings with a semantic accent system using Vuestic color presets.
 
-**Rationale**: The current `domainShell` uses Vuetify-specific color names (`'teal'`, `'deep-purple'`, etc.) that were conceptual only. With Vuestic, each domain gets a semantic accent CSS variable (e.g., `--va-domain-accent`) set at the layout level, while the base palette remains consistent. This creates visual cohesion with subtle domain differentiation.
+**Rationale**: The current `domainShell` uses Vuetify-specific color names (`'teal'`, `'deep-purple'`, etc.) that were conceptual only. With Vuestic, each domain gets a semantic accent CSS variable (e.g., `--va-domain-accent`) set at the layout level, while routine navigation remains primary-brand neutral. Success, info, warning, and danger colors are reserved for state and feedback.
 
 ### Decision 6: Logo Handling Strategy
 
-**Choice**: Copy the brand logo PNG to `packages/web/public/img/` and use it directly. Create an `AppLogo.vue` component that renders the appropriate logo variant based on theme (light/dark) and context (full/icon-only).
+**Choice**: Copy the brand logo asset to `packages/web/public/img/` and use it directly. Create an `AppLogo.vue` component that renders the appropriate graphic identity variant based on theme and context. Graphic identity means a brand image that contains both the product logo mark and product text.
 
 **Rationale**: SVG assets are not yet available. The `AppLogo` component abstracts the logo source, so when SVGs arrive they can be swapped in one place. In the meantime, the PNG from the brand guide works for development.
 

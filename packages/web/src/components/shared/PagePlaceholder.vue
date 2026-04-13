@@ -19,23 +19,51 @@ const fallbackContent = {
 </script>
 
 <template>
-  <v-container class="py-8">
-    <v-card variant="outlined" class="pa-6">
-      <v-card-title class="text-h5">
+  <section class="page-placeholder">
+    <VaCard class="page-placeholder__card">
+      <VaCardTitle>
         {{ typeof route.meta.title === 'string' ? route.meta.title : fallbackContent.title }}
-      </v-card-title>
-      <v-card-subtitle class="mt-1">{{ route.path }}</v-card-subtitle>
-      <v-card-text class="mt-4">
-        {{
-          typeof route.meta.description === 'string'
-            ? route.meta.description
-            : fallbackContent.description
-        }}
-      </v-card-text>
-      <v-divider class="my-4" />
-      <v-alert type="info" variant="tonal">
-        Vista placeholder. No hay funcionalidad de negocio implementada en esta fase.
-      </v-alert>
-    </v-card>
-  </v-container>
+      </VaCardTitle>
+      <VaCardContent>
+        <p class="page-placeholder__path">{{ route.path }}</p>
+        <p>
+          {{
+            typeof route.meta.description === 'string'
+              ? route.meta.description
+              : fallbackContent.description
+          }}
+        </p>
+        <VaDivider />
+        <VaAlert class="page-placeholder__alert" color="info" outline>
+          Vista placeholder. No hay funcionalidad de negocio implementada en esta fase.
+        </VaAlert>
+      </VaCardContent>
+    </VaCard>
+  </section>
 </template>
+
+<style scoped>
+.page-placeholder {
+  width: min(64rem, 100%);
+}
+
+.page-placeholder__card {
+  border: 1px solid var(--va-background-border);
+  border-radius: 8px;
+  color: var(--va-text-primary);
+}
+
+.page-placeholder__path {
+  margin-top: 0;
+  color: var(--va-secondary);
+  font-size: 0.9rem;
+}
+
+.page-placeholder__alert {
+  color: var(--va-text-primary);
+}
+
+.page-placeholder__alert :deep(.va-alert__content) {
+  color: var(--va-text-primary) !important;
+}
+</style>

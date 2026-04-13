@@ -92,6 +92,12 @@ export const appRoutes = [
         name: 'site-home',
         component: SiteHomePage,
         meta: createPageRouteMeta('site-home', { layout: DOMAIN.SITE })
+      },
+      {
+        path: 'demo',
+        name: 'site-demo',
+        component: () => import('@/pages/site/SiteDemoPage.vue'),
+        meta: createPageRouteMeta('site-demo', { layout: DOMAIN.SITE })
       }
     ]
   },

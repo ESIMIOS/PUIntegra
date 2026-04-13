@@ -11,7 +11,7 @@
 import { createWebApp } from '@/app/createWebApp';
 
 describe('web app smoke', () => {
-  it('bootstraps app, router, and vuetify without runtime errors', async () => {
+  it('bootstraps app, router, and vuestic without runtime errors', async () => {
     const { app, router } = createWebApp();
     const mountPoint = document.createElement('div');
     mountPoint.id = 'app';

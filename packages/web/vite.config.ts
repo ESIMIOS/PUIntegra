@@ -27,7 +27,7 @@ export default defineConfig({
     setupFiles: ['./tests/setup.ts'],
     server: {
       deps: {
-        inline: ['vuetify']
+        inline: ['vuestic-ui']
       }
     }
   }

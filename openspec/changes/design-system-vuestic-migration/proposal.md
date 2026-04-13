@@ -19,15 +19,15 @@ This is the right moment to establish a professional design foundation before bu
 - Rewrite all **6 layouts** using Vuestic components (`VaLayout`, `VaSidebar`, `VaNavbar`, `VaFooter`):
   - **SiteLayout**: Public-facing with navbar + footer, no sidebar.
   - **AuthLayout**: Centered, minimal, logo-prominent, split-screen or card-based.
-  - **AppLayout**: Dashboard shell with collapsible sidebar + top app bar + breadcrumb area.
+  - **AppLayout**: Dashboard shell with persistent sidebar + sticky top app bar + session context.
   - **AdminLayout**: Same shell structure as App (shared `DashboardShell` base component) with distinct accent color.
-  - **AccountLayout**: Independent authenticated layout with simple sub-navigation (no sidebar or minimal sidebar).
+  - **AccountLayout**: Connected authenticated account shell with header, account sidebar, and return paths to App/Admin.
   - **ErrorLayout**: Centered, minimal, brand-consistent error display.
 - Implement **dark/light theme toggle** with system-preference detection and `localStorage` persistence.
 - Update `bom.ts` to export Vuestic instead of Vuetify imports.
 - Update `main.css` / `main.ts` to use Vuestic styles.
 - Remap all placeholder page components from Vuetify components (`v-container`, `v-card`, `v-alert`, etc.) to Vuestic equivalents (`VaCard`, `VaAlert`, etc.).
-- Prepare **SVG logo assets** for use in layouts (horizontal logo, icon-only variant).
+- Prepare **SVG logo assets** for use in layouts (graphic identity image containing logo mark + product text, and icon-only variant where needed).
 - Create a **design system showcase page** at `/site/demo` demonstrating tokens, components, and layout patterns.
 - Persist design guidelines as a **live spec** at `packages/web/specs/design-system.md`.
 

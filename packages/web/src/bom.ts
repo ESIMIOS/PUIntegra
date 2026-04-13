@@ -31,9 +31,12 @@ export type { Router } from 'vue-router';
 
 export { z } from 'zod';
 
-export { createVuetify } from 'vuetify';
-export * as vuetifyComponents from 'vuetify/components';
-export * as vuetifyDirectives from 'vuetify/directives';
+export {
+  createVuestic,
+  defineVuesticConfig,
+  useBreakpoint,
+  useColors
+} from 'vuestic-ui';
 
 /**
  * PRODUCT
@@ -41,13 +44,17 @@ export * as vuetifyDirectives from 'vuetify/directives';
  */
 export { default as InactivityWarningModal } from '@/components/auth/InactivityWarningModal.vue';
 export { default as MockSessionSwitcher } from '@/components/dev/MockSessionSwitcher.vue';
+export { default as AppLogo } from '@/components/shared/AppLogo.vue';
+export { default as DashboardShell } from '@/components/shared/DashboardShell.vue';
 export { default as PagePlaceholder } from '@/components/shared/PagePlaceholder.vue';
+export { default as ThemeToggle } from '@/components/shared/ThemeToggle.vue';
 
 export { useAuthStore } from '@/stores/authStore';
 export { useInstitutionStore } from '@/stores/institutionStore';
 export { useMockSession } from '@/composables/useMockSession';
 export { useRouteNavigation } from '@/composables/useRouteNavigation';
 export { useSessionInactivity } from '@/composables/useSessionInactivity';
+export { useThemePreference } from '@/composables/useThemePreference';
 
 export {
   logSystemMessage,
@@ -56,7 +63,14 @@ export {
   logSystemMessageWarning
 } from '@/shared/logging/systemLogger';
 
-export { createAppVuetify } from '@/plugins/vuetify';
+export { createAppVuestic } from '@/plugins/vuestic';
+export {
+  VUESTIC_DARK_PRESET,
+  VUESTIC_LIGHT_PRESET,
+  appVuesticConfig,
+  darkThemeColors,
+  lightThemeColors
+} from '@/plugins/vuestic';
 export { createAppRouter } from '@/router/createRouter';
 
 export { createRouteMeta, mergeRouteMeta } from '@/router/metaSchema';

@@ -15,7 +15,7 @@ OpenSpec, AGENTS.md, Zod schemas, and Firebase.
 ## Stack
 - **Monorepo**: pnpm workspaces
 - **Backend**: Node.js 20 + TypeScript + Cloud Functions + Hono
-- **Frontend**: Vue 3 + vue-router + Vite + Pinia + TypeScript + WebApp/PWA + Vuetify
+- **Frontend**: Vue 3 + vue-router + Vite + Pinia + TypeScript + WebApp/PWA + Vuestic UI
 - **Web delivery**: Firebase Hosting
 - **Shared contract**: Zod schemas in `packages/shared`
 - **Firebase**: Hosting, Firestore, Auth, Cloud Functions

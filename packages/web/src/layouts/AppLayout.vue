@@ -8,21 +8,47 @@
  * @changelog
  * - 0.0.1	(2026-04-10)	Versión inicial del archivo.	@tirsomartinezreyes
  */
-import { domainShell, useInstitutionStore, DOMAIN } from '@/bom'
+import {
+  buildNavigationLinks,
+  computed,
+  DEFAULT_FUB,
+  DEFAULT_RFC,
+  domainShell,
+  DOMAIN,
+  ROLE,
+  useAuthStore,
+  useInstitutionStore
+} from '@/bom'
+import DashboardShell from '@/components/shared/DashboardShell.vue'
 
+const authStore = useAuthStore()
 const institutionStore = useInstitutionStore()
+
+const menuItems = computed(() =>
+  buildNavigationLinks(DOMAIN.APP, {
+    activeRfc: institutionStore.activeRfc || DEFAULT_RFC,
+    adminInspectionRfc: DEFAULT_RFC,
+    defaultFub: DEFAULT_FUB,
+    isAuthenticated: authStore.isAuthenticated,
+    isInstitutionRole:
+      authStore.activeRole === ROLE.INSTITUTION_ADMIN ||
+      authStore.activeRole === ROLE.INSTITUTION_OPERATOR,
+    isInstitutionAdmin: authStore.activeRole === ROLE.INSTITUTION_ADMIN,
+    isSystemRole: authStore.activeRole === ROLE.SYSTEM_ADMINISTRATOR
+  })
+)
 </script>
 
 <template>
-  <v-layout class="layout-shell">
-    <v-main>
-      <v-app-bar :color="domainShell[DOMAIN.APP].appBarColor" density="comfortable">
-        <v-app-bar-title>{{ domainShell[DOMAIN.APP].title }}</v-app-bar-title>
-        <template #append>
-          <v-chip class="mr-4" color="white" variant="outlined"> {{ domainShell[DOMAIN.APP].chipLabel }}: {{ institutionStore.activeRfc }} </v-chip>
-        </template>
-      </v-app-bar>
-      <router-view />
-    </v-main>
-  </v-layout>
+  <DashboardShell
+    :menu-items="menuItems"
+    :accent-color="domainShell[DOMAIN.APP].accentColor"
+    :domain-title="domainShell[DOMAIN.APP].title"
+    :chip-label="domainShell[DOMAIN.APP].chipLabel"
+    :chip-value="institutionStore.activeRfc"
+    account-name="Pepe Pecas"
+    account-label="user"
+    session-label="Rol"
+    :session-value="authStore.activeRole"
+  />
 </template>

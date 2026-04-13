@@ -6,9 +6,12 @@ Define the baseline webapp architecture for local development and navigable skel
 
 ## Scope in current state
 
-- Vue 3 webapp with `vue-router`, Pinia, Vuetify 3.
+- Vue 3 webapp with `vue-router`, Pinia, Vuestic UI.
 - Minimal PWA baseline (manifest + service worker registration).
 - Contextual layout domains: `/site`, `/auth`, `/app`, `/admin`, `/account`, `/error`.
+- Design system and theme behavior live in [`design-system.md`](./design-system.md).
+- Vuestic implementation guidelines live in [`vuestic-usage.md`](./vuestic-usage.md).
+- Product CSS utility class rules live in [`css-utilities.md`](./css-utilities.md).
 - Full documented route skeleton with placeholders and default redirects.
 - Guard pipeline with mock-mode control for local browsing.
 
@@ -16,7 +19,7 @@ Define the baseline webapp architecture for local development and navigable skel
 
 - First-level paths act as layout domains.
 - Internal routes represent views.
-- Layout shell presentation strings (title/color/chip labels) must be centralized in `src/shared/constants/domains.ts` by domain key.
+- Layout shell presentation strings (title/accent color/chip labels) must be centralized in `src/shared/constants/domains.ts` by domain key.
 - Route metadata keys used by guards:
   - `allowedRoles`
   - `requiresAuth`

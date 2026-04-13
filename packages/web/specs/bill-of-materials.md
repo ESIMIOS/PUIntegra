@@ -34,7 +34,7 @@ This distinction preserves local encapsulation while keeping centralized traceab
 
 1. **OPENSOURCE**
 - Purpose: Third-party dependencies from public registries.
-- Example: `vue-router`, `pinia`, `zod`, `vuetify`.
+- Example: `vue-router`, `pinia`, `zod`, `vuestic-ui`.
 - Location: top section of `src/bom.ts`.
 
 2. **TEAM**

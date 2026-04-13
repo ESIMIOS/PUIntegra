@@ -15,9 +15,9 @@ const showMockPanel = import.meta.env.DEV;
 </script>
 
 <template>
-  <v-app>
+  <div class="app-root">
     <router-view />
     <InactivityWarningModal />
     <MockSessionSwitcher v-if="showMockPanel" />
-  </v-app>
+  </div>
 </template>

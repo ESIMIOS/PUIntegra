@@ -4,7 +4,7 @@
 Implement the first local frontend foundation for `packages/web` as a browsable skeleton without business functionality.
 
 ## Scope
-- Vue 3 webapp bootstrap with `vue-router`, Pinia, Vuetify 3, and minimal PWA registration.
+- Vue 3 webapp bootstrap with `vue-router`, Pinia, Vuestic UI, and minimal PWA registration.
 - Contextual layouts and placeholder pages for documented routes in section 10.2-10.5.
 - Mock session/context mode to browse guarded branches in local development.
 - Smoke, routing, layout, and guard tests in Vitest.

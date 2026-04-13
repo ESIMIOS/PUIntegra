@@ -9,13 +9,13 @@
  */
 
 import '@/styles/main.css';
-import 'vuetify/dist/vuetify.min.css';
+import 'vuestic-ui/css';
 import { createWebApp } from '@/app/createWebApp';
 import { registerServiceWorker } from '@/app/registerServiceWorker';
 
 const { app, router } = createWebApp();
 
-await router.isReady();
-app.mount('#app');
-
-registerServiceWorker();
+router.isReady().then(() => {
+  app.mount('#app');
+  registerServiceWorker();
+});

@@ -22,6 +22,9 @@ const isAlerting = ref(false);
 let timerInterval: ReturnType<typeof setInterval> | null = null;
 let listenerCleanup: (() => void) | null = null;
 
+/**
+ * @description Expone el estado singleton de inactividad de sesión y configura listeners de actividad.
+ */
 export function useSessionInactivity() {
   const authStore = useAuthStore();
   const router = useRouter();
@@ -101,7 +104,9 @@ export function useSessionInactivity() {
   };
 }
 
-// Helper para pruebas - permite resetear el estado global entre tests
+/**
+ * @description Reinicia el estado global de inactividad entre pruebas unitarias.
+ */
 export function resetGlobalState() {
   secondsRemaining.value = SECONDS_TO_CLOSE_SESSION_FOR_INACTIVITY;
   isAlerting.value = false;

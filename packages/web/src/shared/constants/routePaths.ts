@@ -13,6 +13,7 @@ export const DEFAULT_FUB = 'FUB-0001';
 
 export const routePaths = {
   siteHome: '/site/home',
+  siteDemo: '/site/demo',
   authLogin: '/auth/login',
   authCreateAccount: '/auth/create-account',
   authVerifyEmail: '/auth/verify-email',
@@ -49,6 +50,7 @@ export const routePaths = {
 
 export const allDocumentedPaths = [
   routePaths.siteHome,
+  routePaths.siteDemo,
   routePaths.authLogin,
   routePaths.authCreateAccount,
   routePaths.authVerifyEmail,

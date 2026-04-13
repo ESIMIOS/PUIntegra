@@ -26,6 +26,18 @@ importers:
         specifier: 3.23.8
         version: 3.23.8
     devDependencies:
+      '@eslint/js':
+        specifier: 9.25.1
+        version: 9.25.1
+      '@typescript-eslint/eslint-plugin':
+        specifier: 8.31.1
+        version: 8.31.1(@typescript-eslint/parser@8.31.1(eslint@9.25.1)(typescript@5.4.5))(eslint@9.25.1)(typescript@5.4.5)
+      '@typescript-eslint/parser':
+        specifier: 8.31.1
+        version: 8.31.1(eslint@9.25.1)(typescript@5.4.5)
+      eslint:
+        specifier: 9.25.1
+        version: 9.25.1
       typescript:
         specifier: 5.4.5
         version: 5.4.5
@@ -39,6 +51,18 @@ importers:
         specifier: 3.23.8
         version: 3.23.8
     devDependencies:
+      '@eslint/js':
+        specifier: 9.25.1
+        version: 9.25.1
+      '@typescript-eslint/eslint-plugin':
+        specifier: 8.31.1
+        version: 8.31.1(@typescript-eslint/parser@8.31.1(eslint@9.25.1)(typescript@5.4.5))(eslint@9.25.1)(typescript@5.4.5)
+      '@typescript-eslint/parser':
+        specifier: 8.31.1
+        version: 8.31.1(eslint@9.25.1)(typescript@5.4.5)
+      eslint:
+        specifier: 9.25.1
+        version: 9.25.1
       typescript:
         specifier: 5.4.5
         version: 5.4.5
@@ -60,9 +84,9 @@ importers:
       vue-router:
         specifier: 4.5.1
         version: 4.5.1(vue@3.5.32(typescript@5.4.5))
-      vuetify:
-        specifier: 3.8.0
-        version: 3.8.0(typescript@5.4.5)(vue@3.5.32(typescript@5.4.5))
+      vuestic-ui:
+        specifier: 1.10.3
+        version: 1.10.3(vue@3.5.32(typescript@5.4.5))
       zod:
         specifier: 3.23.8
         version: 3.23.8
@@ -364,6 +388,18 @@ packages:
   '@firebase/util@1.10.0':
     resolution: {integrity: sha512-xKtx4A668icQqoANRxyDLBLz51TAbDP9KRfpbKGxiCAW346d0BeJe5vN6/hKxxmWwnZ0mautyv39JxviwwQMOQ==}
 
+  '@floating-ui/core@1.7.5':
+    resolution: {integrity: sha512-1Ih4WTWyw0+lKyFMcBHGbb5U5FtuHJuujoyyr5zTaWS5EYMeT6Jb2AuDeftsCsEuchO+mM2ij5+q9crhydzLhQ==}
+
+  '@floating-ui/dom@1.7.6':
+    resolution: {integrity: sha512-9gZSAI5XM36880PPMm//9dfiEngYoC6Am2izES1FF406YFsjvyBMmeJ2g4SAju3xWwtuynNRFL2s9hgxpLI5SQ==}
+
+  '@floating-ui/utils@0.2.11':
+    resolution: {integrity: sha512-RiB/yIh78pcIxl6lLMG0CgBXAZ2Y0eVHqMPYugu+9U0AeT6YBeiJpf7lbdJNIugFP5SIjwNRgo4DhR1Qxi26Gg==}
+
+  '@floating-ui/vue@1.1.11':
+    resolution: {integrity: sha512-HzHKCNVxnGS35r9fCHBc3+uCnjw9IWIlCPL683cGgM9Kgj2BiAl8x1mS7vtvP6F9S/e/q4O6MApwSHj8hNLGfw==}
+
   '@google-cloud/firestore@7.11.6':
     resolution: {integrity: sha512-EW/O8ktzwLfyWBOsNuhRoMi8lrC3clHM5LVFhGvO1HCsLozCOOXRAlHrYBoE6HL42Sc8yYMuCb2XqcnJ4OOEpw==}
     engines: {node: '>=14.0.0'}
@@ -655,6 +691,9 @@ packages:
 
   '@types/jsonwebtoken@9.0.10':
     resolution: {integrity: sha512-asx5hIG9Qmf/1oStypjanR7iKTv0gXQ1Ov/jfrX6kS/EO0OFni8orbmGCn0672NHR3kXHwpAwR+B368ZGN/2rA==}
+
+  '@types/lodash@4.17.24':
+    resolution: {integrity: sha512-gIW7lQLZbue7lRSWEFql49QJJWThrTFFeIMJdp3eH4tKoxm1OvEPg02rm4wCCSHS0cL3/Fizimb35b7k8atwsQ==}
 
   '@types/long@4.0.2':
     resolution: {integrity: sha512-MqTGEo5bj5t157U6fA/BiDynNkn0YknVdh48CMPkTSpFTVmvao5UQmm7uEF6xBEo7qIMAlY/JSleYaE6VOdpaA==}
@@ -951,6 +990,9 @@ packages:
 
   chownr@1.1.4:
     resolution: {integrity: sha512-jJ0bqzaylmJtVnNgzTeSOs8DPavpbYgEr/b0YL8/2GO3xJEhInFmhKMUnEJQjZumK7KXGFhUy89PrsJWlakBVg==}
+
+  cleave.js@1.6.0:
+    resolution: {integrity: sha512-ivqesy3j5hQVG3gywPfwKPbi/7ZSftY/UNp5uphnqjr25yI2CP8FS2ODQPzuLXXnNLi29e2+PgPkkiKUXLs/Nw==}
 
   cliui@8.0.1:
     resolution: {integrity: sha512-BSeNnyus75C4//NQ9gQt1/csTXyo/8Sb+afLAkzAptFuMsod9HFokGNudZpi/oQV73hnVK+sR+5PVRMd+Dr7YQ==}
@@ -2336,21 +2378,10 @@ packages:
       typescript:
         optional: true
 
-  vuetify@3.8.0:
-    resolution: {integrity: sha512-ROC0Xq2G/25ZyUpQMhaynMyXZBJY1WbOGlqOB810yubp8hfY8RlrOw+mzXJonOq6jylCY32muQ9xiJF1JPTLVA==}
-    engines: {node: ^12.20 || >=14.13}
+  vuestic-ui@1.10.3:
+    resolution: {integrity: sha512-E8Y6E7dg08+yrN+0UfIb7pffH6dX9hBrLhjTR74w9T8iXlkw8t5ULPwnzIXxrTxPbk/HvDDs1s++bMw/S0OFmA==}
     peerDependencies:
-      typescript: '>=4.7'
-      vite-plugin-vuetify: '>=2.1.0'
-      vue: ^3.5.0
-      webpack-plugin-vuetify: '>=3.1.0'
-    peerDependenciesMeta:
-      typescript:
-        optional: true
-      vite-plugin-vuetify:
-        optional: true
-      webpack-plugin-vuetify:
-        optional: true
+      vue: ^3.0.4
 
   w3c-xmlserializer@5.0.0:
     resolution: {integrity: sha512-o8qghlI8NZHU1lLPrpi2+Uq7abh4GGPpYANlalzWxyWteJOCsr/P+oPBA49TOLu5FTZO4d3F9MnWJfiMo4BkmA==}
@@ -2662,6 +2693,26 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
+  '@floating-ui/core@1.7.5':
+    dependencies:
+      '@floating-ui/utils': 0.2.11
+
+  '@floating-ui/dom@1.7.6':
+    dependencies:
+      '@floating-ui/core': 1.7.5
+      '@floating-ui/utils': 0.2.11
+
+  '@floating-ui/utils@0.2.11': {}
+
+  '@floating-ui/vue@1.1.11(vue@3.5.32(typescript@5.4.5))':
+    dependencies:
+      '@floating-ui/dom': 1.7.6
+      '@floating-ui/utils': 0.2.11
+      vue-demi: 0.14.10(vue@3.5.32(typescript@5.4.5))
+    transitivePeerDependencies:
+      - '@vue/composition-api'
+      - vue
+
   '@google-cloud/firestore@7.11.6':
     dependencies:
       '@opentelemetry/api': 1.9.1
@@ -2921,6 +2972,8 @@ snapshots:
     dependencies:
       '@types/ms': 2.1.0
       '@types/node': 25.5.2
+
+  '@types/lodash@4.17.24': {}
 
   '@types/long@4.0.2':
     optional: true
@@ -3310,6 +3363,8 @@ snapshots:
       get-func-name: 2.0.2
 
   chownr@1.1.4: {}
+
+  cleave.js@1.6.0: {}
 
   cliui@8.0.1:
     dependencies:
@@ -4868,11 +4923,15 @@ snapshots:
     optionalDependencies:
       typescript: 5.4.5
 
-  vuetify@3.8.0(typescript@5.4.5)(vue@3.5.32(typescript@5.4.5)):
+  vuestic-ui@1.10.3(vue@3.5.32(typescript@5.4.5)):
     dependencies:
+      '@floating-ui/vue': 1.1.11(vue@3.5.32(typescript@5.4.5))
+      '@types/lodash': 4.17.24
+      cleave.js: 1.6.0
+      lodash: 4.18.1
       vue: 3.5.32(typescript@5.4.5)
-    optionalDependencies:
-      typescript: 5.4.5
+    transitivePeerDependencies:
+      - '@vue/composition-api'
 
   w3c-xmlserializer@5.0.0:
     dependencies:

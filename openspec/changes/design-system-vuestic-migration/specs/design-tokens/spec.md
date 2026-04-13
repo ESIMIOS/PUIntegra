@@ -31,12 +31,16 @@ All design tokens (colors, spacing scale, border radii, elevation/shadow levels)
 - **THEN** it SHALL use the brand palette colors without explicit per-component color overrides
 
 ### Requirement: Domain accent tokens
-Each layout domain (site, auth, app, admin, account, error) SHALL have a semantic accent value defined in the `domainShell` configuration. This accent MUST be applied at the layout level to differentiate domains visually while maintaining palette cohesion.
+Each layout domain (site, auth, app, admin, account, error) SHALL have a semantic accent value defined in the `domainShell` configuration. This accent MAY be applied at the layout level for subtle differentiation while maintaining palette cohesion.
+
+Routine navigation structure, sidebar icons, and persistent shell controls SHALL use the primary brand color by default. Success, info, warning, and danger colors SHALL be reserved for state, feedback, validation, and status communication.
 
 #### Scenario: App domain renders with its accent
 - **WHEN** a user navigates to any `/app/*` route
-- **THEN** the layout's primary interactive elements (sidebar highlight, app bar) SHALL reflect the App domain's accent color
+- **THEN** routine navigation elements SHALL remain primary-brand neutral
+- **AND** any App domain accent SHALL be subtle and SHALL NOT make navigation look like status feedback
 
 #### Scenario: Admin domain renders with its accent
 - **WHEN** a user navigates to any `/admin/*` route
-- **THEN** the layout SHALL use the Admin domain's accent color, visually distinct from the App domain
+- **THEN** routine navigation elements SHALL remain primary-brand neutral
+- **AND** any Admin domain accent SHALL be subtle and SHALL NOT make navigation look like status feedback

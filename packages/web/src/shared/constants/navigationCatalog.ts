@@ -26,6 +26,7 @@ export type NavigationContext = {
 type NavigationDefinition = {
   id: string;
   label: string;
+  icon: string;
   description: string;
   // eslint-disable-next-line no-unused-vars
   to: (context: NavigationContext) => string;
@@ -38,6 +39,7 @@ type NavigationCatalog = Record<NavigationDomain, readonly NavigationDefinition[
 export type NavigationLink = {
   id: string;
   label: string;
+  icon: string;
   to: string;
   disabled: boolean;
 };
@@ -57,45 +59,59 @@ export const navigationCatalog = {
     {
       id: 'site-home',
       label: 'Home',
+      icon: 'home',
       description:
         'Página pública principal del producto con información de valor, acceso y contacto.',
       to: () => routePaths.siteHome
+    },
+    {
+      id: 'site-demo',
+      label: 'Demo',
+      icon: 'palette',
+      description: 'Referencia viva del sistema visual, tokens y patrones de componentes.',
+      to: () => routePaths.siteDemo
     }
   ],
   [DOMAIN.AUTH]: [
     {
       id: 'auth-login',
       label: 'Login',
+      icon: 'login',
       description: 'Ingreso a la aplicación mediante autenticación de cuenta.',
       to: () => routePaths.authLogin
     },
     {
       id: 'auth-create-account',
       label: 'Crear cuenta',
+      icon: 'person_add',
       description: 'Alta inicial de cuenta cuando existe permiso habilitante.',
       to: () => routePaths.authCreateAccount
     },
     {
       id: 'auth-verify-email',
       label: 'Verificar correo',
+      icon: 'mark_email_read',
       description: 'Confirmación de correo desde enlaces de verificación.',
       to: () => routePaths.authVerifyEmail
     },
     {
       id: 'auth-forgot-password',
       label: 'Recuperar contraseña',
+      icon: 'lock_reset',
       description: 'Solicitud de recuperación de contraseña sin exponer existencia de correo.',
       to: () => routePaths.authForgotPassword
     },
     {
       id: 'auth-reset-password',
       label: 'Restablecer contraseña',
+      icon: 'password',
       description: 'Cambio de contraseña desde enlace válido de recuperación.',
       to: () => routePaths.authResetPassword
     },
     {
       id: 'auth-security-setup',
       label: 'Security setup',
+      icon: 'shield',
       description: 'Bootstrap de seguridad de la cuenta previo a operación plena.',
       to: () => routePaths.authSecuritySetup,
       disabled: (context) => !context.isAuthenticated
@@ -103,6 +119,7 @@ export const navigationCatalog = {
     {
       id: 'auth-logout',
       label: 'Logout',
+      icon: 'logout',
       description: 'Salida de sesión y continuidad de navegación posterior.',
       to: () => routePaths.authLogout
     }
@@ -111,6 +128,7 @@ export const navigationCatalog = {
     {
       id: 'app-institutions',
       label: 'Instituciones',
+      icon: 'account_balance',
       description: 'Selección de contexto institucional para iniciar operación.',
       to: () => routePaths.appInstitutions,
       disabled: (context) => !context.isInstitutionRole
@@ -118,6 +136,7 @@ export const navigationCatalog = {
     {
       id: 'app-dashboard',
       label: 'Dashboard',
+      icon: 'dashboard',
       description: 'Resumen operativo de solicitudes y estado de sincronización de hallazgos.',
       to: (context) => routePaths.appDashboard(context.activeRfc),
       disabled: (context) => !context.isInstitutionRole
@@ -125,6 +144,7 @@ export const navigationCatalog = {
     {
       id: 'app-admin-plan',
       label: 'Admin plan',
+      icon: 'assignment',
       description: 'Vista administrativa del plan vigente de la institución.',
       to: (context) => routePaths.appAdminPlan(context.activeRfc),
       disabled: (context) => !context.isInstitutionAdmin
@@ -132,6 +152,7 @@ export const navigationCatalog = {
     {
       id: 'app-admin-contacts',
       label: 'Admin contacts',
+      icon: 'contacts',
       description: 'Listado de contactos legales, técnicos y de búsqueda inmediata.',
       to: (context) => routePaths.appAdminContacts(context.activeRfc),
       disabled: (context) => !context.isInstitutionAdmin
@@ -139,6 +160,7 @@ export const navigationCatalog = {
     {
       id: 'app-admin-settings',
       label: 'Admin settings',
+      icon: 'settings',
       description: 'Parámetros sensibles de institución sin exposición de secretos en claro.',
       to: (context) => routePaths.appAdminSettings(context.activeRfc),
       disabled: (context) => !context.isInstitutionAdmin
@@ -146,6 +168,7 @@ export const navigationCatalog = {
     {
       id: 'app-admin-permissions',
       label: 'Admin permissions',
+      icon: 'admin_panel_settings',
       description: 'Gestión y filtrado de permisos de acceso institucional.',
       to: (context) => routePaths.appAdminPermissions(context.activeRfc),
       disabled: (context) => !context.isInstitutionAdmin
@@ -153,6 +176,7 @@ export const navigationCatalog = {
     {
       id: 'app-requests',
       label: 'Solicitudes',
+      icon: 'rule',
       description: 'Vista de solicitudes de búsqueda de la institución activa.',
       to: (context) => routePaths.appRequests(context.activeRfc),
       disabled: (context) => !context.isInstitutionRole
@@ -160,6 +184,7 @@ export const navigationCatalog = {
     {
       id: 'app-request-detail',
       label: 'Detalle solicitud',
+      icon: 'article',
       description: 'Detalle operativo de solicitud específica por FUB.',
       to: (context) => routePaths.appRequestDetail(context.activeRfc, context.defaultFub),
       disabled: (context) => !context.isInstitutionRole
@@ -167,6 +192,7 @@ export const navigationCatalog = {
     {
       id: 'app-logs',
       label: 'Logs',
+      icon: 'receipt_long',
       description: 'Bitácora institucional con filtros de categoría, origen y tiempo.',
       to: (context) => routePaths.appLogs(context.activeRfc),
       disabled: (context) => !context.isInstitutionRole
@@ -176,6 +202,7 @@ export const navigationCatalog = {
     {
       id: 'admin-institutions',
       label: 'Instituciones',
+      icon: 'account_balance',
       description: 'Consulta multiinstitución para el backoffice del proveedor.',
       to: () => routePaths.adminInstitutions,
       disabled: (context) => !context.isSystemRole
@@ -183,6 +210,7 @@ export const navigationCatalog = {
     {
       id: 'admin-new-institution',
       label: 'Nueva institución',
+      icon: 'add_business',
       description: 'Flujo de incorporación inicial de una institución cliente.',
       to: () => routePaths.adminNewInstitution,
       disabled: (context) => !context.isSystemRole
@@ -190,6 +218,7 @@ export const navigationCatalog = {
     {
       id: 'admin-institution',
       label: 'Detalle institución',
+      icon: 'business',
       description: 'Vista pivote institucional desde la perspectiva del proveedor.',
       to: (context) => routePaths.adminInstitution(context.adminInspectionRfc),
       disabled: (context) => !context.isSystemRole
@@ -197,6 +226,7 @@ export const navigationCatalog = {
     {
       id: 'admin-institution-requests',
       label: 'Solicitudes institución',
+      icon: 'rule',
       description: 'Vista resumida de solicitudes institucionales en backoffice.',
       to: (context) => routePaths.adminInstitutionRequests(context.adminInspectionRfc),
       disabled: (context) => !context.isSystemRole
@@ -204,6 +234,7 @@ export const navigationCatalog = {
     {
       id: 'admin-institution-request-detail',
       label: 'Detalle solicitud',
+      icon: 'article',
       description: 'Detalle de solicitud con foco de supervisión y trazabilidad.',
       to: (context) =>
         routePaths.adminInstitutionRequestDetail(context.adminInspectionRfc, context.defaultFub),
@@ -212,6 +243,7 @@ export const navigationCatalog = {
     {
       id: 'admin-institution-plan',
       label: 'Plan institución',
+      icon: 'assignment',
       description: 'Supervisión comercial y operativa del plan institucional.',
       to: (context) => routePaths.adminInstitutionPlan(context.adminInspectionRfc),
       disabled: (context) => !context.isSystemRole
@@ -219,6 +251,7 @@ export const navigationCatalog = {
     {
       id: 'admin-institution-contacts',
       label: 'Contactos institución',
+      icon: 'contacts',
       description: 'Consulta transversal de contactos institucionales.',
       to: (context) => routePaths.adminInstitutionContacts(context.adminInspectionRfc),
       disabled: (context) => !context.isSystemRole
@@ -226,6 +259,7 @@ export const navigationCatalog = {
     {
       id: 'admin-logs',
       label: 'Logs globales',
+      icon: 'receipt_long',
       description: 'Bitácora global del sistema para el administrador proveedor.',
       to: () => routePaths.adminLogs,
       disabled: (context) => !context.isSystemRole
@@ -235,6 +269,7 @@ export const navigationCatalog = {
     {
       id: 'account-settings',
       label: 'Configuración',
+      icon: 'manage_accounts',
       description: 'Perfil personal, identidad base y seguridad de cuenta autenticada.',
       to: () => routePaths.accountSettings,
       disabled: (context) => !context.isAuthenticated
@@ -242,6 +277,7 @@ export const navigationCatalog = {
     {
       id: 'account-logs',
       label: 'Logs',
+      icon: 'receipt_long',
       description: 'Bitácora filtrada por la actividad de la cuenta personal autenticada.',
       to: () => routePaths.accountLogs,
       disabled: (context) => !context.isAuthenticated
@@ -251,18 +287,21 @@ export const navigationCatalog = {
     {
       id: 'error-403',
       label: 'Error 403',
+      icon: 'block',
       description: 'Acceso prohibido por incompatibilidad entre ruta, rol o contexto.',
       to: () => routePaths.error403
     },
     {
       id: 'error-404',
       label: 'Error 404',
+      icon: 'search_off',
       description: 'Ruta no encontrada o recurso inexistente.',
       to: () => routePaths.error404
     },
     {
       id: 'error-500',
       label: 'Error 500',
+      icon: 'error',
       description: 'Fallo interno del sistema o de infraestructura.',
       to: () => routePaths.error500
     }
@@ -313,6 +352,7 @@ export function buildNavigationLinks(
   return navigationCatalog[domain].map((link) => ({
     id: link.id,
     label: link.label,
+    icon: link.icon,
     to: link.to(context),
     disabled: 'disabled' in link ? link.disabled(context) : false
   }));

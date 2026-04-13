@@ -25,29 +25,21 @@ const stayLoggedIn = () => {
 </script>
 
 <template>
-  <v-dialog
+  <VaModal
     v-model="show"
-    persistent
-    max-width="400"
+    no-dismiss
+    hide-default-actions
+    max-width="400px"
+    title="Sesión por expirar"
   >
-    <v-card>
-      <v-card-title class="text-h5 bg-warning text-white">
-        Sesión por expirar
-      </v-card-title>
-      <v-card-text class="pt-4">
-        Tu sesión se cerrará automáticamente en <strong>{{ secondsRemaining }}</strong> segundos debido a la inactividad.
-        ¿Deseas continuar trabajando?
-      </v-card-text>
-      <v-card-actions>
-        <v-spacer />
-        <v-btn
-          color="warning"
-          variant="elevated"
-          @click="stayLoggedIn"
-        >
-          Mantener sesión iniciada
-        </v-btn>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
+    <p>
+      Tu sesión se cerrará automáticamente en <strong>{{ secondsRemaining }}</strong> segundos debido a la inactividad.
+      ¿Deseas continuar trabajando?
+    </p>
+    <template #footer>
+      <VaButton size="small" color="warning" @click="stayLoggedIn">
+        Mantener sesión iniciada
+      </VaButton>
+    </template>
+  </VaModal>
 </template>
