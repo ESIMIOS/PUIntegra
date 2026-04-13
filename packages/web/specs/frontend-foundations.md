@@ -78,6 +78,11 @@ Define the baseline webapp architecture for local development and navigable skel
 - By default, Vue 3 `ref()` defined inside a composable function scope is unique to each component instance.
 - **Requirement**: For global state (for example session timers or global notifications), define the state variables **outside** the exported function scope to ensure a singleton instance across the application.
 
+### Browser global references
+- **Requirement**: Use `globalThis` when code needs to reference the JavaScript global object, including browser APIs such as timers, events, and document/window capabilities.
+- Avoid direct `window` references for global object access so composables and tests remain compatible with Vitest, SSR-like execution, and non-browser test environments.
+- Direct browser-specific globals may be used only when the API is inherently tied to that object and the code guards its availability.
+
 ### Testing composables with lifecycle hooks
 - Composables using `onMounted` or `onUnmounted` require an active component context to be tested reliably.
 - **Requirement**: Use a `withSetup` helper or a dummy test component to provide the necessary Vue application context for lifecycle hooks during Vitest execution.

@@ -15,6 +15,7 @@ import {
   SECONDS_TO_CLOSE_SESSION_FOR_INACTIVITY, 
   SECONDS_TO_SHOW_INACTIVITY_ALERT 
 } from '@shared';
+import { routePaths } from '@/shared/constants/routePaths';
 
 // State compartido (Singleton)
 const secondsRemaining = ref(SECONDS_TO_CLOSE_SESSION_FOR_INACTIVITY);
@@ -56,7 +57,7 @@ export function useSessionInactivity() {
       } else {
         stopTimer();
         authStore.resetToAnonymous();
-        router.push('/auth/logout');
+        router.push(routePaths.authLogout);
       }
     }, 1000);
   };
@@ -72,9 +73,9 @@ export function useSessionInactivity() {
     if (listenerCleanup) return;
     const events = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart'];
     const handler = () => handleActivity();
-    events.forEach(event => window.addEventListener(event, handler));
+    events.forEach(event => globalThis.addEventListener(event, handler));
     listenerCleanup = () => {
-      events.forEach(event => window.removeEventListener(event, handler));
+      events.forEach(event => globalThis.removeEventListener(event, handler));
     };
   };
 
