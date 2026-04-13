@@ -25,11 +25,11 @@ let isVuesticPresetApplied = false;
  * @description Lee la preferencia de tema del sistema operativo cuando no existe override local.
  */
 function readSystemTheme(): ThemePreference {
-  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+  if (globalThis.window === undefined || typeof globalThis.matchMedia !== 'function') {
     return 'light';
   }
 
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  return globalThis.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 }
 
 /**

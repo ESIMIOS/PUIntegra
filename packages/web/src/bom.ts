@@ -56,6 +56,8 @@ export { useRouteNavigation } from '@/composables/useRouteNavigation';
 export { useSessionInactivity } from '@/composables/useSessionInactivity';
 export { useThemePreference } from '@/composables/useThemePreference';
 
+
+export { webSystemMessages } from '@/shared/constants/systemMessages';
 export {
   logSystemMessage,
   logSystemMessageError,

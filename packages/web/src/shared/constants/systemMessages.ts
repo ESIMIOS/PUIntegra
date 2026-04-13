@@ -80,5 +80,12 @@ export const webSystemMessages = {
     severity: 'WARNING',
     package: 'web',
     message: 'Falló el registro del service worker.'
+  },
+  vueAppRouterInitializationFailed: {
+    code: 'WEB-APP-500-001',
+    key: 'web.app.router_initialization_failed',
+    severity: 'ERROR',
+    package: 'web',
+    message: 'Error durante la inicialización del enrutador de la aplicación.'
   }
 } as const satisfies Record<string, SystemMessage>;
