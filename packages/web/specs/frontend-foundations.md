@@ -79,7 +79,8 @@ Define the baseline webapp architecture for local development and navigable skel
 - **Requirement**: For global state (for example session timers or global notifications), define the state variables **outside** the exported function scope to ensure a singleton instance across the application.
 
 ### Browser global references
-- **Requirement**: Use `globalThis` when code needs to reference the JavaScript global object, including browser APIs such as timers, events, and document/window capabilities.
+- **Requirement**: Use `globalThis` when code needs to reference the JavaScript global object, such as for timers or other cross-runtime global capabilities.
+- Treat DOM-specific APIs (for example `document`, `window`, or `addEventListener`) as browser-only capabilities: use them only when `globalThis` is a browser `Window`-like global and guard their availability before access.
 - Avoid direct `window` references for global object access so composables and tests remain compatible with Vitest, SSR-like execution, and non-browser test environments.
 - Direct browser-specific globals may be used only when the API is inherently tied to that object and the code guards its availability.
 
