@@ -8,5 +8,9 @@
         "**/.vscode/**",
         "**/.git/**",
         "**/*.pdf"
-    ]
+    ],
+    "sonarlint.connectedMode.project": {
+        "connectionId": "esimios",
+        "projectKey": "ESIMIOS_PUIntegra"
+    }
 }

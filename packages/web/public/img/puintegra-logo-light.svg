@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="64" viewBox="0 0 240 64" role="img" aria-labelledby="title">
+  <title id="title">PUIntegra</title>
+  <rect width="64" height="64" rx="8" fill="#0B1F4C"/>
+  <path d="M18 42V16h15c8 0 13 5 13 12s-5 12-13 12h-7v2h-8Zm8-10h7c3 0 5-2 5-4s-2-4-5-4h-7v8Z" fill="#FFFFFF"/>
+  <circle cx="46" cy="46" r="8" fill="#3BB54A"/>
+  <text x="78" y="41" fill="#0B1F4C" font-family="Inter, Segoe UI, sans-serif" font-size="28" font-weight="800" letter-spacing="0">PUIntegra</text>
+</svg>
