@@ -38,11 +38,14 @@ const paletteTokenNames = [
 ] as const;
 
 const colorTokens = computed(() =>
-  paletteTokenNames.map((token) => ({
-    token,
-    cssVariable: `--va-${token.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`)}`,
-    value: palette.value[token]
-  }))
+  paletteTokenNames.map((token) => {
+    const kebabToken = token.replaceAll(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
+    return {
+      token,
+      cssVariable: `--va-${kebabToken}`,
+      value: palette.value[token]
+    };
+  })
 );
 
 const layoutRows = domainValues.map((domain) => ({

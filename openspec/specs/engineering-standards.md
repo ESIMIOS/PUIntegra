@@ -47,6 +47,11 @@ Define project-wide engineering documentation and code conventions that apply ac
 - Root `.npmrc` must preserve `save-exact=true` and `save-prefix=`.
 - In a file, imports from the same module specifier must be consolidated into a single `import` statement.
 
+## TypeScript quality policy
+
+- Prefer `String.prototype.replaceAll()` over `String.prototype.replace()` when replacing every occurrence of a plain string pattern, to satisfy SonarQube `typescript:S7781` and make the intended global replacement explicit.
+- Avoid nested template literals. Extract the inner expression to a named constant or compose the string in separate steps to satisfy SonarQube `typescript:S4624` and keep interpolation readable.
+
 ## Shared contract placement
 
 - System-wide constants, enums, and contracts belong in `packages/shared`.

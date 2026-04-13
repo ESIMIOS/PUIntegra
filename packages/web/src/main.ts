@@ -8,14 +8,19 @@
  * - 0.0.1	(2026-04-10)	Versión inicial del archivo.	@tirsomartinezreyes
  */
 
-import '@/styles/main.css';
-import 'vuestic-ui/css';
-import { createWebApp } from '@/app/createWebApp';
-import { registerServiceWorker } from '@/app/registerServiceWorker';
+import '@/styles/main.css'
+// @ts-ignore - Vuestic UI no exporta tipos de CSS, pero esto es necesario para que TypeScript permita importar los estilos.
+import 'vuestic-ui/css'
+import { createWebApp } from '@/app/createWebApp'
+import { registerServiceWorker } from '@/app/registerServiceWorker'
+import { logSystemMessageError, webSystemMessages } from './bom'
 
-const { app, router } = createWebApp();
+const { app, router } = createWebApp()
 
-router.isReady().then(() => {
-  app.mount('#app');
-  registerServiceWorker();
-});
+try {
+	await router.isReady()
+	app.mount('#app')
+	registerServiceWorker()
+} catch (error) {
+	logSystemMessageError(webSystemMessages.vueAppRouterInitializationFailed, error)
+}
