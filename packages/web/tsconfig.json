@@ -5,8 +5,6 @@
     "jsxImportSource": "vue",
     "lib": ["ESNext", "DOM"],
     "types": ["vite/client", "vitest/globals"],
-    "ignoreDeprecations": "6.0",
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
       "@shared": ["../shared/src/index.ts"],
