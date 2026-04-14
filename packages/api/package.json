@@ -14,18 +14,18 @@
   },
   "dependencies": {
     "@puintegra/shared": "workspace:*",
-    "firebase-admin": "12.1.0",
-    "firebase-functions": "5.0.0",
+    "firebase-admin": "12.7.0",
+    "firebase-functions": "5.1.1",
     "hono": "4.12.12",
-    "zod": "3.23.8"
+    "zod": "3.25.76"
   },
   "devDependencies": {
-    "@eslint/js": "9.25.1",
-    "@typescript-eslint/eslint-plugin": "8.31.1",
-    "@typescript-eslint/parser": "8.31.1",
+    "@eslint/js": "9.39.4",
+    "@typescript-eslint/eslint-plugin": "8.58.2",
+    "@typescript-eslint/parser": "8.58.2",
     "@vitest/coverage-v8": "1.6.1",
-    "eslint": "9.25.1",
-    "typescript": "5.4.5",
+    "eslint": "9.39.4",
+    "typescript": "5.9.3",
     "vitest": "1.6.1"
   }
 }
