@@ -53,7 +53,9 @@ function scrubUrl(url: string): string {
   }
 }
 
-/** Returns true only after Sentry.init() has completed successfully. */
+/**
+ * Returns true only after Sentry.init() has completed successfully.
+ */
 function isSentryReady(): boolean {
   return Sentry.getClient() !== undefined;
 }

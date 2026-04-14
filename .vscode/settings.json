@@ -16,6 +16,19 @@
     "chat.tools.terminal.autoApprove": {
         "openspec": true,
         "npx eslint": true,
-        "node_modules/.bin/vue-tsc": true
+        "node_modules/.bin/vue-tsc": true,
+        "/^cat packages/web/package\\.json \\| python3 -c \"import json,sys; d=json\\.load\\(sys\\.stdin\\); deps=\\{\\*\\*d\\.get\\('dependencies',\\{\\}\\), \\*\\*d\\.get\\('devDependencies',\\{\\}\\)\\}; \\[print\\(k,v\\) for k,v in sorted\\(deps\\.items\\(\\)\\)\\]\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^cat packages/api/package\\.json \\| python3 -c \"import json,sys; d=json\\.load\\(sys\\.stdin\\); deps=\\{\\*\\*d\\.get\\('dependencies',\\{\\}\\), \\*\\*d\\.get\\('devDependencies',\\{\\}\\)\\}; \\[print\\(k,v\\) for k,v in sorted\\(deps\\.items\\(\\)\\)\\]\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^cat packages/shared/package\\.json \\| python3 -c \"import json,sys; d=json\\.load\\(sys\\.stdin\\); deps=\\{\\*\\*d\\.get\\('dependencies',\\{\\}\\), \\*\\*d\\.get\\('devDependencies',\\{\\}\\)\\}; \\[print\\(k,v\\) for k,v in sorted\\(deps\\.items\\(\\)\\)\\]\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "npx vue-tsc": true
     }
 }
