@@ -10,7 +10,9 @@
  * - 0.0.1	(2026-04-10)	Versión inicial del archivo.	@tirsomartinezreyes
  */
 import { MockSessionSwitcher, InactivityWarningModal } from '@/bom';
+import { useSentryScope } from '@/composables/useSentryScope';
 
+useSentryScope();
 const showMockPanel = import.meta.env.DEV;
 </script>
 

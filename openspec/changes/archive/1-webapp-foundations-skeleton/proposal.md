@@ -1,4 +1,4 @@
-# Proposal: webapp-foundations-skeleton
+# Proposal: 1-webapp-foundations-skeleton
 
 ## Objective
 Implement the first local frontend foundation for `packages/web` as a browsable skeleton without business functionality.

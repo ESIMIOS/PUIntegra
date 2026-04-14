@@ -1,0 +1,7 @@
+{
+  "projects": {
+    "default": "puintegra-dev",
+    "staging": "puintegra-staging",
+    "production": "puintegra-production"
+  }
+}

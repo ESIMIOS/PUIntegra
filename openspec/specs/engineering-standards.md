@@ -88,3 +88,39 @@ Define project-wide engineering documentation and code conventions that apply ac
 - **Problem**: Importing from centralized re-exporters (`bom.ts`, `index.ts`) within the same package or components that are re-exported by that file.
 - **Consequence**: Module evaluation cycles lead to `undefined` values at runtime, breaking state and constants.
 - **Rule**: NEVER import from a package's central re-exporter or index file from within the same package. Always use direct paths (for example `@/stores/authStore` or `../utils/foo`) for internal dependencies.
+
+
+## GitHub Actions security
+
+### Pin third-party actions to full commit SHAs
+- **Rule**: All third-party GitHub Actions (any action NOT in the `actions/*` or `github/*` namespaces) MUST be pinned to a full 40-character commit SHA, not a mutable tag or branch.
+- **Rationale**: Mutable tags (e.g. `@v4`, `@main`) can be silently updated or hijacked by the action author or a supply-chain attacker, executing arbitrary code in your CI runner with access to all secrets.
+- **Format**: `uses: owner/action@<40-char-sha> # vX.Y.Z` — the version comment is required for human readability.
+
+```yaml
+# ❌ Unsafe — tag is mutable
+- uses: pnpm/action-setup@v4
+- uses: FirebaseExtended/action-hosting-deploy@v0
+
+# ✅ Safe — pinned to commit SHA with version comment
+- uses: pnpm/action-setup@fe02b34f77f8bc703788d5817da081398fad5dd2 # v4.0.0
+- uses: FirebaseExtended/action-hosting-deploy@e2eda2e106cfa35cdbcf4ac9ddaf6c4756df2c8c # v0
+```
+
+- First-party GitHub actions (`actions/checkout`, `actions/setup-node`, etc.) may use tags — they are governed by GitHub's own security processes.
+- When upgrading a pinned action, update both the SHA and the version comment atomically.
+- To find the commit SHA for a tag: `gh api repos/{owner}/{repo}/git/ref/tags/{tag}` and dereference annotated tags if `type == "tag"`.
+
+### pnpm install script allowlist
+- **Rule**: The root `package.json` MUST declare `pnpm.onlyBuiltDependencies` to allowlist the exact set of packages permitted to run lifecycle scripts (`postinstall`, `preinstall`, `install`).
+- **Rationale**: Without this, any transitive dependency can run arbitrary shell code during `pnpm install` in CI, where all secrets are available.
+- **Audit command**: Run the following to detect new packages with install scripts before updating the allowlist:
+  ```bash
+  node -e "
+  const {execSync} = require('child_process');
+  const r = execSync('find node_modules/.pnpm -maxdepth 5 -name package.json').toString().split('\n');
+  r.forEach(f => { try { const d = JSON.parse(require('fs').readFileSync(f)); ['postinstall','preinstall','install'].forEach(k => { if (d.scripts?.[k]) console.log(d.name, k, d.scripts[k]); }); } catch {} });
+  "
+  ```
+- **Current allowlist** (as of initial setup): `esbuild`, `farmhash`, `protobufjs`, `vue-demi`
+- When adding a new dependency that requires a lifecycle script, explicitly add it to the allowlist and document the reason in the PR.
