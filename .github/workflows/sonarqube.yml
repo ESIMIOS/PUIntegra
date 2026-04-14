@@ -8,8 +8,6 @@ on:
       - "**/*.md"
       - "openspec/**"
       - "1-Análisis/**"
-      - ".github/CODEOWNERS"
-      - "sonar-architecture.yaml"
 jobs:
   sonarqube:
     name: SonarQube
