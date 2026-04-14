@@ -12,6 +12,8 @@ Define the baseline webapp architecture for local development and navigable skel
 - Design system and theme behavior live in [`design-system.md`](./design-system.md).
 - Vuestic implementation guidelines live in [`vuestic-usage.md`](./vuestic-usage.md).
 - Product CSS utility class rules live in [`css-utilities.md`](./css-utilities.md).
+- Error observability (Sentry) lives in [`error-observability.md`](./error-observability.md).
+- Deployment environments live in [`environments.md`](./environments.md).
 - Full documented route skeleton with placeholders and default redirects.
 - Guard pipeline with mock-mode control for local browsing.
 

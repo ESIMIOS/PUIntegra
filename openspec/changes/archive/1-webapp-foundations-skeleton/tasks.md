@@ -1,4 +1,4 @@
-# Tasks: webapp-foundations-skeleton
+# Tasks: 1-webapp-foundations-skeleton
 
 ## 1. Tests first
 - Add Vitest + Vue testing baseline for `packages/web`.

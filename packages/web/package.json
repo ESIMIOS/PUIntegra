@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@puintegra/shared": "workspace:*",
+    "@sentry/vue": "10.48.0",
     "pinia": "2.1.7",
     "vue": "3.5.32",
     "vue-router": "4.5.1",

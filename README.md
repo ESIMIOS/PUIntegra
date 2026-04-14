@@ -24,11 +24,20 @@ OpenSpec, AGENTS.md, Zod schemas, and Firebase.
 
 ## Quick start
 ```bash
-# Install dependencies
+# 1. Install dependencies
 pnpm install
 
-# Start Firebase emulators
+# 2. (Optional) Add personal secrets for local Sentry reporting
+#    Mode files (.env.development / .env.staging / .env.production) are committed
+#    and provide all non-secret defaults automatically.
+#    Only needed if you want Sentry active locally:
+#    echo "VITE_SENTRY_DSN=<your-dsn>" >> packages/web/.env.local
+
+# 3. Start Firebase emulators
 firebase emulators:start
+
+# 4. Start the dev server
+pnpm --filter web dev
 
 # Run all tests
 pnpm -r test
@@ -36,6 +45,11 @@ pnpm -r test
 # Typecheck all packages
 pnpm -r typecheck
 ```
+
+> **Environment variables**: Mode files (`.env.development`, `.env.staging`, `.env.production`) are
+> committed and contain all non-secret defaults — no setup needed for local development.
+> To enable optional features locally (e.g. Sentry), create `.env.local` and add secrets.
+> See `packages/web/.env.example` for full documentation of all variables.
 
 ## SDD workflow (OpenSpec)
 ```bash
