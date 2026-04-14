@@ -83,6 +83,13 @@ NEVER use `cat > file << 'EOF'` heredoc to write or rewrite TypeScript/Markdown 
 Heredocs in the bash tool strip tab indentation and collapse tab-separated fields (e.g. JSDoc changelog lines).
 ALWAYS use the edit tool for all file modifications. Heredoc is only acceptable for plain text where whitespace is irrelevant.
 
+NEVER use the edit tool to modify package.json files directly.
+Use ecosystem commands instead — they understand the format and make atomic changes:
+- `pnpm pkg set scripts.foo="bar"` to add/change a script field
+- `pnpm add <pkg>` / `pnpm remove <pkg>` to manage dependencies
+- `node -e "..."` or `jq` for deep JSON mutations
+Raw text edits on package.json risk dropping keys and producing invalid JSON.
+
 
 All types must be inferred from Zod:
   import { z } from 'zod'
