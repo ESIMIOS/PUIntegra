@@ -4,6 +4,12 @@ on:
   push:
     branches:
       - stage
+    paths-ignore:
+      - "**/*.md"
+      - "openspec/**"
+      - "1-Análisis/**"
+      - "sonar-project.properties"
+      - "sonar-architecture.yaml"
 
 jobs:
   deploy-staging:
