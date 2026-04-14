@@ -79,9 +79,11 @@ specs in the same task.
 **Always sync progress**: Update the `tasks.md` file in the current change folder continuously. Do not rely on internal agent task lists; the on-disk `tasks.md` is the only source of truth for the implementation status.
 
 
-## Absolute constraints
+NEVER use `cat > file << 'EOF'` heredoc to write or rewrite TypeScript/Markdown files.
+Heredocs in the bash tool strip tab indentation and collapse tab-separated fields (e.g. JSDoc changelog lines).
+ALWAYS use the edit tool for all file modifications. Heredoc is only acceptable for plain text where whitespace is irrelevant.
 
-NEVER define TypeScript types manually.
+
 All types must be inferred from Zod:
   import { z } from 'zod'
   import { UserSchema } from '@puintegra/shared'
