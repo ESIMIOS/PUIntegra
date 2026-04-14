@@ -9,7 +9,7 @@
  * - 0.0.1	(2026-04-10)	Versión inicial del archivo.	@tirsomartinezreyes
  */
 
-import { defineConfig, type ConfigEnv, type Plugin } from 'vite';
+import { defineConfig, type Plugin } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import { resolve } from 'node:path';
 
@@ -22,7 +22,7 @@ function checkEnvPlugin(): Plugin {
   return {
     name: 'check-env',
     configResolved(config) {
-      const env = config.env as Record<string, string>;
+      const env = config.env;
       const mode = config.mode;
 
       // Skip validation in test mode — Vitest runs with mode='test', no .env.test needed
@@ -48,7 +48,7 @@ function checkEnvPlugin(): Plugin {
   };
 }
 
-export default defineConfig(({ mode }: ConfigEnv) => ({
+export default defineConfig({
   plugins: [vue(), checkEnvPlugin()],
   resolve: {
     alias: {
@@ -67,4 +67,4 @@ export default defineConfig(({ mode }: ConfigEnv) => ({
       }
     }
   }
-}));
+});

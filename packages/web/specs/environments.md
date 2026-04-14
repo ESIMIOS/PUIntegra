@@ -105,7 +105,7 @@ A `checkEnvPlugin` Vite plugin runs during `configResolved` (after all `.env.*` 
 - `VITE_SENTRY_DSN` must be set for `staging` and `production` builds (committed in `.env.staging`/`.env.production`)
 - Validation is **skipped in `test` mode** (Vitest runs with `mode=test`, no `.env.test` needed)
 
-This replaces the old `check-env.mjs` pre-script which ran before Vite and could not see Vite env files.
+This replaces the previous pre-script approach (`check-env.mjs`) which ran before Vite loaded env files and therefore could not see any `VITE_*` variables.
 
 ---
 

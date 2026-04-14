@@ -86,7 +86,7 @@ Managed in `packages/web/.env.example` (committed, empty values) and `.env.local
 | Variable | Required in prod | Default | Purpose |
 |---|---|---|---|
 | `VITE_SENTRY_DSN` | Yes | — | Routes events to the Sentry project |
-| `VITE_SENTRY_ENVIRONMENT` | Yes | `development` | Tags events by environment |
+| `VITE_APP_ENV` | Yes | `development` | Tags events by environment (set automatically by Vite mode file) |
 | `VITE_SENTRY_RELEASE` | Recommended | — | Links events to a deploy/version |
 | `VITE_SENTRY_TRACE_SAMPLE_RATE` | No | `1` | Fraction of performance transactions captured (0–1) |
 

@@ -32,6 +32,6 @@ export function createWebApp() {
 		pinia,
 		router,
 		vuestic,
-    sentry
+		sentry
 	}
 }

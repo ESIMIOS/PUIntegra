@@ -14,6 +14,7 @@
         "projectKey": "ESIMIOS_PUIntegra"
     },
     "chat.tools.terminal.autoApprove": {
-        "openspec": true
+        "openspec": true,
+        "npx eslint": true
     }
 }

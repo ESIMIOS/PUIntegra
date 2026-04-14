@@ -60,6 +60,7 @@ export const useAuthStore = defineStore('auth', {
       this.isAuthenticated = false;
       this.activeRole = ROLE.ANONYMOUS;
       this.requiresSecuritySetup = false;
+      this.allowedInstitutionRfcs = [];
       this.uid = null;
       this.email = null;
     }

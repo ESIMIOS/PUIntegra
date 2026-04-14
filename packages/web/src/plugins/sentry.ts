@@ -36,17 +36,26 @@ function redactSecrets(obj: Record<string, unknown>): Record<string, unknown> {
 
 /**
  * Strips sensitive query parameters from a URL string.
+ * Accepts both absolute and relative URLs; relative ones are resolved
+ * against the current origin so query params can still be scrubbed.
  */
 function scrubUrl(url: string): string {
   try {
-    const parsed = new URL(url);
+    const base = globalThis.location?.origin ?? 'https://placeholder.invalid';
+    const parsed = new URL(url, base);
     SECRET_PARAMS.forEach((p) => {
       if (parsed.searchParams.has(p)) parsed.searchParams.set(p, '[Filtered]');
     });
-    return parsed.toString();
+    // Return only the part that was originally provided
+    return url.startsWith('http') ? parsed.toString() : parsed.pathname + parsed.search + parsed.hash;
   } catch {
     return url;
   }
+}
+
+/** Returns true only after Sentry.init() has completed successfully. */
+function isSentryReady(): boolean {
+  return Sentry.getClient() !== undefined;
 }
 
 /**
@@ -121,10 +130,23 @@ export interface SentryMetadata extends Record<string, unknown> {
  * captureException(err, { operation: 'submitRequest', requestId: fub, userEmail: email });
  */
 export function captureException(error: unknown, metadata?: SentryMetadata): void {
-  if (!import.meta.env.VITE_SENTRY_DSN) return;
+  if (!isSentryReady()) return;
 
   Sentry.withScope((scope) => {
     if (metadata) scope.setExtras(metadata);
     Sentry.captureException(error);
   });
+}
+
+/**
+ * Sets the active user context on Sentry.
+ * No-op when Sentry is not initialised.
+ *
+ * @example
+ * setUser({ id: uid, email });
+ * setUser(null); // clears user on logout
+ */
+export function setUser(user: Sentry.User | null): void {
+  if (!isSentryReady()) return;
+  Sentry.setUser(user);
 }
