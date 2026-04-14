@@ -1,0 +1,286 @@
+# SonarCloud Architecture Definition — PUIntegra
+# Defines intended component boundaries and allowed/forbidden dependencies.
+# SonarCloud will raise issues on any deviation detected in source code.
+#
+# Architecture: Three-layer monorepo
+#   shared  →  Zod schemas + constants (pure contract layer)
+#   api     →  Cloud Functions + Hono router + Firestore services (backend)
+#   web     →  Vue 3 SPA + Pinia + Vue Router + Vuestic UI (frontend)
+#
+# Communication boundary: api ↔ web is REST/HTTP only — never direct imports.
+#
+# References:
+#   openspec/specs/engineering-standards.md
+#   packages/web/specs/frontend-foundations.md
+#   packages/*/AGENTS.md, firebase/AGENTS.md
+
+version: "1"
+
+components:
+
+  # ─── Contract Layer ──────────────────────────────────────────────────────────
+  # Single source of truth for all domain types, Zod schemas, and constants.
+  # Consumed by both api and web. Must remain pure (no upward dependencies).
+  - name: Shared
+    paths:
+      - packages/shared/src/**
+
+  # ─── Backend Layer ───────────────────────────────────────────────────────────
+  # Cloud Functions + Hono router. Firestore/Admin SDK access MUST be confined
+  # to src/services/. Auth validation MUST be confined to src/middleware/.
+  - name: API
+    paths:
+      - packages/api/src/**
+
+  # ── API Internal Sub-components ─────────────────────────────────────────────
+  # Enforce internal layering within the API package.
+
+  - name: API-Functions
+    paths:
+      - packages/api/src/functions/**
+
+  - name: API-Middleware
+    paths:
+      - packages/api/src/middleware/**
+
+  - name: API-Services
+    paths:
+      - packages/api/src/services/**
+
+  # ─── Frontend Layer ──────────────────────────────────────────────────────────
+  # Vue 3 SPA. No Firebase SDK. No direct API package imports.
+  # All external/internal deps must be accessed via bom.ts or direct paths.
+  - name: Web
+    paths:
+      - packages/web/src/**
+
+  # ── Web Internal Sub-components ─────────────────────────────────────────────
+  # Enforce the presentational-component → composable → store → shared layering.
+
+  - name: Web-Components
+    paths:
+      - packages/web/src/components/**
+
+  - name: Web-Composables
+    paths:
+      - packages/web/src/composables/**
+
+  - name: Web-Stores
+    paths:
+      - packages/web/src/stores/**
+
+  - name: Web-Pages
+    paths:
+      - packages/web/src/pages/**
+
+  - name: Web-Router
+    paths:
+      - packages/web/src/router/**
+
+  - name: Web-SharedConstants
+    paths:
+      - packages/web/src/shared/**
+
+  - name: Web-BoM
+    paths:
+      - packages/web/src/bom.ts
+
+  # ─── Firebase Configuration ──────────────────────────────────────────────────
+  # Declarative rules and specs — must never import executable code.
+  - name: Firebase
+    paths:
+      - firebase/**
+
+relationships:
+
+  # ══════════════════════════════════════════════════════════════════════════════
+  # CROSS-PACKAGE RULES
+  # ══════════════════════════════════════════════════════════════════════════════
+
+  # Shared is consumed by API and Web (read-only contract).
+  # Shared must NOT import upward — it has no runtime dependencies.
+  - from: API
+    to: Shared
+    status: ALLOWED
+
+  - from: Web
+    to: Shared
+    status: ALLOWED
+
+  - from: Shared
+    to: API
+    status: FORBIDDEN
+
+  - from: Shared
+    to: Web
+    status: FORBIDDEN
+
+  # API ↔ Web boundary: communication is REST/HTTP only.
+  # Direct package imports across this boundary are forbidden.
+  - from: API
+    to: Web
+    status: FORBIDDEN
+
+  - from: Web
+    to: API
+    status: FORBIDDEN
+
+  # Firebase configuration is declarative — it must not import source code.
+  - from: Firebase
+    to: API
+    status: FORBIDDEN
+
+  - from: Firebase
+    to: Web
+    status: FORBIDDEN
+
+  - from: Firebase
+    to: Shared
+    status: FORBIDDEN
+
+  # ══════════════════════════════════════════════════════════════════════════════
+  # API INTERNAL LAYER RULES
+  # ══════════════════════════════════════════════════════════════════════════════
+
+  # Handlers (functions/) call services and middleware — never SDK directly.
+  - from: API-Functions
+    to: API-Services
+    status: ALLOWED
+
+  - from: API-Functions
+    to: API-Middleware
+    status: ALLOWED
+
+  # Services layer owns all Firestore/Admin SDK access.
+  # Middleware layer owns all auth token validation.
+  # Neither depends on the other.
+  - from: API-Services
+    to: API-Functions
+    status: FORBIDDEN
+
+  - from: API-Services
+    to: API-Middleware
+    status: FORBIDDEN
+
+  - from: API-Middleware
+    to: API-Functions
+    status: FORBIDDEN
+
+  - from: API-Middleware
+    to: API-Services
+    status: FORBIDDEN
+
+  # ══════════════════════════════════════════════════════════════════════════════
+  # WEB INTERNAL LAYER RULES
+  # ══════════════════════════════════════════════════════════════════════════════
+
+  # Components are presentational only.
+  # They receive data via props and emit events.
+  # FORBIDDEN: direct store access, direct composable-with-side-effects access.
+  - from: Web-Components
+    to: Web-Stores
+    status: FORBIDDEN
+
+  - from: Web-Components
+    to: Web-Router
+    status: FORBIDDEN
+
+  # Composables orchestrate stores and expose reactive data to pages/router.
+  - from: Web-Composables
+    to: Web-Stores
+    status: ALLOWED
+
+  - from: Web-Composables
+    to: Web-SharedConstants
+    status: ALLOWED
+
+  - from: Web-Composables
+    to: Web-BoM
+    status: ALLOWED
+
+  # Pages call composables and render components.
+  # Pages may also use stores directly when no composable abstraction is needed.
+  - from: Web-Pages
+    to: Web-Composables
+    status: ALLOWED
+
+  - from: Web-Pages
+    to: Web-Components
+    status: ALLOWED
+
+  - from: Web-Pages
+    to: Web-Stores
+    status: ALLOWED
+
+  - from: Web-Pages
+    to: Web-BoM
+    status: ALLOWED
+
+  # Router guards access stores (via Pinia injection) and shared constants.
+  - from: Web-Router
+    to: Web-Stores
+    status: ALLOWED
+
+  - from: Web-Router
+    to: Web-SharedConstants
+    status: ALLOWED
+
+  - from: Web-Router
+    to: Web-BoM
+    status: ALLOWED
+
+  # Stores depend only on shared contracts and the BoM for framework primitives.
+  - from: Web-Stores
+    to: Web-SharedConstants
+    status: ALLOWED
+
+  - from: Web-Stores
+    to: Web-BoM
+    status: ALLOWED
+
+  # Stores must NOT import upward from composables or pages (would be circular).
+  - from: Web-Stores
+    to: Web-Composables
+    status: FORBIDDEN
+
+  - from: Web-Stores
+    to: Web-Pages
+    status: FORBIDDEN
+
+  - from: Web-Stores
+    to: Web-Router
+    status: FORBIDDEN
+
+  # Web-local constants/logging layer depends only on Shared (for types).
+  # It must NOT depend on stores, composables, or components.
+  - from: Web-SharedConstants
+    to: Web-Stores
+    status: FORBIDDEN
+
+  - from: Web-SharedConstants
+    to: Web-Composables
+    status: FORBIDDEN
+
+  - from: Web-SharedConstants
+    to: Web-Components
+    status: FORBIDDEN
+
+  - from: Web-SharedConstants
+    to: Web-Pages
+    status: FORBIDDEN
+
+  # BoM (bom.ts) is a central re-exporter.
+  # Files re-exported by bom.ts must NOT import FROM bom.ts — circular dependency.
+  # This rule catches the most dangerous circular pattern:
+  #   stores and composables (which bom.ts re-exports) importing back from bom.ts.
+  - from: Web-Stores
+    to: Web-BoM
+    status: FORBIDDEN
+
+  - from: Web-Composables
+    to: Web-BoM
+    status: FORBIDDEN
+
+  - from: Web-Components
+    to: Web-BoM
+    status: FORBIDDEN
