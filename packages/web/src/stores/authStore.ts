@@ -15,7 +15,9 @@ import { defineStore, AuthenticatedRoleSchema, RoleSchema, ROLE, z } from '@/bom
 const DEV_MOCK_RFCS = ['XAXX010101000', 'BBB010101BBB']
 type Role = z.infer<typeof RoleSchema>
 
-/** Single source of truth for the unauthenticated state shape. */
+/**
+ * Single source of truth for the unauthenticated state shape.
+ */
 function anonymousState() {
 	return {
 		isAuthenticated: false,
