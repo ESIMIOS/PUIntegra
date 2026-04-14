@@ -4,6 +4,10 @@ on:
   push:
     branches:
       - stage
+    paths-ignore:
+      - "**/*.md"
+      - "openspec/**"
+      - "1-Análisis/**"
 
 jobs:
   deploy-staging:
