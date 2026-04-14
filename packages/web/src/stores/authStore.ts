@@ -22,11 +22,15 @@ export const useAuthStore = defineStore('auth', {
     activeRole: Role;
     requiresSecuritySetup: boolean;
     allowedInstitutionRfcs: string[];
+    uid: string | null;
+    email: string | null;
   } => ({
     isAuthenticated: false,
     activeRole: ROLE.ANONYMOUS,
     requiresSecuritySetup: false,
-    allowedInstitutionRfcs: DEFAULT_RFCS
+    allowedInstitutionRfcs: DEFAULT_RFCS,
+    uid: null,
+    email: null
   }),
   actions: {
     setAuthenticated(value: boolean) {
@@ -56,6 +60,8 @@ export const useAuthStore = defineStore('auth', {
       this.isAuthenticated = false;
       this.activeRole = ROLE.ANONYMOUS;
       this.requiresSecuritySetup = false;
+      this.uid = null;
+      this.email = null;
     }
   }
 });

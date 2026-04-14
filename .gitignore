@@ -69,6 +69,11 @@ web_modules/
 .env
 .env.*
 !.env.example
+# Mode files contain no secrets and are committed so CI and new devs get defaults
+!.env.development
+!.env.staging
+!.env.production
+# .env.local is git-ignored — use it for personal secrets or variables (VITE_SENTRY_DSN, etc.)
 
 # parcel-bundler cache (https://parceljs.org/)
 .cache

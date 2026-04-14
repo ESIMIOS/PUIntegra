@@ -1,0 +1,40 @@
+name: Deploy — Production
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy-production:
+    name: Build & Deploy to Production
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@fe02b34f77f8bc703788d5817da081398fad5dd2 # v4.0.0
+        with:
+          version: latest
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        #SONARQUBE: --ignore-scripts should not be used here because we need to run the postinstall scripts to build native dependencies like esbuild, there are white-listed in the root package.json using onlyBuiltDependencies
+        run: pnpm install --frozen-lockfile #NOSONAR
+
+      - name: Build (production mode)
+        run: pnpm --filter web build -- --mode production
+        env:
+          VITE_SENTRY_RELEASE: ${{ github.sha }}
+
+      - name: Deploy to Firebase (production)
+        uses: FirebaseExtended/action-hosting-deploy@e2eda2e106cfa35cdbcf4ac9ddaf6c4756df2c8c # v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_PRODUCTION }}
+          projectId: puintegra-production
+          channelId: live
