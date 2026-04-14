@@ -20,6 +20,6 @@
     "@typescript-eslint/parser": "8.31.1",
     "eslint": "9.25.1",
     "typescript": "5.4.5",
-    "vitest": "1.6.0"
+    "vitest": "1.6.1"
   }
 }
