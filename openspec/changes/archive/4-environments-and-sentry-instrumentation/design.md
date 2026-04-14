@@ -146,7 +146,7 @@ Each job uses a dedicated service account secret (`FIREBASE_SERVICE_ACCOUNT_STAG
 | Variable | Purpose | Required in prod |
 |---|---|---|
 | `VITE_SENTRY_DSN` | Routes events to the correct project | Yes |
-| `VITE_SENTRY_ENVIRONMENT` | Tags events (`production`, `staging`) | Yes |
+| `VITE_APP_ENV` | Tags events (`production`, `staging`) | Yes |
 | `VITE_SENTRY_RELEASE` | Links events to a specific deploy | Recommended |
 
 If `VITE_SENTRY_DSN` is absent or empty, `sentry.ts` exits early without calling `Sentry.init`.
