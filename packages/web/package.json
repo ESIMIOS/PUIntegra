@@ -8,6 +8,7 @@
     "build": "vue-tsc --noEmit && vite build",
     "typecheck": "vue-tsc --noEmit",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "lint:jsdoc": "node ./scripts/check-jsdoc.mjs",
     "lint": "pnpm run lint:jsdoc && eslint ."
   },
@@ -25,6 +26,7 @@
     "@typescript-eslint/eslint-plugin": "8.31.1",
     "@typescript-eslint/parser": "8.31.1",
     "@vitejs/plugin-vue": "5.0.4",
+    "@vitest/coverage-v8": "1.6.1",
     "@vue/test-utils": "2.4.6",
     "eslint": "9.25.1",
     "eslint-plugin-vue": "10.1.0",

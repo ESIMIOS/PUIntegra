@@ -65,6 +65,13 @@ export default defineConfig({
       deps: {
         inline: ['vuestic-ui']
       }
+    },
+    coverage: {
+      provider: 'v8',
+      reporter: ['lcov', 'text-summary'],
+      reportsDirectory: './coverage',
+      include: ['src/**/*.{ts,vue}'],
+      exclude: ['src/**/*.d.ts', 'src/main.ts']
     }
   }
 });
