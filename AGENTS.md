@@ -86,9 +86,10 @@ ALWAYS use the edit tool for all file modifications. Heredoc is only acceptable 
 NEVER use the edit tool to modify package.json files directly.
 Use ecosystem commands instead — they understand the format and make atomic changes:
 - `pnpm pkg set scripts.foo="bar"` to add/change a script field
-- `pnpm add <pkg>` / `pnpm remove <pkg>` to manage dependencies
+- `pnpm add <pkg>` / `pnpm remove <pkg>` to manage dependencies — this also updates the lockfile
 - `node -e "..."` or `jq` for deep JSON mutations
-Raw text edits on package.json risk dropping keys and producing invalid JSON.
+Raw text edits on package.json risk dropping keys (invalid JSON) and leave pnpm-lock.yaml out of sync.
+If a direct package.json edit was unavoidable, always run `pnpm install` immediately after to resync the lockfile.
 
 
 All types must be inferred from Zod:
