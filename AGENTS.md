@@ -193,6 +193,10 @@ Non-VS-Code agents (Codex, Claude, etc.) must read these files explicitly when p
 **When performing any OpenSpec operation, read the corresponding workflow file first.**
 
 
+Confirmed plans are not implementation approval. After a human confirms a plan,
+STOP and wait for an explicit apply/implement request so the human can choose
+which model or agent should execute the plan.
+
 Ask before generating. A clarifying question takes 10 seconds.
 A file generated from wrong assumptions takes 30 minutes to untangle.
 If you are unsure whether a change affects the shared contract, assume it does
