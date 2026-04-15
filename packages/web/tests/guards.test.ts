@@ -89,4 +89,30 @@ describe('route guards in mock mode', () => {
 
     expect(router.currentRoute.value.path).toBe('/admin/institutions');
   });
+
+  it('allows admin inspection route for DEFAULT_RFC while keeping SYSTEM_RFC context', async () => {
+    const { router, authStore, institutionStore } = createRouterWithStores();
+
+    authStore.setRole(ROLE.SYSTEM_ADMINISTRATOR);
+    authStore.setRequiresSecuritySetup(false);
+    institutionStore.setActiveRfc(SYSTEM_RFC);
+
+    await router.push(`/admin/institutions/${DEFAULT_RFC}`);
+
+    expect(router.currentRoute.value.path).toBe(`/admin/institutions/${DEFAULT_RFC}`);
+    expect(institutionStore.activeRfc).toBe(SYSTEM_RFC);
+  });
+
+  it('rejects institution administrator when SYSTEM_RFC is active', async () => {
+    const { router, authStore, institutionStore } = createRouterWithStores();
+
+    authStore.setRole(ROLE.INSTITUTION_ADMIN);
+    authStore.setRequiresSecuritySetup(false);
+    authStore.setAllowedInstitutionRfcs([DEFAULT_RFC]);
+    institutionStore.setActiveRfc(SYSTEM_RFC);
+
+    await router.push(`/app/${DEFAULT_RFC}/dashboard`);
+
+    expect(router.currentRoute.value.path).toBe('/error/403');
+  });
 });

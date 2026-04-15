@@ -62,6 +62,10 @@ Define project-wide engineering documentation and code conventions that apply ac
 
 - Domain string literals (roles, statuses, permissions, etc.) must be declared once in a single shared constant source.
 - Zod schemas, subset lists, and inferred types must be derived from that constant source.
+- For constrained vocabularies, use this canonical shape:
+  - `UPPER_SNAKE_CASE` object with stable values (`as const`)
+  - `<Domain>Values` derived from that object
+  - `z.enum(<Domain>Values)` for runtime validation
 - Responsibility split must be explicit:
   - constants define the domain vocabulary (canonical values used by business logic),
   - schemas validate unknown/runtime inputs against that vocabulary.
@@ -78,6 +82,20 @@ Define project-wide engineering documentation and code conventions that apply ac
 - Keep related files paired by naming and proximity to reduce cognitive load:
   - `src/constants/<entity>.ts`
   - `src/schemas/<entity>.schema.ts`
+
+## Timestamp policy
+
+- All persisted domain timestamps must use **UTC epoch milliseconds** as `number`.
+- Shared schemas must validate them with an explicit timestamp schema (for example `TimestampMillisecondsUtcSchema`).
+- Do not use ISO datetime strings in persisted entity contracts unless a spec explicitly requires external interoperability format.
+
+## Web message boundary policy
+
+- `webSystemMessages` is strictly technical/observability catalog.
+- User-facing copy must be defined in `webUIMessages` (or equivalent UI message catalog), never embedded in system telemetry messages.
+- Store/controller layers may map technical errors to UI messages, but must keep both catalogs separated.
+- Message code format is `PACKAGE-CONTEXT-NNN` (single numeric sequence, zero-padded to 3 digits), for example `WEB-GUARD-001`.
+- Do not encode HTTP semantics in message codes; severity and metadata represent operational context.
 
 ## Spec maintenance model
 

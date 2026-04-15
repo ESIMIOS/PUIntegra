@@ -10,13 +10,14 @@
 
 import {
   computed,
-  z,
+  onMounted,
+  ROLE,
   RoleSchema,
+  z,
   useAuthStore,
+  useMockDataStore,
   useInstitutionStore,
-  DEFAULT_RFC,
-  SYSTEM_RFC,
-  ROLE
+  withMockControllerDelay
 } from '@/bom';
 
 /**
@@ -25,31 +26,30 @@ import {
 export function useMockSession() {
   const authStore = useAuthStore();
   const institutionStore = useInstitutionStore();
+  const mockDataStore = useMockDataStore();
 
   /**
    * @description Sincroniza RFC fijo por rol: anónimo vacío, sistema SYSTEM_RFC, institucional DEFAULT_RFC.
    */
-  function syncRfcForRole(role: z.infer<typeof RoleSchema>) {
-    if (role === ROLE.SYSTEM_ADMINISTRATOR) {
-      institutionStore.setActiveRfc(SYSTEM_RFC);
-      return;
-    }
-
-    if (role === ROLE.ANONYMOUS) {
+  async function syncSessionForRole(role: z.infer<typeof RoleSchema>) {
+    const profile = await mockDataStore.resolveSessionProfileByRole(role);
+    authStore.setAllowedInstitutionRfcs(profile.allowedInstitutionRfcs);
+    authStore.setIdentity({
+      uid: profile.user.userId,
+      email: profile.user.email
+    });
+    if (!profile.activeRfc) {
       institutionStore.clearActiveRfc();
       return;
     }
-
-    if (role === ROLE.INSTITUTION_ADMIN || role === ROLE.INSTITUTION_OPERATOR) {
-      institutionStore.setActiveRfc(DEFAULT_RFC);
-    }
+    institutionStore.setActiveRfc(profile.activeRfc);
   }
 
   const roleModel = computed({
     get: () => authStore.activeRole,
-    set: (value: z.infer<typeof RoleSchema>) => {
+    set: async (value: z.infer<typeof RoleSchema>) => {
       authStore.setRole(value);
-      syncRfcForRole(value);
+      await withMockControllerDelay(() => syncSessionForRole(value));
     }
   });
 
@@ -65,35 +65,40 @@ export function useMockSession() {
    */
   function setAnonymous() {
     authStore.resetToAnonymous();
-    syncRfcForRole(ROLE.ANONYMOUS);
+    institutionStore.clearActiveRfc();
   }
 
   /**
    * @description Ajusta la sesión mock al perfil administrador institucional.
    */
-  function setInstitutionAdmin() {
+  async function setInstitutionAdmin() {
     authStore.setRole(ROLE.INSTITUTION_ADMIN);
     authStore.setRequiresSecuritySetup(false);
-    syncRfcForRole(ROLE.INSTITUTION_ADMIN);
+    await withMockControllerDelay(() => syncSessionForRole(ROLE.INSTITUTION_ADMIN));
   }
 
   /**
    * @description Ajusta la sesión mock al perfil operador institucional.
    */
-  function setInstitutionOperator() {
+  async function setInstitutionOperator() {
     authStore.setRole(ROLE.INSTITUTION_OPERATOR);
     authStore.setRequiresSecuritySetup(false);
-    syncRfcForRole(ROLE.INSTITUTION_OPERATOR);
+    await withMockControllerDelay(() => syncSessionForRole(ROLE.INSTITUTION_OPERATOR));
   }
 
   /**
    * @description Ajusta la sesión mock al perfil administrador del proveedor.
    */
-  function setSystemAdministrator() {
+  async function setSystemAdministrator() {
     authStore.setRole(ROLE.SYSTEM_ADMINISTRATOR);
     authStore.setRequiresSecuritySetup(false);
-    syncRfcForRole(ROLE.SYSTEM_ADMINISTRATOR);
+    await withMockControllerDelay(() => syncSessionForRole(ROLE.SYSTEM_ADMINISTRATOR));
   }
+
+  onMounted(async () => {
+    await mockDataStore.hydrate();
+    await syncSessionForRole(authStore.activeRole);
+  });
 
   return {
     authStore,

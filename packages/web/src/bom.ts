@@ -52,9 +52,35 @@ export { default as ThemeToggle } from '@/components/shared/ThemeToggle.vue';
 export { useAuthStore } from '@/stores/authStore';
 export { useInstitutionStore } from '@/stores/institutionStore';
 export { useMockSession } from '@/composables/useMockSession';
+export {
+  useAccountSettingsController,
+  useContactsController,
+  useDashboardController,
+  useFindingsController,
+  useInstitutionSelectionController,
+  useInstitutionSettingsController,
+  useLogsController,
+  useMockDataResetController,
+  usePermissionsController,
+  useRequestsController
+} from '@/composables/useMockDataControllers';
 export { useRouteNavigation } from '@/composables/useRouteNavigation';
 export { useSessionInactivity } from '@/composables/useSessionInactivity';
 export { useThemePreference } from '@/composables/useThemePreference';
+export { useMockDataStore } from '@/stores/mockDataStore';
+export { MOCK_MILLISECONDS_RESPONSE_DELAY } from '@/mock/constants/mockConfig';
+export { withMockControllerDelay } from '@/mock/controllers/controllerDelay';
+export { MockDataError, isMockDataError } from '@/mock/errors/mockDataError';
+export { canonicalMockSeedDataset, cloneMockDataset } from '@/mock/seed/mockSeed';
+export { createMockDataService } from '@/mock/services/mockDataService';
+export {
+  loadMockDataset,
+  resetMockDataset,
+  saveMockDataset
+} from '@/mock/storage/mockStorage';
+export { webUIMessages } from '@/shared/constants/webUIMessages';
+export { nowUtcMilliseconds, yearsAgoUtcMilliseconds } from '@/shared/utils/dateUtils';
+export { deepClone } from '@/shared/utils/objectUtils';
 
 
 export { webSystemMessages } from '@/shared/constants/systemMessages';
