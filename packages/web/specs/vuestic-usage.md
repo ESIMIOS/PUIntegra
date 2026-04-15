@@ -4,6 +4,13 @@
 
 Define practical rules for using Vuestic UI in `packages/web` so pages, layouts, tests, and future AI-generated code stay consistent.
 
+## Component-First Policy
+
+- Prefer Vuestic components for UI primitives and interaction surfaces before creating custom HTML/CSS equivalents.
+- Typical examples: use `VaProgressBar`, `VaAlert`, `VaInput`, `VaButton`, and `VaCard` instead of re-implementing them with native elements and heavy custom CSS.
+- If a custom rendering is required, justify why Vuestic cannot express the need cleanly in the same change.
+- When custom CSS is needed, prefer global/shared style utilities and reusable classes over many per-component one-off scoped classes.
+
 ## Source Of Truth
 
 - Vuestic plugin configuration lives in `src/plugins/vuestic.ts`.
