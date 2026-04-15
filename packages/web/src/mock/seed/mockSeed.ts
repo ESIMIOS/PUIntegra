@@ -16,11 +16,15 @@ import {
   LOG_CATEGORIES,
   LOG_ORIGIN,
   PERMISSION_STATUS,
+  PUI_FASE_BUSQUEDA,
+  PUI_LUGAR_NACIMIENTO,
+  PUI_SEXO_ASIGNADO,
   ROLE,
   SEARCH_REQUEST_PHASE,
   SEARCH_REQUEST_PHASE_STATUS,
   SEARCH_REQUEST_STATUS,
   SYSTEM_RFC,
+  utcMillisecondsToPuiDate,
   type Contact,
   type Finding,
   type Institution,
@@ -35,6 +39,11 @@ import { deepClone } from '@/shared/utils/objectUtils';
 import type { MockDataset } from '../types/mockData';
 
 const NOW = nowUtcMilliseconds();
+const TODAY = utcMillisecondsToPuiDate(NOW);
+const FIFTEEN_YEARS_AGO = yearsAgoUtcMilliseconds(15, NOW);
+const FIVE_YEARS_AGO = yearsAgoUtcMilliseconds(5, NOW);
+const FIFTEEN_YEARS_AGO_PUI_DATE = utcMillisecondsToPuiDate(FIFTEEN_YEARS_AGO);
+const FIVE_YEARS_AGO_PUI_DATE = utcMillisecondsToPuiDate(FIVE_YEARS_AGO);
 
 const seedUser: User = {
   userId: 'mock-user-001',
@@ -140,7 +149,7 @@ const seedContacts: Contact[] = [
 
 const seedRequests: Request[] = [
   {
-    requestId: 'request-001',
+    requestId: 'FUB-0001-550e8400-e29b-41d4-a716-446655440001',
     RFC: DEFAULT_RFC,
     FUB: 'FUB-0001',
     CURP: 'AAAA000000HDFXXX00',
@@ -149,12 +158,26 @@ const seedRequests: Request[] = [
     searchRequestBasicDataPhaseStatus: SEARCH_REQUEST_PHASE_STATUS.IN_PROGRESS,
     searchRequestHistoricalPhaseStatus: SEARCH_REQUEST_PHASE_STATUS.PENDING,
     searchRequestContinuousPhaseStatus: SEARCH_REQUEST_PHASE_STATUS.PENDING,
+    data: {
+      id: 'FUB-0001-550e8400-e29b-41d4-a716-446655440001',
+      curp: 'AAAA000000HDFXXX00',
+      nombre: 'Maria',
+      primer_apellido: 'Lopez',
+      fecha_nacimiento: '1990-01-01',
+      fecha_desaparicion: TODAY,
+      lugar_nacimiento: PUI_LUGAR_NACIMIENTO.DF,
+      sexo_asignado: PUI_SEXO_ASIGNADO.M,
+      telefono: '+525500000100',
+      correo: 'persona1@example.test',
+      direccion: 'Calle Demo 1',
+      codigo_postal: '01000'
+    },
     updates: [],
     createdAt: NOW,
     updatedAt: NOW
   },
   {
-    requestId: 'request-002',
+    requestId: 'FUB-0002-550e8400-e29b-41d4-a716-446655440002',
     RFC: DEFAULT_RFC,
     FUB: 'FUB-0002',
     CURP: 'AAAA000000HDFXXX01',
@@ -163,48 +186,92 @@ const seedRequests: Request[] = [
     searchRequestBasicDataPhaseStatus: SEARCH_REQUEST_PHASE_STATUS.PENDING,
     searchRequestHistoricalPhaseStatus: SEARCH_REQUEST_PHASE_STATUS.PENDING,
     searchRequestContinuousPhaseStatus: SEARCH_REQUEST_PHASE_STATUS.PENDING,
+    data: {
+      id: 'FUB-0002-550e8400-e29b-41d4-a716-446655440002',
+      curp: 'AAAA000000HDFXXX01',
+      nombre: 'Jose',
+      primer_apellido: 'Hernandez',
+      fecha_nacimiento: '1985-02-02',
+      lugar_nacimiento: PUI_LUGAR_NACIMIENTO.JC,
+      sexo_asignado: PUI_SEXO_ASIGNADO.H,
+      telefono: '+525500000101',
+      correo: 'persona2@example.test'
+    },
     updates: [],
     createdAt: NOW,
     updatedAt: NOW
   },
   {
-    requestId: 'request-003',
+    requestId: 'FUB-0003-550e8400-e29b-41d4-a716-446655440003',
     RFC: DEFAULT_RFC,
     FUB: 'FUB-0003',
     CURP: 'AAAA000000HDFXXX02',
-    missingDate: yearsAgoUtcMilliseconds(15, NOW),
+    missingDate: FIFTEEN_YEARS_AGO,
     searchRequestStatus: SEARCH_REQUEST_STATUS.ACTIVE,
     searchRequestBasicDataPhaseStatus: SEARCH_REQUEST_PHASE_STATUS.DONE,
     searchRequestHistoricalPhaseStatus: SEARCH_REQUEST_PHASE_STATUS.IN_PROGRESS,
     searchRequestContinuousPhaseStatus: SEARCH_REQUEST_PHASE_STATUS.PENDING,
+    data: {
+      id: 'FUB-0003-550e8400-e29b-41d4-a716-446655440003',
+      curp: 'AAAA000000HDFXXX02',
+      nombre: 'Ana',
+      primer_apellido: 'Garcia',
+      fecha_nacimiento: '1979-03-03',
+      fecha_desaparicion: FIFTEEN_YEARS_AGO_PUI_DATE,
+      lugar_nacimiento: PUI_LUGAR_NACIMIENTO.NL,
+      sexo_asignado: PUI_SEXO_ASIGNADO.M,
+      direccion: 'Calle Historica 3'
+    },
     updates: [],
     createdAt: NOW,
     updatedAt: NOW
   },
   {
-    requestId: 'request-004',
+    requestId: 'FUB-0004-550e8400-e29b-41d4-a716-446655440004',
     RFC: DEFAULT_RFC,
     FUB: 'FUB-0004',
     CURP: 'AAAA000000HDFXXX03',
-    missingDate: yearsAgoUtcMilliseconds(5, NOW),
+    missingDate: FIVE_YEARS_AGO,
     searchRequestStatus: SEARCH_REQUEST_STATUS.ACTIVE,
     searchRequestBasicDataPhaseStatus: SEARCH_REQUEST_PHASE_STATUS.DONE,
     searchRequestHistoricalPhaseStatus: SEARCH_REQUEST_PHASE_STATUS.DONE,
     searchRequestContinuousPhaseStatus: SEARCH_REQUEST_PHASE_STATUS.IN_PROGRESS,
+    data: {
+      id: 'FUB-0004-550e8400-e29b-41d4-a716-446655440004',
+      curp: 'AAAA000000HDFXXX03',
+      nombre: 'Luis',
+      primer_apellido: 'Martinez',
+      fecha_nacimiento: '1992-04-04',
+      fecha_desaparicion: FIVE_YEARS_AGO_PUI_DATE,
+      lugar_nacimiento: PUI_LUGAR_NACIMIENTO.VZ,
+      sexo_asignado: PUI_SEXO_ASIGNADO.H,
+      colonia: 'Centro',
+      municipio_o_alcaldia: 'Veracruz'
+    },
     updates: [],
     createdAt: NOW,
     updatedAt: NOW
   },
   {
-    requestId: 'request-005',
+    requestId: 'FUB-0005-550e8400-e29b-41d4-a716-446655440005',
     RFC: DEFAULT_RFC,
     FUB: 'FUB-0005',
     CURP: 'AAAA000000HDFXXX04',
-    missingDate: yearsAgoUtcMilliseconds(5, NOW),
+    missingDate: FIVE_YEARS_AGO,
     searchRequestStatus: SEARCH_REQUEST_STATUS.REVOKED,
     searchRequestBasicDataPhaseStatus: SEARCH_REQUEST_PHASE_STATUS.REVOKED,
     searchRequestHistoricalPhaseStatus: SEARCH_REQUEST_PHASE_STATUS.REVOKED,
     searchRequestContinuousPhaseStatus: SEARCH_REQUEST_PHASE_STATUS.REVOKED,
+    data: {
+      id: 'FUB-0005-550e8400-e29b-41d4-a716-446655440005',
+      curp: 'AAAA000000HDFXXX04',
+      nombre: 'Sofia',
+      primer_apellido: 'Ramirez',
+      fecha_nacimiento: '2000-05-05',
+      fecha_desaparicion: FIVE_YEARS_AGO_PUI_DATE,
+      lugar_nacimiento: PUI_LUGAR_NACIMIENTO.MC,
+      sexo_asignado: PUI_SEXO_ASIGNADO.X
+    },
     updates: [],
     createdAt: NOW,
     updatedAt: NOW
@@ -220,7 +287,17 @@ const seedFindings: Finding[] = [
     searchRequestPhase: SEARCH_REQUEST_PHASE.SEARCH_REQUEST_BASIC_DATA,
     PUISyncStatus: FINDING_PUI_SYNC_STATUS.PENDING,
     PUISyncScheduleDate: NOW,
-    data: { id: 'finding-contract-001' },
+    data: {
+      id: 'FUB-0001-550e8400-e29b-41d4-a716-446655440101',
+      institucion_id: DEFAULT_RFC,
+      curp: 'AAAA000000HDFXXX00',
+      fase_busqueda: PUI_FASE_BUSQUEDA.FASE_1,
+      lugar_nacimiento: PUI_LUGAR_NACIMIENTO.DF,
+      nombre_completo: {
+        nombre: 'Maria',
+        primer_apellido: 'Lopez'
+      }
+    },
     responses: [],
     updates: [],
     createdAt: NOW,

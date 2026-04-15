@@ -5,7 +5,7 @@ PUIntegra now has the PUI web-service TypeScript contract available, but it is o
 ## What Changes
 
 - Add PUI transport Zod schemas as the canonical source of truth for PUI web-service payload validation and inferred TypeScript types.
-- Replace duplicated or handwritten PUI transport interfaces with schema-inferred types; `packages/shared/src/constants/PUI.ts` becomes transitional compatibility only or is removed after imports migrate.
+- Replace duplicated or handwritten PUI transport interfaces with schema-inferred types and remove `packages/shared/src/constants/PUI.ts` as a duplicate contract surface.
 - Update `RequestSchema` so internal request documents store `data: PUIPUIActivaReporteEnInstitucionPayload`.
 - Update `FindingSchema` so internal finding documents store `data: PUIInstitucionNotificaCoincidenciaEnPUIPayload` instead of an unconstrained record.
 - Add mapper utilities between internal domain enums and PUI transport enums, especially `SEARCH_REQUEST_PHASE` and `PUIFaseBusqueda`.
@@ -32,7 +32,7 @@ PUIntegra now has the PUI web-service TypeScript contract available, but it is o
   - `packages/shared/src/schemas/finding.schema.ts` will replace generic finding data with typed PUI match payload data.
   - `packages/shared/src/index.ts` will export the new schemas, constants, mappers, utilities, and inferred types.
 - Affected shared constants:
-  - `packages/shared/src/constants/PUI.ts` will stop being an independent contract source and become transitional re-export or be removed after migration.
+  - `packages/shared/src/constants/PUI.ts` will be removed because no imports require transitional compatibility.
 - Affected web mock files:
   - mock seed, fixture tests, repository/service/controller tests that validate requests/findings.
 - Affected documentation:

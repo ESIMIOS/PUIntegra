@@ -21,6 +21,8 @@ import {
   LOG_ORIGIN,
   PERMISSION_STATUS,
   LogSchema,
+  PUI_FASE_BUSQUEDA,
+  PUI_LUGAR_NACIMIENTO,
   PermissionSchema,
   RequestSchema,
   ROLE,
@@ -31,6 +33,22 @@ import {
 } from '../src';
 
 const NOW = Date.now();
+const PUI_CASE_ID = 'FUB-0001-550e8400-e29b-41d4-a716-446655440000';
+const REQUEST_DATA = {
+  id: PUI_CASE_ID,
+  curp: 'AAAA000000HDFXXX00',
+  nombre: 'Maria',
+  primer_apellido: 'Lopez',
+  fecha_desaparicion: '2026-04-15',
+  lugar_nacimiento: PUI_LUGAR_NACIMIENTO.DF
+};
+const FINDING_DATA = {
+  id: PUI_CASE_ID,
+  institucion_id: 'XAXX010101000',
+  curp: 'AAAA000000HDFXXX00',
+  fase_busqueda: PUI_FASE_BUSQUEDA.FASE_1,
+  lugar_nacimiento: PUI_LUGAR_NACIMIENTO.DF
+};
 
 describe('stage1 schemas', () => {
   it('accepts valid stage1 entity payloads', () => {
@@ -86,6 +104,7 @@ describe('stage1 schemas', () => {
       searchRequestBasicDataPhaseStatus: SEARCH_REQUEST_PHASE_STATUS.IN_PROGRESS,
       searchRequestHistoricalPhaseStatus: SEARCH_REQUEST_PHASE_STATUS.PENDING,
       searchRequestContinuousPhaseStatus: SEARCH_REQUEST_PHASE_STATUS.PENDING,
+      data: REQUEST_DATA,
       createdAt: NOW,
       updatedAt: NOW
     }).success).toBe(true);
@@ -98,7 +117,7 @@ describe('stage1 schemas', () => {
       searchRequestPhase: SEARCH_REQUEST_PHASE.SEARCH_REQUEST_BASIC_DATA,
       PUISyncStatus: FINDING_PUI_SYNC_STATUS.PENDING,
       PUISyncScheduleDate: NOW,
-      data: { id: 'finding-contract-id' },
+      data: FINDING_DATA,
       createdAt: NOW,
       updatedAt: NOW
     }).success).toBe(true);
@@ -169,6 +188,7 @@ describe('stage1 schemas', () => {
       searchRequestBasicDataPhaseStatus: SEARCH_REQUEST_PHASE_STATUS.IN_PROGRESS,
       searchRequestHistoricalPhaseStatus: SEARCH_REQUEST_PHASE_STATUS.PENDING,
       searchRequestContinuousPhaseStatus: 'BAD',
+      data: REQUEST_DATA,
       createdAt: NOW,
       updatedAt: NOW
     }).success).toBe(false);
@@ -181,7 +201,7 @@ describe('stage1 schemas', () => {
       searchRequestPhase: 'INVALID_PHASE',
       PUISyncStatus: FINDING_PUI_SYNC_STATUS.PENDING,
       PUISyncScheduleDate: NOW,
-      data: { id: 'finding-contract-id' },
+      data: FINDING_DATA,
       createdAt: NOW,
       updatedAt: NOW
     }).success).toBe(false);
@@ -196,6 +216,36 @@ describe('stage1 schemas', () => {
       impact: {},
       searchRequest: {},
       createdAt: NOW
+    }).success).toBe(false);
+  });
+
+  it('requires PUI-shaped request and finding data', () => {
+    expect(RequestSchema.safeParse({
+      requestId: 'req-001',
+      RFC: 'XAXX010101000',
+      FUB: 'FUB-0001',
+      CURP: 'AAAA000000HDFXXX00',
+      missingDate: NOW,
+      searchRequestStatus: SEARCH_REQUEST_STATUS.ACTIVE,
+      searchRequestBasicDataPhaseStatus: SEARCH_REQUEST_PHASE_STATUS.IN_PROGRESS,
+      searchRequestHistoricalPhaseStatus: SEARCH_REQUEST_PHASE_STATUS.PENDING,
+      searchRequestContinuousPhaseStatus: SEARCH_REQUEST_PHASE_STATUS.PENDING,
+      data: { id: 'missing-required-activation-fields' },
+      createdAt: NOW,
+      updatedAt: NOW
+    }).success).toBe(false);
+
+    expect(FindingSchema.safeParse({
+      findingId: 'finding-001',
+      RFC: 'XAXX010101000',
+      FUB: 'FUB-0001',
+      CURP: 'AAAA000000HDFXXX00',
+      searchRequestPhase: SEARCH_REQUEST_PHASE.SEARCH_REQUEST_BASIC_DATA,
+      PUISyncStatus: FINDING_PUI_SYNC_STATUS.PENDING,
+      PUISyncScheduleDate: NOW,
+      data: { id: 'generic-data-is-not-enough' },
+      createdAt: NOW,
+      updatedAt: NOW
     }).success).toBe(false);
   });
 });

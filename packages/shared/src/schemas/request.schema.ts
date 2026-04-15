@@ -10,6 +10,7 @@
 
 import { z } from 'zod';
 import { TimestampMillisecondsUtcSchema, UpdateActorSchema } from './domain-common.schema';
+import { PUIPUIActivaReporteEnInstitucionPayloadSchema } from './pui-transport.schema';
 
 export const SEARCH_REQUEST_STATUS = {
   ACTIVE: 'ACTIVE',
@@ -71,6 +72,7 @@ export const RequestSchema = z.object({
   searchRequestBasicDataPhaseStatus: SearchRequestPhaseStatusSchema,
   searchRequestHistoricalPhaseStatus: SearchRequestPhaseStatusSchema,
   searchRequestContinuousPhaseStatus: SearchRequestPhaseStatusSchema,
+  data: PUIPUIActivaReporteEnInstitucionPayloadSchema,
   updates: z.array(RequestUpdateSchema).default([]),
   createdAt: TimestampMillisecondsUtcSchema,
   updatedAt: TimestampMillisecondsUtcSchema

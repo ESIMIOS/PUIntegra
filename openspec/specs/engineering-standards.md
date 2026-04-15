@@ -51,6 +51,7 @@ Define project-wide engineering documentation and code conventions that apply ac
 
 - Prefer `String.prototype.replaceAll()` over `String.prototype.replace()` when replacing every occurrence of a plain string pattern, to satisfy SonarQube `typescript:S7781` and make the intended global replacement explicit.
 - Avoid nested template literals. Extract the inner expression to a named constant or compose the string in separate steps to satisfy SonarQube `typescript:S4624` and keep interpolation readable.
+- Prefer negative indexes with `String.prototype.slice()` when trimming a known suffix length, for example `value.slice(0, -37)` instead of `value.slice(0, value.length - 37)`.
 
 ## Shared contract placement
 

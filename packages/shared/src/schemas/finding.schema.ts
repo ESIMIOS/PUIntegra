@@ -13,6 +13,7 @@ import {
   TimestampMillisecondsUtcSchema,
   UpdateActorSchema
 } from './domain-common.schema';
+import { PUIInstitucionNotificaCoincidenciaEnPUIPayloadSchema } from './pui-transport.schema';
 import { SearchRequestPhaseSchema } from './request.schema';
 
 export const FINDING_PUI_SYNC_STATUS = {
@@ -36,7 +37,7 @@ export const FindingResponseSchema = z.object({
   response: z.record(z.unknown())
 });
 
-export const FindingDataSchema = z.record(z.unknown());
+export const FindingDataSchema = PUIInstitucionNotificaCoincidenciaEnPUIPayloadSchema;
 
 export const FindingUpdateSchema = UpdateActorSchema.extend({
   previousPUISyncStatus: FindingPuiSyncStatusSchema.nullable().optional(),

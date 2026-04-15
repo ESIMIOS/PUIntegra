@@ -19,6 +19,7 @@ Define persistent rules for `packages/shared` as the system-wide contract packag
 - Constants and schemas belong to the same domain concept but different responsibilities:
   - `src/constants/*`: canonical domain values for business logic.
   - `src/schemas/*`: runtime validation contracts for unknown/dynamic inputs.
+- Transport contracts for external web-service payloads are schema-first. When an external contract must be validated at runtime, the `src/schemas/*` file is the canonical source and any `src/constants/*` module may only re-export or support that schema-backed contract.
 
 ## Constant and role modeling guideline
 
@@ -41,3 +42,16 @@ Define persistent rules for `packages/shared` as the system-wide contract packag
 - Stage-1 entity timestamps use UTC epoch milliseconds (`number`) through `TimestampMillisecondsUtcSchema`.
 - The provider/system context (`SYSTEM_RFC`) is modeled through permissions and context metadata, not as a tenant institution document.
 - Tenant institution collections must represent real institution RFCs only (for example `DEFAULT_RFC` in mock seed).
+
+## PUI transport contract guideline
+
+- PUI web-service payloads are modeled in `src/schemas/pui-transport.schema.ts`.
+- PUI transport schemas preserve wire field names and wire formats, including `snake_case` fields and `YYYY-MM-DD` date strings.
+- TypeScript PUI transport types are inferred from Zod schemas; handwritten interfaces for the same payload shape are not maintained in parallel.
+- `src/constants/PUI.ts` is intentionally absent; PUI transport constants and schemas live together in the schema-backed contract.
+- Internal domain documents keep query/index fields separately from PUI transport payload data.
+- `RequestSchema.data` stores `PUIPUIActivaReporteEnInstitucionPayload`.
+- `FindingSchema.data` stores `PUIInstitucionNotificaCoincidenciaEnPUIPayload`.
+- PUI transport dates convert to internal UTC epoch milliseconds only at mapper or adapter boundaries.
+- Invalid PUI calendar dates must throw at conversion boundaries instead of silently becoming `null`.
+- PUI/internal enum translation must live in explicit mapper utilities, not inline string comparisons in services or UI code.

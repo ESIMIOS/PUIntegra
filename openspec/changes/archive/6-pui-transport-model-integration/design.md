@@ -27,7 +27,7 @@ Internal `RequestSchema` and `FindingSchema` already model operational PUIntegra
 
 ### PUI transport schemas are canonical
 
-Create `packages/shared/src/schemas/pui-transport.schema.ts` and move the effective PUI contract there: value constants, derived value arrays, regex/min/max constants, Zod schemas, and `z.infer` types. `PUI.ts` must not remain a second independent contract source; it may temporarily re-export the new schema module while imports migrate.
+Create `packages/shared/src/schemas/pui-transport.schema.ts` and move the effective PUI contract there: value constants, derived value arrays, regex/min/max constants, Zod schemas, and `z.infer` types. `PUI.ts` must not remain a second independent contract source and is removed because no runtime imports require transitional compatibility.
 
 Alternative considered: keep interfaces in `PUI.ts` and define schemas elsewhere. This was rejected because two parallel contract definitions will drift.
 
@@ -59,7 +59,7 @@ Alternative considered: store transport dates as timestamps inside PUI payloads.
 ## Risks / Trade-offs
 
 - PUI comments may contain ambiguous optionality -> implement only constraints explicitly expressed by the current contract and cover ambiguity in tests.
-- `PUI.ts` import migration can be noisy -> keep a transitional re-export for compatibility, then remove it only when all imports are updated.
+- Removing `PUI.ts` can break untracked external imports -> verify repository imports and expose all PUI contracts from `@puintegra/shared`.
 - Cross-field validation in Zod can increase complexity -> keep payload shape validation in schemas and document mapper-level consistency checks.
 - Mock seeds may need broad fixture edits -> update seed and fixture tests in the same change to prevent stale generic payloads.
 
@@ -77,4 +77,4 @@ Rollback is straightforward before production API adoption: revert the schema, m
 
 ## Open Questions
 
-- Whether `PUI.ts` should be deleted immediately or kept as a temporary re-export depends on import usage during implementation. The preferred default is transitional re-export if any imports remain.
+- No open questions remain for `PUI.ts`; repository imports use schema-backed exports.

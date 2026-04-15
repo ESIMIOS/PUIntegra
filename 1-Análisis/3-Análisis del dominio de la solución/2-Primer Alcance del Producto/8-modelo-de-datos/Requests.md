@@ -20,6 +20,7 @@
 | `requestId` | Identificador único del documento en la colección `Requests`. |
 | `RFC` | Institución responsable de atender la solicitud. |
 | `missingDate` | Fecha asociada al caso o desaparición. |
+| `data` | Payload contractual de activación recibido desde PUI, con forma `PUIPUIActivaReporteEnInstitucionPayload`. |
 | `searchRequestStatus` | Estado general vigente de la solicitud. |
 | `searchRequestBasicDataPhaseStatus` | Estado de la fase de datos básicos. |
 | `searchRequestHistoricalPhaseStatus` | Estado de la fase histórica. |
@@ -64,6 +65,9 @@
 | `requestId` como identificador único de colección | La unicidad técnica del registro debe descansar en `requestId` y no en `FUB`. |
 | `FUB` único por institución | `FUB` debe conservarse como identificador funcional del caso y puede usarse para acceder a una solicitud dentro del contexto de un `RFC`, aunque pueda repetirse entre instituciones distintas. |
 | Correlación transversal | `FUB`, `CURP` y `RFC` deben permitir relacionar la solicitud con hallazgos y logs. |
+| Payload PUI tipado | `data` debe validar contra el contrato de transporte PUI `PUIPUIActivaReporteEnInstitucionPayload`; no debe usarse como contenedor genérico. |
+| Derivación desde PUI | Al crear una solicitud desde `/activar-reporte`, `requestId`, `FUB`, `CURP` y `missingDate` deben derivarse del payload PUI validado y del contexto institucional activo. |
+| Fechas de transporte | Las fechas dentro de `data` conservan formato PUI `YYYY-MM-DD`; los campos internos como `missingDate`, `createdAt` y `updatedAt` usan timestamp UTC en milisegundos. |
 | No depende de interoperabilidad real para existir | La operatividad interna precede a la integración externa. |
 | Atribución mínima de mutaciones | Toda entrada de `updates[]` debe indicar `updateOrigin` y conservar identidad de la persona que realizó el cambio cuando esa atribución exista. |
 | Historial append-only de cambios | Los elementos de `updates[]` solo deben añadirse y no reescribirse ni eliminarse. |

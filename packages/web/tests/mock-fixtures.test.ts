@@ -13,7 +13,13 @@ import {
   cloneMockDataset,
   canonicalMockSeedDataset
 } from '@/bom';
-import { LOG_CATEGORIES, ROLE, SEARCH_REQUEST_STATUS } from '@shared';
+import {
+  LOG_CATEGORIES,
+  PUIInstitucionNotificaCoincidenciaEnPUIPayloadSchema,
+  PUIPUIActivaReporteEnInstitucionPayloadSchema,
+  ROLE,
+  SEARCH_REQUEST_STATUS
+} from '@shared';
 import { MockDatasetSchema } from '@/mock/storage/mockDatasetSchema';
 
 describe('mock fixtures', () => {
@@ -47,5 +53,28 @@ describe('mock fixtures', () => {
 
     const categoryCount = new Set(dataset.logs.map((item) => item.category)).size;
     expect(categoryCount).toBe(Object.values(LOG_CATEGORIES).length);
+  });
+
+  it('uses PUI-shaped request and finding payload data', () => {
+    const dataset = cloneMockDataset(canonicalMockSeedDataset);
+
+    expect(dataset.requests.every((item) => (
+      PUIPUIActivaReporteEnInstitucionPayloadSchema.safeParse(item.data).success
+    ))).toBe(true);
+    expect(dataset.findings.every((item) => (
+      PUIInstitucionNotificaCoincidenciaEnPUIPayloadSchema.safeParse(item.data).success
+    ))).toBe(true);
+  });
+
+  it('rejects old generic finding data and malformed request data', () => {
+    const genericFinding = cloneMockDataset(canonicalMockSeedDataset);
+    genericFinding.findings[0]!.data = { id: 'generic-finding-contract-id' } as never; //NOSONAR - forzamos un valor inválido para probar rechazo de esquema
+
+    expect(MockDatasetSchema.safeParse(genericFinding).success).toBe(false);
+
+    const malformedRequest = cloneMockDataset(canonicalMockSeedDataset);
+    malformedRequest.requests[0]!.data = { id: 'missing-required-request-fields' } as never; //NOSONAR - forzamos un valor inválido para probar rechazo de esquema
+
+    expect(MockDatasetSchema.safeParse(malformedRequest).success).toBe(false);
   });
 });

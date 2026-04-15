@@ -148,3 +148,84 @@ export type {
   LogSeverity,
   SystemMessage
 } from './schemas/system-message.schema';
+
+export {
+  PUI_RFC_REGEX,
+  PUI_CURP_REGEX,
+  PUI_DATE_REGEX,
+  PUI_PASSWORD_REGEX,
+  PUI_PERSON_NAME_REGEX,
+  PUI_OPTIONAL_PERSON_NAME_REGEX,
+  PUI_TEXT_20_REGEX,
+  PUI_TEXT_40_REGEX,
+  PUI_TEXT_50_REGEX,
+  PUI_TEXT_100_REGEX,
+  PUI_TEXT_500_REGEX,
+  PUI_POSTAL_CODE_REGEX,
+  PUI_PHONE_REGEX,
+  PUI_EMAIL_REGEX,
+  PUI_CASE_ID_REGEX,
+  PUI_LUGAR_NACIMIENTO,
+  PuiLugarNacimientoValues,
+  PuiLugarNacimientoSchema,
+  PUI_SEXO_ASIGNADO,
+  PuiSexoAsignadoValues,
+  PuiSexoAsignadoSchema,
+  PUI_FASE_BUSQUEDA,
+  PuiFaseBusquedaValues,
+  PuiFaseBusquedaSchema,
+  PUI_ETIQUETA_HUELLA,
+  PuiEtiquetaHuellaValues,
+  PuiEtiquetaHuellaSchema,
+  PuiRfcSchema,
+  PuiCurpSchema,
+  PuiDateSchema,
+  PuiCaseIdSchema,
+  PuiPasswordSchema,
+  PUILoginInstitucionEnPUIRequestSchema,
+  PUILoginPUIEnInstitucionRequestSchema,
+  PUILoginResponseSchema,
+  PUINombreCompletoSchema,
+  PUIDomicilioSchema,
+  PUIHuellasSchema,
+  PUIInstitucionNotificaCoincidenciaEnPUIPayloadSchema,
+  PUINotificarResponseSchema,
+  PUIPUIActivaReporteEnInstitucionPayloadSchema,
+  PUIInstitucionNotificaBusquedaFinalizadaEnPUIPayloadSchema,
+  PUIReporteActivoSchema,
+  PUIInstitucionConsultaReportesActivosEnPUIResponseSchema,
+  PUIPUIDesactivaReporteEnInstitucionPayloadSchema
+} from './schemas/pui-transport.schema';
+export type {
+  PuiLugarNacimiento,
+  PuiSexoAsignado,
+  PuiFaseBusqueda,
+  PuiEtiquetaHuella,
+  PUILoginInstitucionEnPUIRequest,
+  PUILoginPUIEnInstitucionRequest,
+  PUILoginResponse,
+  PUINombreCompleto,
+  PUIDomicilio,
+  PUIHuellas,
+  PUIInstitucionNotificaCoincidenciaEnPUIPayload,
+  PUINotificarResponse,
+  PUIPUIActivaReporteEnInstitucionPayload,
+  PUIInstitucionNotificaBusquedaFinalizadaEnPUIPayload,
+  PUIReporteActivo,
+  PUIInstitucionConsultaReportesActivosEnPUIResponse,
+  PUIPUIDesactivaReporteEnInstitucionPayload
+} from './schemas/pui-transport.schema';
+
+export {
+  puiDateToUtcMilliseconds,
+  optionalPuiDateToUtcMilliseconds,
+  utcMillisecondsToPuiDate
+} from './utils/puiDateUtils';
+
+export {
+  extractFubFromPuiCaseId,
+  toPuiFaseBusqueda,
+  fromPuiFaseBusqueda,
+  puiActivationPayloadToRequestCreateData,
+  puiMatchPayloadToFindingCreateData
+} from './mappers/puiDomainAdapters';
