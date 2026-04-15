@@ -221,6 +221,20 @@ VaNavbar: {
 
 - Tests may stub `VaIcon` by rendering its `name` prop, but production code must use real `VaIcon`.
 
+## Progress Indicators
+
+- Prefer `<VaProgressBar>` for standard progress bars that fit the Vuestic design system.
+- Prefer native `<progress :max :value>` when custom styling is required — it has equivalent semantics with zero ARIA boilerplate.
+- **Never use** `<div role="progressbar" aria-valuemin aria-valuemax aria-valuenow>` as a workaround.
+  - It triggers SonarCloud `Web:S6819` at IDE level (SonarLint), which `sonar-project.properties` suppressions cannot silence.
+- When styling native `<progress>`, reset browser defaults and use pseudo-elements:
+  ```css
+  progress { appearance: none; border: none; }
+  progress::-webkit-progress-bar  { background: transparent; }
+  progress::-webkit-progress-value { background: var(--domain-accent); }
+  progress::-moz-progress-bar      { background: var(--domain-accent); }
+  ```
+
 ## Common Failure Modes
 
 - Icon name appears as text: Material Icons font link is missing or not loaded.

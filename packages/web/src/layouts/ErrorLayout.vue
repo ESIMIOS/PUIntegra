@@ -8,12 +8,15 @@
  * @changelog
  * - 0.0.1	(2026-04-10)	Versión inicial del archivo.	@tirsomartinezreyes
  */
-import { DOMAIN, domainShell } from '@/bom'
-import AppLogo from '@/components/shared/AppLogo.vue'
+import { DOMAIN, domainShell } from "@/bom";
+import AppLogo from "@/components/shared/AppLogo.vue";
 </script>
 
 <template>
-  <VaLayout class="layout-shell error-layout" :style="{ '--domain-accent': domainShell[DOMAIN.ERROR].accentColor }">
+  <VaLayout
+    class="layout-shell error-layout"
+    :style="{ '--domain-accent': domainShell[DOMAIN.ERROR].accentColor }"
+  >
     <main class="error-layout__main">
       <AppLogo size="prominent" />
       <VaDivider class="error-layout__divider" />
@@ -24,8 +27,8 @@ import AppLogo from '@/components/shared/AppLogo.vue'
 
 <style scoped>
 .error-layout {
-	min-height: 100vh;
-	background: var(--va-background-primary);
+  min-height: 100vh;
+  background: var(--va-background-primary);
 }
 
 .error-layout__main {
@@ -44,8 +47,8 @@ import AppLogo from '@/components/shared/AppLogo.vue'
 }
 
 .error-layout__main h1 {
-	color: var(--domain-accent);
-	font-size: 1.5rem;
-	letter-spacing: 0;
+  color: var(--domain-accent);
+  font-size: 1.5rem;
+  letter-spacing: 0;
 }
 </style>
