@@ -8,7 +8,9 @@ Define the functional contract of local frontend mock mode (`packages/web`) for 
 
 - Applies to the `MockSessionSwitcher` development panel.
 - Applies to stores and guards that resolve local navigation.
-- Does not define business operations or real persistence.
+- Applies to mock data repositories/services/controllers that support stage-1 data operations.
+- Includes LocalStorage persistence and reset for mock CRUD data.
+- Does not define real backend integration.
 
 ## Session and role state
 
@@ -29,6 +31,17 @@ Define the functional contract of local frontend mock mode (`packages/web`) for 
   - `INSTITUTION_ADMIN -> DEFAULT_RFC`
   - `INSTITUTION_OPERATOR -> DEFAULT_RFC`
 - `Active RFC` in UI is read-only.
+
+## Organization strategy
+
+- The mock layer models two organizational contexts:
+  - tenant institution context: `DEFAULT_RFC`
+  - provider/system context: `SYSTEM_RFC`
+- `SYSTEM_RFC` is a reserved provider context and not a tenant `Institutions` document.
+- Tenant institution lists must exclude `SYSTEM_RFC`.
+- Seeded permissions for the same mock user include:
+  - `SYSTEM_RFC` + `SYSTEM_ADMINISTRATOR`
+  - `DEFAULT_RFC` + `INSTITUTION_ADMIN`
 
 ## Guard constraints
 
@@ -59,4 +72,4 @@ Define the functional contract of local frontend mock mode (`packages/web`) for 
 
 - Real Firebase/Auth/API integration.
 - Real permission resolution from backend.
-- Mock state persistence outside local runtime.
+- Business view implementation (placeholders remain until follow-up changes).

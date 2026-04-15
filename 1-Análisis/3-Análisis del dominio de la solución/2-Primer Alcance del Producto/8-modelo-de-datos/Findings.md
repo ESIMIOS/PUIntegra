@@ -22,7 +22,7 @@
 | `searchRequestPhase` | Fase de búsqueda a la que corresponde el hallazgo. |
 | `PUISyncStatus` | Estado de preparación o sincronización externa del hallazgo. |
 | `PUISyncScheduleDate` | Timestamp que define cuándo debe ejecutarse el próximo intento de sincronización con la PUI, o `null` cuando no exista intento pendiente. |
-| `data` | Cuerpo principal del hallazgo, con forma contractual preparada para interoperabilidad futura. |
+| `data` | Payload contractual de notificación de coincidencia hacia PUI, con forma `PUIInstitucionNotificaCoincidenciaEnPUIPayload`. |
 | `responses[]` | Evidencia append-only de respuestas devueltas por la PUI en cada intento de sincronización. |
 | `createdAt` | Fecha de creación del hallazgo. |
 | `updatedAt` | Fecha de última actualización del hallazgo vigente. |
@@ -69,10 +69,12 @@
 |---|---|
 | Entidad operativa del MVP | `Findings` debe existir y poder gestionarse en el alcance 1 aunque el envío formal a la PUI ocurra después. |
 | Relación `Requests 1:N Findings` | Una solicitud puede tener múltiples hallazgos relacionados dentro del SaaS. |
-| Estructura preparada para contrato futuro | Su `data` debe mantener forma compatible con la interoperabilidad prevista. |
+| Estructura contractual PUI | Su `data` debe validar contra `PUIInstitucionNotificaCoincidenciaEnPUIPayload` y no debe usarse como contenedor genérico. |
 | `findingId` como identificador único de colección | La unicidad técnica del registro debe descansar en `findingId`. |
 | `data.id` como identificador contractual preparado para PUI | El campo `data.id` no reemplaza a `findingId`; debe construirse conforme al requerimiento contractual externo basado en la concatenación de `FUB` y la respuesta correspondiente. |
 | Correlación obligatoria con solicitud | Debe poder relacionarse con `Requests` mediante `FUB`, `CURP` y fase correspondiente. |
+| Fase PUI explícita | `data.fase_busqueda` debe mapearse explícitamente contra `SEARCH_REQUEST_PHASE`; no deben compararse literales de transporte PUI fuera de adaptadores compartidos. |
+| Fechas de transporte | Las fechas dentro de `data` conservan formato PUI `YYYY-MM-DD`; los campos internos como `PUISyncScheduleDate`, `createdAt` y `updatedAt` usan timestamp UTC en milisegundos. |
 | Estado de sincronización explícito | La preparación o avance hacia interoperabilidad futura debe modelarse mediante `PUISyncStatus`. |
 | Programación explícita de reintentos | `PUISyncScheduleDate` debe usarse para determinar cuándo puede ejecutarse el siguiente intento de sincronización y debe quedar en `null` cuando el hallazgo ya no tenga intento pendiente. |
 | Evidencia append-only de respuestas PUI | Cada intento de sincronización debe agregar una entrada a `responses[]` con fecha, código HTTP y payload completo de respuesta, sin sobrescribir intentos previos. |

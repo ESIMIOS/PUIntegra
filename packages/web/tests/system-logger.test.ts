@@ -64,7 +64,7 @@ describe('system logger', () => {
 
   it('logs verbose helper as debug for DEBUG severity', () => {
     const debugMessage: SystemMessage = {
-      code: 'WEB-DEBUG-000-001',
+      code: 'WEB-DEBUG-001',
       key: 'web.logger.debug_event',
       severity: 'DEBUG',
       package: 'web',

@@ -10,9 +10,6 @@
  */
 
 import { defineStore, AuthenticatedRoleSchema, RoleSchema, ROLE, z } from '@/bom'
-
-/** Mock RFCs used only as seed data for development. */
-const DEV_MOCK_RFCS = ['XAXX010101000', 'BBB010101BBB']
 type Role = z.infer<typeof RoleSchema>
 
 /**
@@ -46,10 +43,10 @@ export const useAuthStore = defineStore('auth', {
 		setRole(role: Role) {
 			this.activeRole = role
 			this.isAuthenticated = role !== ROLE.ANONYMOUS
-			// Seed mock RFCs for development when transitioning to an authenticated role
-			if (role !== ROLE.ANONYMOUS && this.allowedInstitutionRfcs.length === 0) {
-				this.allowedInstitutionRfcs = DEV_MOCK_RFCS
-			}
+		},
+		setIdentity(identity: { uid: string | null; email: string | null }) {
+			this.uid = identity.uid
+			this.email = identity.email
 		},
 		setRequiresSecuritySetup(value: boolean) {
 			this.requiresSecuritySetup = value
