@@ -27,7 +27,7 @@ jobs:
 
       - name: Install dependencies
         #SONARQUBE: --ignore-scripts should not be used here because we need to run the postinstall scripts to build native dependencies like esbuild, there are white-listed in the root package.json using onlyBuiltDependencies
-        run: pnpm install --frozen-lockfile #NOSONAR
+        run: pnpm install --frozen-lockfile
 
       - name: Build (production mode)
         run: pnpm --filter web build -- --mode production

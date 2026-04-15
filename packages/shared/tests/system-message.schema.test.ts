@@ -9,7 +9,7 @@ import {
 describe('system message schema', () => {
   it('accepts a valid system message envelope', () => {
     const parsed = SystemMessageSchema.safeParse({
-      code: 'WEB-GUARD-403-001',
+      code: 'WEB-GUARD-001',
       key: 'web.guard.role_mismatch',
       severity: 'WARNING',
       package: 'web',
@@ -28,7 +28,7 @@ describe('system message schema', () => {
   });
 
   it('rejects invalid message code format', () => {
-    const parsed = MessageCodeSchema.safeParse('web-guard-403-001');
+    const parsed = MessageCodeSchema.safeParse('WEB-GUARD-403-001');
     expect(parsed.success).toBe(false);
   });
 

@@ -43,6 +43,15 @@ Use OpenSpec slash commands to drive every feature:
   /opsx:apply             implement tasks from tasks.md
   /opsx:archive           archive completed change
 
+**Detailed workflow instructions live in `.agent/` (read these explicitly if your tool does not load them automatically):**
+- Propose/explore:  `.agent/workflows/opsx-propose.md` + `.agent/skills/openspec-propose/SKILL.md`
+- Apply tasks:      `.agent/workflows/opsx-apply.md`   + `.agent/skills/openspec-apply-change/SKILL.md`
+- Archive:          `.agent/workflows/opsx-archive.md` + `.agent/skills/openspec-archive-change/SKILL.md`
+- Explore:          `.agent/workflows/opsx-explore.md` + `.agent/skills/openspec-explore/SKILL.md`
+
+Non-VS-Code agents (Codex, CLI, etc.): before executing any `/opsx:*` command, read the
+corresponding workflow file above to understand the expected steps and constraints.
+
 **Archiving Rule**: 
 - NEVER archive a change folder without explicit human approval.
 - Every change folder MUST be prefixed with a three-digit serial number (for example `001-feature-name`, `002-fix-name`) before archiving.
@@ -164,7 +173,26 @@ When a technical lesson, "gotcha", or architectural pattern is identified during
 
 **CRITICAL**: NEVER modify persistent live specs or this file (`AGENTS.md`) without explicit human approval of the proposal. Always promote lessons learned to the relevant spec once approved to prevent future regressions.
 
-## When in doubt
+## Agent Workflows & Skills (tool-specific)
+
+Specialized workflows and skills for this repo are defined in the `.agent/` folder.
+Non-VS-Code agents (Codex, Claude, etc.) must read these files explicitly when performing the corresponding task:
+
+### Workflows (`.agent/workflows/`)
+- `opsx-propose.md`   — How to create a new OpenSpec change with all artifacts
+- `opsx-apply.md`     — How to implement tasks from an approved change
+- `opsx-explore.md`   — How to explore and understand the codebase architecture
+- `opsx-archive.md`   — How to archive a completed change (requires human approval)
+
+### Skills (`.agent/skills/`)
+- `openspec-propose/SKILL.md`        — Skill definition for proposing changes
+- `openspec-apply-change/SKILL.md`   — Skill definition for applying changes
+- `openspec-explore/SKILL.md`        — Skill definition for codebase exploration
+- `openspec-archive-change/SKILL.md` — Skill definition for archiving changes
+
+**When performing any OpenSpec operation, read the corresponding workflow file first.**
+
+
 Ask before generating. A clarifying question takes 10 seconds.
 A file generated from wrong assumptions takes 30 minutes to untangle.
 If you are unsure whether a change affects the shared contract, assume it does
