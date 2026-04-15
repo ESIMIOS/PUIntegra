@@ -95,6 +95,10 @@ const layoutRows = domainValues.map((domain) => ({
         <VaChip color="success">Integración lista</VaChip>
         <VaAlert color="info" outline>Estado informativo de operación.</VaAlert>
         <VaInput label="RFC" placeholder="XAXX010101000" />
+        <div class="design-demo__progress">
+          <span>Progreso de sincronización</span>
+          <VaProgressBar :model-value="72" color="success" rounded />
+        </div>
       </div>
     </section>
 
@@ -185,5 +189,10 @@ const layoutRows = domainValues.map((domain) => ({
   border-radius: 8px;
   padding: 1rem;
   background: var(--va-background-secondary);
+}
+
+.design-demo__progress {
+  display: grid;
+  gap: 0.35rem;
 }
 </style>

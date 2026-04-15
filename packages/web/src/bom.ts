@@ -26,7 +26,7 @@ export type { DefineComponent } from 'vue';
 export { createPinia, defineStore } from 'pinia';
 export type { Pinia } from 'pinia';
 
-export { createRouter, createWebHistory, useRoute } from 'vue-router';
+export { createRouter, createWebHistory, useRoute, useRouter } from 'vue-router';
 export type { Router } from 'vue-router';
 
 export { z } from 'zod';
