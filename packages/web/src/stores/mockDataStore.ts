@@ -11,6 +11,7 @@
 import { defineStore } from 'pinia';
 import { createMockDataService } from '@/mock/services/mockDataService';
 import { canonicalMockSeedDataset, cloneMockDataset } from '@/mock/seed/mockSeed';
+import { MOCK_MILLISECONDS_RESPONSE_DELAY } from '@/mock/constants/mockConfig';
 import { isMockDataError, MockDataError, MOCK_DATA_ERROR_KIND } from '@/mock/errors/mockDataError';
 import { webUiDataErrorByKind } from '@/shared/constants/webUIMessages';
 import { webSystemMessages } from '@/shared/constants/systemMessages';
@@ -28,6 +29,12 @@ function resolveUserErrorMessage(error: unknown) {
   return webUiDataErrorByKind[MOCK_DATA_ERROR_KIND.UNKNOWN].message;
 }
 
+async function waitMockReadDelay() {
+  await new Promise<void>((resolve) => {
+    globalThis.setTimeout(resolve, MOCK_MILLISECONDS_RESPONSE_DELAY);
+  });
+}
+
 export const useMockDataStore = defineStore('mock-data', {
   state: () => ({
     dataset: cloneMockDataset(canonicalMockSeedDataset),
@@ -40,6 +47,15 @@ export const useMockDataStore = defineStore('mock-data', {
     clearError() {
       this.error = null;
       this.userErrorMessage = null;
+    },
+    /**
+     * @description Captura errores externos al store para exponer estado seguro en UI.
+     */
+    captureExternalError(error: unknown, fallbackMessage: string) {
+      this.error = isMockDataError(error)
+        ? error
+        : new MockDataError(MOCK_DATA_ERROR_KIND.UNKNOWN, fallbackMessage, { error });
+      this.userErrorMessage = resolveUserErrorMessage(this.error);
     },
     async hydrate() {
       this.isLoading = true;
@@ -80,10 +96,52 @@ export const useMockDataStore = defineStore('mock-data', {
       }
     },
     async listInstitutions() {
-      return mockDataService.listInstitutions();
+      this.isLoading = true;
+      this.clearError();
+      try {
+        const [institutions] = await Promise.all([
+          Promise.resolve(mockDataService.listInstitutions()),
+          waitMockReadDelay()
+        ]);
+        return institutions;
+      } catch (error) {
+        this.error = isMockDataError(error)
+          ? error
+          : new MockDataError(MOCK_DATA_ERROR_KIND.UNKNOWN, 'Failed to list institutions.', { error });
+        this.userErrorMessage = resolveUserErrorMessage(this.error);
+        logSystemMessage(webSystemMessages.mockDataUnknownFailure, {
+          operation: 'listInstitutions',
+          errorKind: this.error.kind
+        });
+        throw this.error;
+      } finally {
+        this.isLoading = false;
+      }
     },
     async listPermissionsByUser(userId: string) {
-      return mockDataService.listPermissionsByUser(userId);
+      this.isLoading = true;
+      this.clearError();
+      try {
+        const [permissions] = await Promise.all([
+          Promise.resolve(mockDataService.listPermissionsByUser(userId)),
+          waitMockReadDelay()
+        ]);
+        return permissions;
+      } catch (error) {
+        this.error = isMockDataError(error)
+          ? error
+          : new MockDataError(MOCK_DATA_ERROR_KIND.UNKNOWN, 'Failed to list permissions.', { error });
+        this.userErrorMessage = resolveUserErrorMessage(this.error);
+        logSystemMessage(webSystemMessages.mockDataUnknownFailure, {
+          operation: 'listPermissionsByUser',
+          errorKind: this.error.kind,
+          entityType: 'permission',
+          entityId: userId
+        });
+        throw this.error;
+      } finally {
+        this.isLoading = false;
+      }
     },
     async resolveSessionProfileByRole(role: 'ANONYMOUS' | 'INSTITUTION_ADMIN' | 'INSTITUTION_OPERATOR' | 'SYSTEM_ADMINISTRATOR') {
       return mockDataService.resolveSessionProfileByRole(role);
@@ -186,7 +244,29 @@ export const useMockDataStore = defineStore('mock-data', {
       }
     },
     async listContactsByRfc(rfc: string) {
-      return mockDataService.listContactsByRfc(rfc);
+      this.isLoading = true;
+      this.clearError();
+      try {
+        const [contacts] = await Promise.all([
+          Promise.resolve(mockDataService.listContactsByRfc(rfc)),
+          waitMockReadDelay()
+        ]);
+        return contacts;
+      } catch (error) {
+        this.error = isMockDataError(error)
+          ? error
+          : new MockDataError(MOCK_DATA_ERROR_KIND.UNKNOWN, 'Failed to list contacts.', { error });
+        this.userErrorMessage = resolveUserErrorMessage(this.error);
+        logSystemMessage(webSystemMessages.mockDataUnknownFailure, {
+          operation: 'listContactsByRfc',
+          errorKind: this.error.kind,
+          RFC: rfc,
+          entityType: 'contact'
+        });
+        throw this.error;
+      } finally {
+        this.isLoading = false;
+      }
     },
     async createContact(input: Parameters<typeof mockDataService.createContact>[0]) {
       this.isSaving = true;
@@ -237,13 +317,79 @@ export const useMockDataStore = defineStore('mock-data', {
       }
     },
     async listRequestsByRfc(rfc: string) {
-      return mockDataService.listRequestsByRfc(rfc);
+      this.isLoading = true;
+      this.clearError();
+      try {
+        const [requests] = await Promise.all([
+          Promise.resolve(mockDataService.listRequestsByRfc(rfc)),
+          waitMockReadDelay()
+        ]);
+        return requests;
+      } catch (error) {
+        this.error = isMockDataError(error)
+          ? error
+          : new MockDataError(MOCK_DATA_ERROR_KIND.UNKNOWN, 'Failed to list requests.', { error });
+        this.userErrorMessage = resolveUserErrorMessage(this.error);
+        logSystemMessage(webSystemMessages.mockDataUnknownFailure, {
+          operation: 'listRequestsByRfc',
+          errorKind: this.error.kind,
+          RFC: rfc,
+          entityType: 'request'
+        });
+        throw this.error;
+      } finally {
+        this.isLoading = false;
+      }
     },
     async listFindingsByRfc(rfc: string) {
-      return mockDataService.listFindingsByRfc(rfc);
+      this.isLoading = true;
+      this.clearError();
+      try {
+        const [findings] = await Promise.all([
+          Promise.resolve(mockDataService.listFindingsByRfc(rfc)),
+          waitMockReadDelay()
+        ]);
+        return findings;
+      } catch (error) {
+        this.error = isMockDataError(error)
+          ? error
+          : new MockDataError(MOCK_DATA_ERROR_KIND.UNKNOWN, 'Failed to list findings.', { error });
+        this.userErrorMessage = resolveUserErrorMessage(this.error);
+        logSystemMessage(webSystemMessages.mockDataUnknownFailure, {
+          operation: 'listFindingsByRfc',
+          errorKind: this.error.kind,
+          RFC: rfc,
+          entityType: 'finding'
+        });
+        throw this.error;
+      } finally {
+        this.isLoading = false;
+      }
     },
     async listLogs(filters: { RFC?: string; userId?: string } = {}) {
-      return mockDataService.listLogs(filters);
+      this.isLoading = true;
+      this.clearError();
+      try {
+        const [logs] = await Promise.all([
+          Promise.resolve(mockDataService.listLogs(filters)),
+          waitMockReadDelay()
+        ]);
+        return logs;
+      } catch (error) {
+        this.error = isMockDataError(error)
+          ? error
+          : new MockDataError(MOCK_DATA_ERROR_KIND.UNKNOWN, 'Failed to list logs.', { error });
+        this.userErrorMessage = resolveUserErrorMessage(this.error);
+        logSystemMessage(webSystemMessages.mockDataUnknownFailure, {
+          operation: 'listLogs',
+          errorKind: this.error.kind,
+          ...filters,
+          entityType: 'log'
+        });
+        throw this.error;
+      } finally {
+        this.isLoading = false;
+      }
     }
   }
 });

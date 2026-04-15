@@ -14,11 +14,14 @@ export async function withMockControllerDelay<T>(
   task: () => Promise<T>,
   milliseconds = MOCK_MILLISECONDS_RESPONSE_DELAY
 ): Promise<T> {
-  await new Promise<void>((resolve) => {
-    const timeoutRef = globalThis.setTimeout(resolve, milliseconds);
-    if (typeof timeoutRef === 'number') {
-      return;
-    }
+  const taskPromise = task();
+  const delayPromise = new Promise<void>((resolve) => {
+    globalThis.setTimeout(resolve, milliseconds);
   });
-  return task();
+
+  const [taskResult] = await Promise.allSettled([taskPromise, delayPromise]);
+  if (taskResult.status === 'rejected') {
+    throw taskResult.reason;
+  }
+  return taskResult.value;
 }

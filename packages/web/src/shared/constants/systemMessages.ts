@@ -114,34 +114,34 @@ export const webSystemMessages = {
     key: 'web.data.validation_failed',
     severity: 'WARNING',
     package: 'web',
-    message: 'La operacion de datos mock fallo por validacion.'
+    message: 'La operación de datos mock falló por validación.'
   },
   mockDataNotFound: {
     code: 'WEB-DATA-002',
     key: 'web.data.not_found',
     severity: 'WARNING',
     package: 'web',
-    message: 'No se encontro la entidad solicitada en datos mock.'
+    message: 'No se encontró la entidad solicitada en datos mock.'
   },
   mockDataConflictDetected: {
     code: 'WEB-DATA-003',
     key: 'web.data.conflict_detected',
     severity: 'WARNING',
     package: 'web',
-    message: 'Se detecto un conflicto de datos mock.'
+    message: 'Se detectó un conflicto de datos mock.'
   },
   mockDataForbiddenOperation: {
     code: 'WEB-DATA-004',
     key: 'web.data.forbidden_operation',
     severity: 'WARNING',
     package: 'web',
-    message: 'La sesion actual no puede ejecutar la operacion de datos mock.'
+    message: 'La sesión actual no puede ejecutar la operación de datos mock.'
   },
   mockDataUnknownFailure: {
     code: 'WEB-DATA-005',
     key: 'web.data.unknown_failure',
     severity: 'ERROR',
     package: 'web',
-    message: 'Fallo inesperado en operaciones de datos mock.'
+    message: 'Falló inesperadamente en operaciones de datos mock.'
   }
 } as const satisfies Record<string, SystemMessage>;

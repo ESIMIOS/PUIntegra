@@ -8,7 +8,7 @@
  * - 0.0.1	(2026-04-14)	Versión inicial del archivo.	@tirsomartinezreyes
  */
 
-import { computed } from '@/bom';
+import { computed } from 'vue';
 import { withMockControllerDelay } from '@/mock/controllers/controllerDelay';
 import { useMockDataStore } from '@/stores/mockDataStore';
 
@@ -20,7 +20,7 @@ export function useInstitutionSelectionController() {
   return {
     isLoading: computed(() => store.isLoading),
     errorMessage: computed(() => store.userErrorMessage),
-    loadInstitutions: () => withMockControllerDelay(() => store.listInstitutions())
+    loadInstitutions: () => store.listInstitutions()
   };
 }
 
@@ -60,7 +60,7 @@ export function usePermissionsController() {
   return {
     isSaving: computed(() => store.isSaving),
     errorMessage: computed(() => store.userErrorMessage),
-    listByUser: (userId: string) => withMockControllerDelay(() => store.listPermissionsByUser(userId)),
+    listByUser: (userId: string) => store.listPermissionsByUser(userId),
     create: (input: Parameters<typeof store.createPermission>[0]) =>
       withMockControllerDelay(() => store.createPermission(input)),
     update: (input: Parameters<typeof store.updatePermission>[0]) =>
@@ -78,7 +78,7 @@ export function useContactsController() {
     isLoading: computed(() => store.isLoading),
     isSaving: computed(() => store.isSaving),
     errorMessage: computed(() => store.userErrorMessage),
-    loadByRfc: (rfc: string) => withMockControllerDelay(() => store.listContactsByRfc(rfc)),
+    loadByRfc: (rfc: string) => store.listContactsByRfc(rfc),
     create: (input: Parameters<typeof store.createContact>[0]) =>
       withMockControllerDelay(() => store.createContact(input)),
     update: (input: Parameters<typeof store.updateContact>[0]) =>
@@ -95,8 +95,8 @@ export function useDashboardController() {
   return {
     isLoading: computed(() => store.isLoading),
     errorMessage: computed(() => store.userErrorMessage),
-    loadRequests: (rfc: string) => withMockControllerDelay(() => store.listRequestsByRfc(rfc)),
-    loadFindings: (rfc: string) => withMockControllerDelay(() => store.listFindingsByRfc(rfc))
+    loadRequests: (rfc: string) => store.listRequestsByRfc(rfc),
+    loadFindings: (rfc: string) => store.listFindingsByRfc(rfc)
   };
 }
 
@@ -108,7 +108,7 @@ export function useRequestsController() {
   return {
     isLoading: computed(() => store.isLoading),
     errorMessage: computed(() => store.userErrorMessage),
-    loadByRfc: (rfc: string) => withMockControllerDelay(() => store.listRequestsByRfc(rfc))
+    loadByRfc: (rfc: string) => store.listRequestsByRfc(rfc)
   };
 }
 
@@ -120,7 +120,7 @@ export function useFindingsController() {
   return {
     isLoading: computed(() => store.isLoading),
     errorMessage: computed(() => store.userErrorMessage),
-    loadByRfc: (rfc: string) => withMockControllerDelay(() => store.listFindingsByRfc(rfc))
+    loadByRfc: (rfc: string) => store.listFindingsByRfc(rfc)
   };
 }
 
@@ -132,8 +132,7 @@ export function useLogsController() {
   return {
     isLoading: computed(() => store.isLoading),
     errorMessage: computed(() => store.userErrorMessage),
-    load: (filters: { RFC?: string; userId?: string } = {}) =>
-      withMockControllerDelay(() => store.listLogs(filters))
+    load: (filters: { RFC?: string; userId?: string } = {}) => store.listLogs(filters)
   };
 }
 

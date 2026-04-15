@@ -76,9 +76,21 @@ Define the baseline webapp architecture for local development and navigable skel
 - This file only preserves the architectural relationship: guards and routes depend on mock state to enable local browsable navigation.
 
 ## Shared state and testing patterns
+### Spanish UI copy quality
+- User-facing copy in Spanish must preserve correct accents and orthography (for example: `sesión`, `acción`, `ocurrió`).
+- Shared message catalogs (`src/shared/constants/*Messages.ts`) are the source of truth and must be reviewed for orthographic consistency before merge.
+
 ### Shared composable state (Singletons)
 - By default, Vue 3 `ref()` defined inside a composable function scope is unique to each component instance.
 - **Requirement**: For global state (for example session timers or global notifications), define the state variables **outside** the exported function scope to ensure a singleton instance across the application.
+
+### Async computed setter safety
+- Vue computed setters are consumed as fire-and-forget by UI bindings (`v-model`, direct assignment), so returned promises are not awaited by callers.
+- **Requirement**: Computed setters that trigger async work MUST catch errors internally and route failures to store error state and system logging (or explicitly swallow with documented reason). They must not leak unhandled promise rejections.
+
+### Async lifecycle hook safety
+- Vue lifecycle hooks (`onMounted`, `onUnmounted`, etc.) do not await async callback completion for caller-level error handling.
+- **Requirement**: Async work triggered from lifecycle hooks MUST be wrapped in `try/catch` and route failures to store error state plus system logging (or a documented safe fallback such as reset), to prevent unhandled promise rejections.
 
 ### Browser global references
 - **Requirement**: Use `globalThis` when code needs to reference the JavaScript global object, such as for timers or other cross-runtime global capabilities.

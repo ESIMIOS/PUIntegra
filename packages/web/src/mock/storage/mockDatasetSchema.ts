@@ -8,7 +8,7 @@
  * - 0.0.1	(2026-04-14)	Versión inicial del archivo.	@tirsomartinezreyes
  */
 
-import { z } from '@/bom';
+import { z } from 'zod';
 import {
   ContactSchema,
   FindingSchema,

@@ -38,7 +38,7 @@ export const webUIMessages = {
     key: 'web.ui.data.forbidden',
     severity: 'WARNING',
     package: 'web',
-    message: 'Tu sesion actual no permite realizar esta accion.'
+    message: 'Tu sesión actual no permite realizar esta acción.'
   },
   dataStorage: {
     code: 'WEB-UI-005',
@@ -52,7 +52,7 @@ export const webUIMessages = {
     key: 'web.ui.data.unknown',
     severity: 'ERROR',
     package: 'web',
-    message: 'Ocurrio un error inesperado. Intenta de nuevo.'
+    message: 'Ocurrió un error inesperado. Intenta de nuevo.'
   }
 } as const satisfies Record<string, SystemMessage>;
 

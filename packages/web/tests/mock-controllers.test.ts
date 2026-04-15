@@ -34,12 +34,13 @@ describe('mock controllers', () => {
     const promise = controller.loadInstitutions();
 
     await vi.advanceTimersByTimeAsync(MOCK_MILLISECONDS_RESPONSE_DELAY - 1);
-    expect(controller.isLoading.value).toBe(false);
+    expect(controller.isLoading.value).toBe(true);
 
     await vi.advanceTimersByTimeAsync(1);
     const institutions = await promise;
 
     expect(institutions.length).toBe(1);
+    expect(controller.isLoading.value).toBe(false);
     vi.useRealTimers();
   });
 
@@ -120,5 +121,28 @@ describe('mock controllers', () => {
 
     expect(store.userErrorMessage).toBeTruthy();
     expect(store.error).toBeTruthy();
+  });
+
+  it('keeps delay even when mutation fails', async () => {
+    vi.useFakeTimers();
+    const store = useMockDataStore();
+    await store.hydrate();
+    const controller = useAccountSettingsController();
+
+    const promise = controller.save({
+      userId: 'missing-user-id',
+      name: 'Nombre Invalido',
+      updatedByRole: ROLE.INSTITUTION_ADMIN,
+      updatedByEmail: 'admin@example.test'
+    });
+    promise.catch(() => undefined);
+
+    await vi.advanceTimersByTimeAsync(MOCK_MILLISECONDS_RESPONSE_DELAY - 1);
+    expect(controller.isSaving.value).toBe(false);
+
+    await vi.advanceTimersByTimeAsync(1);
+    await expect(promise).rejects.toBeTruthy();
+    expect(controller.isSaving.value).toBe(false);
+    vi.useRealTimers();
   });
 });

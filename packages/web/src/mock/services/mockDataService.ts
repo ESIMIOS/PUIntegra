@@ -23,11 +23,11 @@ import {
   type SearchRequestPhase,
   type SearchRequestPhaseStatus,
   type SearchRequestStatus,
-  type RoleSchema,
+  RoleSchema,
   type User,
   type UserUpdate
 } from '@shared';
-import { z } from '@/bom';
+import { z } from 'zod';
 import { nowUtcMilliseconds } from '@/shared/utils/dateUtils';
 import { deepClone } from '@/shared/utils/objectUtils';
 import { createMockRepositories } from '../repositories/mockRepositories';
