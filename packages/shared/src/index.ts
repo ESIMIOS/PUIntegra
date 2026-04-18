@@ -10,6 +10,19 @@ export {
 } from './constants/access';
 
 export {
+  buildUnifiedSystemMessageTree,
+  buildTypedSystemMessagesTree,
+  buildSystemMessagesTree,
+  sharedSystemMessageTree,
+  sharedSystemMessages
+} from './constants/system-messages';
+export type {
+  BuiltMessageTree,
+  MessageTree,
+  SystemMessageTemplate
+} from './constants/system-messages';
+
+export {
   RoleSchema,
   AuthenticatedRoleSchema
 } from './schemas/access.schema';

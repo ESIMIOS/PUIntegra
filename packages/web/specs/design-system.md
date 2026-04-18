@@ -55,19 +55,6 @@ Dark theme:
 | `textPrimary` | `#EEF4FF` |
 | `textInverted` | `#07101F` |
 
-## Domain Accents
-
-Domain shell metadata lives in `src/shared/constants/domains.ts`.
-
-| Domain | Accent | Structure |
-| --- | --- | --- |
-| `site` | `#0B1F4C` | navbar + footer |
-| `auth` | `#1A3A6B` | centered auth surface |
-| `app` | `#3BB54A` | sidebar + top bar |
-| `admin` | `#7E57C2` | sidebar + top bar |
-| `account` | `#2C88D9` | header + account sidebar |
-| `error` | `#D3455B` | centered error display |
-
 ## Theme Behavior
 
 - The first load checks `localStorage` key `puintegra-theme-preference`.
@@ -118,9 +105,9 @@ Domain shell metadata lives in `src/shared/constants/domains.ts`.
 
 ## Navigation Color Semantics
 
-- Neutral navigation structure, sidebar icons, and persistent shell controls SHOULD use the primary brand color.
+- Neutral navigation structure, sidebar icons, and persistent shell controls MUST use the primary brand color to ensure product consistency.
 - Semantic colors SHOULD be reserved for state and feedback: success, info, warning, danger, disabled, selected, or validation states.
-- Domain accent colors MAY be used as subtle highlights, but SHOULD NOT make routine navigation look like status feedback.
+- Domain-specific accent colors have been deprecated in favor of a unified brand experience. Use the standard theme primary color for navigation highlights.
 
 ## Footer Contract
 
@@ -142,6 +129,44 @@ Domain shell metadata lives in `src/shared/constants/domains.ts`.
 - Sidebar navigation MUST NOT become icon-only on desktop.
 - On small screens, a sidebar MAY become an overlay, drawer, or alternate navigation pattern, but it MUST preserve readable text labels.
 - Existing sidebar minimization behavior is technical debt if it violates the desktop icon-plus-text contract.
+
+## Card Title Contract
+
+- Card titles MUST be bold (`font-weight: 700`).
+- Card titles SHOULD use primary brand color or strong text-primary contrast.
+
+## Forms And Selects
+
+- Prefer Vuestic form components for product UI.
+- **Label Alignment**: Input field labels MUST be aligned to the left. Do not let parent container centering collapse or center labels.
+- **Error States**: MUST use Vuestic's native error states (`error` and `error-messages` props) when a form validation fails. Do not use ad hoc error text outside components.
+- Use `VaSelect` with object options when values are constrained.
+
+## Grid System Strategy
+
+- **Standard**: Follow the official [Vuestic Grid System](https://ui.vuestic.dev/styles/grid).
+- **Preference**: ALWAYS prefer Vuestic grid classes and alignment helpers over custom CSS.
+- **Implementation**: See specific class names and helpers in [`vuestic-usage.md`](./vuestic-usage.md#grid-system-implementation).
+
+## Error Prevention Philosophy
+
+- **Prevention over Cure**: Guide the user proactively to avoid errors instead of punishing them with alerts after the fact.
+- **Avoid Redundant Alerts**: Do not use informational alerts for basic UI indications or instructions. Use clear typography (`.text--secondary`), placeholders, or labels instead.
+- **Smart Disabling**: Block action buttons (`:disabled`) when the required data for that action is missing. 
+- **Contextual Guidance**: Use component props like `placeholder` or `messages` to guide the user before they interact.
+- **Tactical Implementation**: See specific Vuestic patterns in [`vuestic-usage.md`](./vuestic-usage.md#error-prevention-tactics).
+
+## Destructive Actions Contract
+
+- **Mandatory Confirmation**: Destructive actions MUST be protected by a confirmation dialog (`VaModal`).
+- **Two-Button Pattern**: The confirmation dialog MUST have exactly two options: a neutral "Cancelar" and a red execution button.
+- **Visual Identity**: Use the `danger` (red) semantical color for the execution button.
+- **Implementation**: See standard modal configuration in [`vuestic-usage.md`](./vuestic-usage.md#destructive-actions-implementation).
+
+## Visual Direction
+
+- **Brand Essence**: Clean, institutional, efficient, and premium.
+- **Reference**: Follow UI patterns from [Vuestic Admin](https://github.com/epicmaxco/vuestic-admin) for dashboard layouts, form structures, and complex component compositions.
 
 ## Showcase
 

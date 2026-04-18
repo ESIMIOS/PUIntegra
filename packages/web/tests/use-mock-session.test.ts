@@ -15,9 +15,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ROLE, SYSTEM_RFC } from '@shared';
 import { DEFAULT_RFC } from '@/shared/constants/routePaths';
 import { useMockSession } from '@/composables/useMockSession';
+import { useAuthStore } from '@/stores/authStore';
 import { useMockDataStore } from '@/stores/mockDataStore';
 import { logSystemMessage } from '@/shared/logging/systemLogger';
-import { webSystemMessages } from '@/shared/constants/systemMessages';
+import { systemMessageTree } from '@/shared/constants/systemMessages';
 
 vi.mock('@/mock/controllers/controllerDelay', () => ({
   withMockControllerDelay: async <T>(task: () => Promise<T>) => task()
@@ -56,10 +57,13 @@ describe('useMockSession', () => {
     vi.clearAllMocks();
   });
 
-  it('hydrates on mounted and keeps anonymous identity cleared', async () => {
+  it('does not hydrate dataset on mounted when role is anonymous and keeps identity cleared', async () => {
+    const mockDataStore = useMockDataStore();
+    const hydrateSpy = vi.spyOn(mockDataStore, 'hydrate');
     const [session, app] = withSetup(() => useMockSession());
     await flushAsyncWork();
 
+    expect(hydrateSpy).not.toHaveBeenCalled();
     expect(session.authStore.activeRole).toBe(ROLE.ANONYMOUS);
     expect(session.authStore.isAuthenticated).toBe(false);
     expect(session.authStore.uid).toBeNull();
@@ -160,18 +164,21 @@ describe('useMockSession', () => {
     app.unmount();
   });
 
-  it('captures store error and logs when mounted hydration fails', async () => {
+  it('captures store error and logs when mounted hydration fails for authenticated role', async () => {
+    const authStore = useAuthStore();
+    authStore.setRole(ROLE.INSTITUTION_ADMIN);
+
     const mockDataStore = useMockDataStore();
     vi.spyOn(mockDataStore, 'hydrate').mockRejectedValueOnce(new Error('hydrate failed'));
 
     const [session, app] = withSetup(() => useMockSession());
     await flushAsyncWork();
 
-    expect(session.authStore.activeRole).toBe(ROLE.ANONYMOUS);
+    expect(session.authStore.activeRole).toBe(ROLE.INSTITUTION_ADMIN);
     expect(mockDataStore.error).toBeTruthy();
     expect(mockDataStore.userErrorMessage).toBeTruthy();
     expect(logSystemMessage).toHaveBeenCalledWith(
-      webSystemMessages.mockDataUnknownFailure,
+      systemMessageTree.shared.data.mock.unknownFailure,
       expect.objectContaining({
         operation: 'useMockSession.onMounted'
       })
@@ -195,7 +202,7 @@ describe('useMockSession', () => {
     expect(session.authStore.activeRole).toBe(ROLE.INSTITUTION_ADMIN);
     expect(mockDataStore.userErrorMessage).toBeTruthy();
     expect(logSystemMessage).toHaveBeenCalledWith(
-      webSystemMessages.mockDataUnknownFailure,
+      systemMessageTree.shared.data.mock.unknownFailure,
       expect.objectContaining({
         operation: 'useMockSession.applyRoleChange',
         activeRole: ROLE.INSTITUTION_ADMIN

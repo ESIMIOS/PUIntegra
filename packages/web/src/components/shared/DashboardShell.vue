@@ -8,7 +8,6 @@
  * @changelog
  * - 0.0.1  (2026-04-12)  Shell inicial para dominios app y admin.  @antigravity
  */
-import { computed } from '@/bom';
 import AppFooter from '@/components/shared/AppFooter.vue';
 import AppLogo from '@/components/shared/AppLogo.vue';
 import HeaderSessionContext from '@/components/shared/HeaderSessionContext.vue';
@@ -17,23 +16,12 @@ import type { NavigationLink } from '@/shared/constants/navigationCatalog';
 
 const props = defineProps<{
   menuItems: NavigationLink[];
-  accentColor: string;
   domainTitle: string;
-  chipLabel: string;
-  chipValue: string;
-  accountName: string;
-  accountLabel: string;
-  sessionLabel?: string;
-  sessionValue?: string;
 }>();
-
-const shellStyle = computed(() => ({
-  '--domain-accent': props.accentColor
-}));
 </script>
 
 <template>
-  <VaLayout class="dashboard-shell" :style="shellStyle">
+  <VaLayout class="dashboard-shell">
     <template #left>
       <VaSidebar
         class="dashboard-shell__sidebar"
@@ -71,16 +59,7 @@ const shellStyle = computed(() => ({
         </template>
         <template #right>
           <div class="dashboard-shell__right">
-            <HeaderSessionContext :account-name="accountName" :account-label="accountLabel">
-              <div v-if="sessionLabel && sessionValue" class="dashboard-shell__session-item">
-                <span class="dashboard-shell__session-label">{{ sessionLabel }}</span>
-                <strong class="dashboard-shell__session-value">{{ sessionValue }}</strong>
-              </div>
-              <div class="dashboard-shell__session-item">
-                <span class="dashboard-shell__session-label">{{ chipLabel }}</span>
-                <strong class="dashboard-shell__session-value">{{ chipValue }}</strong>
-              </div>
-            </HeaderSessionContext>
+            <HeaderSessionContext />
             <div class="dashboard-shell__actions" aria-label="Acciones">
               <ThemeToggle />
             </div>
@@ -124,8 +103,8 @@ const shellStyle = computed(() => ({
 }
 
 .dashboard-shell__link:hover {
-  border-left-color: var(--domain-accent);
-  background: color-mix(in srgb, var(--domain-accent) 12%, transparent);
+  border-left-color: var(--va-primary);
+  background: color-mix(in srgb, var(--va-primary) 12%, transparent);
 }
 
 .dashboard-shell__link--disabled {
@@ -156,26 +135,6 @@ const shellStyle = computed(() => ({
 
 .dashboard-shell__right {
   gap: 0.85rem;
-}
-
-.dashboard-shell__session-item {
-  display: grid;
-  gap: 0.1rem;
-}
-
-.dashboard-shell__session-label {
-  color: var(--va-text-secondary);
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0;
-  line-height: 1;
-  text-transform: uppercase;
-}
-
-.dashboard-shell__session-value {
-  color: var(--va-text-primary);
-  font-size: 0.82rem;
-  line-height: 1.15;
 }
 
 .dashboard-shell__link-icon {

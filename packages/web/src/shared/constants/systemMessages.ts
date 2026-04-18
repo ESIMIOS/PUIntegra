@@ -8,140 +8,151 @@
  * - 0.0.1	(2026-04-10)	Versión inicial del archivo.	@tirsomartinezreyes
  */
 
-import type { SystemMessage } from '@shared';
+import {
+  buildUnifiedSystemMessageTree,
+  sharedSystemMessageTree,
+  type MessageTree
+} from '@shared';
+import { MOCK_DATA_ERROR_KIND } from '@/mock/errors/mockDataError';
 
-export const webSystemMessages = {
-  guardRouteNotFound: {
-    code: 'WEB-GUARD-001',
-    key: 'web.guard.route_not_found',
-    severity: 'INFO',
-    package: 'web',
-    message: 'La ruta no fue reconocida por el enrutador.'
+const webSystemMessageTree = {
+  guard: {
+    routeNotFound: {
+      code: 'WEB-GUARD-001',
+      severity: 'INFO',
+      message: 'La ruta no fue reconocida por el enrutador.'
+    },
+    authRequired: {
+      code: 'WEB-GUARD-002',
+      severity: 'INFO',
+      message: 'Esta ruta requiere autenticación.'
+    },
+    systemRoleRequiresSystemRfc: {
+      code: 'WEB-GUARD-003',
+      severity: 'WARNING',
+      message: 'El rol administrador del sistema requiere contexto SYSTEM_RFC.'
+    },
+    nonSystemRoleUsingSystemRfc: {
+      code: 'WEB-GUARD-004',
+      severity: 'WARNING',
+      message: 'Un rol institucional no puede operar con contexto SYSTEM_RFC.'
+    },
+    securitySetupRequired: {
+      code: 'WEB-GUARD-005',
+      severity: 'INFO',
+      message: 'La ruta requiere bootstrap de configuración de seguridad.'
+    },
+    roleMismatch: {
+      code: 'WEB-GUARD-006',
+      severity: 'WARNING',
+      message: 'El rol actual no está autorizado para esta ruta.'
+    },
+    invalidInstitutionRfcParam: {
+      code: 'WEB-GUARD-007',
+      severity: 'WARNING',
+      message: 'La ruta requiere un parámetro RFC institucional válido.'
+    },
+    institutionContextMismatch: {
+      code: 'WEB-GUARD-008',
+      severity: 'WARNING',
+      message: 'El contexto institucional activo no coincide con la ruta solicitada.'
+    },
+    unexpectedError: {
+      code: 'WEB-GUARD-009',
+      severity: 'ERROR',
+      message: 'Error inesperado en el pipeline de guards de rutas.'
+    }
   },
-  guardAuthRequired: {
-    code: 'WEB-GUARD-002',
-    key: 'web.guard.auth_required',
-    severity: 'INFO',
-    package: 'web',
-    message: 'Esta ruta requiere autenticación.'
+  sw: {
+    registrationFailed: {
+      code: 'WEB-SW-001',
+      severity: 'WARNING',
+      message: 'Falló el registro del service worker.'
+    }
   },
-  guardSystemRoleRequiresSystemRfc: {
-    code: 'WEB-GUARD-003',
-    key: 'web.guard.system_role_requires_system_rfc',
-    severity: 'WARNING',
-    package: 'web',
-    message: 'El rol administrador del sistema requiere contexto SYSTEM_RFC.'
+  app: {
+    routerInitializationFailed: {
+      code: 'WEB-APP-001',
+      severity: 'ERROR',
+      message: 'Error durante la inicialización del enrutador de la aplicación.'
+    }
   },
-  guardNonSystemRoleUsingSystemRfc: {
-    code: 'WEB-GUARD-004',
-    key: 'web.guard.non_system_role_using_system_rfc',
-    severity: 'WARNING',
-    package: 'web',
-    message: 'Un rol institucional no puede operar con contexto SYSTEM_RFC.'
+  mock: {
+    hydrationFailed: {
+      code: 'WEB-MOCK-001',
+      severity: 'ERROR',
+      message: 'No fue posible hidratar el estado mock persistido.'
+    },
+    persistenceFailed: {
+      code: 'WEB-MOCK-002',
+      severity: 'ERROR',
+      message: 'No fue posible persistir el estado mock.'
+    },
+    resetFailed: {
+      code: 'WEB-MOCK-003',
+      severity: 'ERROR',
+      message: 'No fue posible restablecer el estado mock.'
+    }
   },
-  guardSecuritySetupRequired: {
-    code: 'WEB-GUARD-005',
-    key: 'web.guard.security_setup_required',
-    severity: 'INFO',
-    package: 'web',
-    message: 'La ruta requiere bootstrap de configuración de seguridad.'
-  },
-  guardRoleMismatch: {
-    code: 'WEB-GUARD-006',
-    key: 'web.guard.role_mismatch',
-    severity: 'WARNING',
-    package: 'web',
-    message: 'El rol actual no está autorizado para esta ruta.'
-  },
-  guardInvalidInstitutionRfcParam: {
-    code: 'WEB-GUARD-007',
-    key: 'web.guard.invalid_institution_rfc_param',
-    severity: 'WARNING',
-    package: 'web',
-    message: 'La ruta requiere un parámetro RFC institucional válido.'
-  },
-  guardInstitutionContextMismatch: {
-    code: 'WEB-GUARD-008',
-    key: 'web.guard.institution_context_mismatch',
-    severity: 'WARNING',
-    package: 'web',
-    message: 'El contexto institucional activo no coincide con la ruta solicitada.'
-  },
-  guardUnexpectedError: {
-    code: 'WEB-GUARD-009',
-    key: 'web.guard.unexpected_error',
-    severity: 'ERROR',
-    package: 'web',
-    message: 'Error inesperado en el pipeline de guards de rutas.'
-  },
-  serviceWorkerRegistrationFailed: {
-    code: 'WEB-SW-001',
-    key: 'web.service_worker.registration_failed',
-    severity: 'WARNING',
-    package: 'web',
-    message: 'Falló el registro del service worker.'
-  },
-  vueAppRouterInitializationFailed: {
-    code: 'WEB-APP-001',
-    key: 'web.app.router_initialization_failed',
-    severity: 'ERROR',
-    package: 'web',
-    message: 'Error durante la inicialización del enrutador de la aplicación.'
-  },
-  mockHydrationFailed: {
-    code: 'WEB-MOCK-001',
-    key: 'web.mock.hydration_failed',
-    severity: 'ERROR',
-    package: 'web',
-    message: 'No fue posible hidratar el estado mock persistido.'
-  },
-  mockPersistenceFailed: {
-    code: 'WEB-MOCK-002',
-    key: 'web.mock.persistence_failed',
-    severity: 'ERROR',
-    package: 'web',
-    message: 'No fue posible persistir el estado mock.'
-  },
-  mockResetFailed: {
-    code: 'WEB-MOCK-003',
-    key: 'web.mock.reset_failed',
-    severity: 'ERROR',
-    package: 'web',
-    message: 'No fue posible restablecer el estado mock.'
-  },
-  mockDataValidationFailed: {
-    code: 'WEB-DATA-001',
-    key: 'web.data.validation_failed',
-    severity: 'WARNING',
-    package: 'web',
-    message: 'La operación de datos mock falló por validación.'
-  },
-  mockDataNotFound: {
-    code: 'WEB-DATA-002',
-    key: 'web.data.not_found',
-    severity: 'WARNING',
-    package: 'web',
-    message: 'No se encontró la entidad solicitada en datos mock.'
-  },
-  mockDataConflictDetected: {
-    code: 'WEB-DATA-003',
-    key: 'web.data.conflict_detected',
-    severity: 'WARNING',
-    package: 'web',
-    message: 'Se detectó un conflicto de datos mock.'
-  },
-  mockDataForbiddenOperation: {
-    code: 'WEB-DATA-004',
-    key: 'web.data.forbidden_operation',
-    severity: 'WARNING',
-    package: 'web',
-    message: 'La sesión actual no puede ejecutar la operación de datos mock.'
-  },
-  mockDataUnknownFailure: {
-    code: 'WEB-DATA-005',
-    key: 'web.data.unknown_failure',
-    severity: 'ERROR',
-    package: 'web',
-    message: 'Falló inesperadamente en operaciones de datos mock.'
+  ui: {
+    auth: {
+      contextRequired: {
+        code: 'WEB-UI-010',
+        severity: 'WARNING',
+        message: 'Selecciona un contexto para continuar.'
+      }
+    },
+    data: {
+      validation: {
+        code: 'WEB-UI-001',
+        severity: 'WARNING',
+        message: 'Revisa los campos marcados antes de continuar.'
+      },
+      notFound: {
+        code: 'WEB-UI-002',
+        severity: 'WARNING',
+        message: 'No encontramos el registro solicitado.'
+      },
+      conflict: {
+        code: 'WEB-UI-003',
+        severity: 'WARNING',
+        message: 'Ya existe un registro con esos datos.'
+      },
+      forbidden: {
+        code: 'WEB-UI-004',
+        severity: 'WARNING',
+        message: 'Tu sesión actual no permite realizar esta acción.'
+      },
+      storage: {
+        code: 'WEB-UI-005',
+        severity: 'ERROR',
+        message: 'No pudimos guardar los cambios locales. Intenta restablecer los datos mock.'
+      },
+      unknown: {
+        code: 'WEB-UI-006',
+        severity: 'ERROR',
+        message: 'Ocurrió un error inesperado. Intenta de nuevo.'
+      },
+      serverError: {
+        code: 'WEB-UI-011',
+        severity: 'ERROR',
+        message: 'Error de comunicación con el servicio. Intenta de nuevo.'
+      }
+    }
   }
-} as const satisfies Record<string, SystemMessage>;
+} as const satisfies MessageTree;
+
+export const systemMessageTree = buildUnifiedSystemMessageTree({
+  web: webSystemMessageTree,
+  shared: sharedSystemMessageTree
+});
+
+export const webUiDataErrorByKind = {
+  [MOCK_DATA_ERROR_KIND.VALIDATION]: systemMessageTree.web!.ui.data.validation,
+  [MOCK_DATA_ERROR_KIND.NOT_FOUND]: systemMessageTree.web!.ui.data.notFound,
+  [MOCK_DATA_ERROR_KIND.CONFLICT]: systemMessageTree.web!.ui.data.conflict,
+  [MOCK_DATA_ERROR_KIND.FORBIDDEN]: systemMessageTree.web!.ui.data.forbidden,
+  [MOCK_DATA_ERROR_KIND.STORAGE]: systemMessageTree.web!.ui.data.storage,
+  [MOCK_DATA_ERROR_KIND.SERVER_ERROR]: systemMessageTree.web!.ui.data.serverError,
+  [MOCK_DATA_ERROR_KIND.UNKNOWN]: systemMessageTree.web!.ui.data.unknown
+} as const;

@@ -175,12 +175,12 @@ onUnmounted(() => {
 
 .error-state__graphic {
   line-height: 1;
-  color: var(--domain-accent);
+  color: var(--va-danger);
 }
 
 .error-state__status {
   margin: 0;
-  color: var(--domain-accent);
+  color: var(--va-danger);
   font-size: 1.15rem;
   font-weight: 700;
   letter-spacing: 0;
@@ -189,7 +189,7 @@ onUnmounted(() => {
 .error-state h1 {
   width: min(90vw, 58rem);
   margin: 0;
-  color: var(--domain-accent);
+  color: var(--va-danger);
   font-size: clamp(2.2rem, 3.6vw, 3.8rem);
   letter-spacing: 0;
   line-height: 1.1;

@@ -11,10 +11,9 @@
 import { defineStore } from 'pinia';
 import { createMockDataService } from '@/mock/services/mockDataService';
 import { canonicalMockSeedDataset, cloneMockDataset } from '@/mock/seed/mockSeed';
-import { MOCK_MILLISECONDS_RESPONSE_DELAY } from '@/mock/constants/mockConfig';
+import { withMockControllerDelay } from '@/mock/controllers/controllerDelay';
 import { isMockDataError, MockDataError, MOCK_DATA_ERROR_KIND } from '@/mock/errors/mockDataError';
-import { webUiDataErrorByKind } from '@/shared/constants/webUIMessages';
-import { webSystemMessages } from '@/shared/constants/systemMessages';
+import { systemMessageTree, webUiDataErrorByKind } from '@/shared/constants/systemMessages';
 import { logSystemMessage } from '@/shared/logging/systemLogger';
 
 const mockDataService = createMockDataService();
@@ -29,11 +28,7 @@ function resolveUserErrorMessage(error: unknown) {
   return webUiDataErrorByKind[MOCK_DATA_ERROR_KIND.UNKNOWN].message;
 }
 
-async function waitMockReadDelay() {
-  await new Promise<void>((resolve) => {
-    globalThis.setTimeout(resolve, MOCK_MILLISECONDS_RESPONSE_DELAY);
-  });
-}
+// waitMockReadDelay is replaced by withMockControllerDelay
 
 export const useMockDataStore = defineStore('mock-data', {
   state: () => ({
@@ -61,12 +56,12 @@ export const useMockDataStore = defineStore('mock-data', {
       this.isLoading = true;
       this.clearError();
       try {
-        this.dataset = mockDataService.hydrate();
+        this.dataset = await withMockControllerDelay(async () => mockDataService.hydrate());
         return this.dataset;
       } catch (error) {
         this.error = new MockDataError(MOCK_DATA_ERROR_KIND.UNKNOWN, 'Failed to hydrate mock dataset.', { error });
         this.userErrorMessage = resolveUserErrorMessage(this.error);
-        logSystemMessage(webSystemMessages.mockHydrationFailed, {
+        logSystemMessage(systemMessageTree.web.mock.hydrationFailed, {
           operation: 'hydrate',
           errorKind: this.error.kind
         });
@@ -79,14 +74,14 @@ export const useMockDataStore = defineStore('mock-data', {
       this.isSaving = true;
       this.clearError();
       try {
-        this.dataset = mockDataService.reset();
+        this.dataset = await withMockControllerDelay(async () => mockDataService.reset());
         return this.dataset;
       } catch (error) {
         this.error = isMockDataError(error)
           ? error
           : new MockDataError(MOCK_DATA_ERROR_KIND.UNKNOWN, 'Failed to reset mock dataset.', { error });
         this.userErrorMessage = resolveUserErrorMessage(this.error);
-        logSystemMessage(webSystemMessages.mockResetFailed, {
+        logSystemMessage(systemMessageTree.web.mock.resetFailed, {
           operation: 'reset',
           errorKind: this.error.kind
         });
@@ -99,17 +94,14 @@ export const useMockDataStore = defineStore('mock-data', {
       this.isLoading = true;
       this.clearError();
       try {
-        const [institutions] = await Promise.all([
-          Promise.resolve(mockDataService.listInstitutions()),
-          waitMockReadDelay()
-        ]);
+        const institutions = await withMockControllerDelay(async () => mockDataService.listInstitutions());
         return institutions;
       } catch (error) {
         this.error = isMockDataError(error)
           ? error
           : new MockDataError(MOCK_DATA_ERROR_KIND.UNKNOWN, 'Failed to list institutions.', { error });
         this.userErrorMessage = resolveUserErrorMessage(this.error);
-        logSystemMessage(webSystemMessages.mockDataUnknownFailure, {
+        logSystemMessage(systemMessageTree.shared.data.mock.unknownFailure, {
           operation: 'listInstitutions',
           errorKind: this.error.kind
         });
@@ -122,17 +114,14 @@ export const useMockDataStore = defineStore('mock-data', {
       this.isLoading = true;
       this.clearError();
       try {
-        const [permissions] = await Promise.all([
-          Promise.resolve(mockDataService.listPermissionsByUser(userId)),
-          waitMockReadDelay()
-        ]);
+        const permissions = await withMockControllerDelay(async () => mockDataService.listPermissionsByUser(userId));
         return permissions;
       } catch (error) {
         this.error = isMockDataError(error)
           ? error
           : new MockDataError(MOCK_DATA_ERROR_KIND.UNKNOWN, 'Failed to list permissions.', { error });
         this.userErrorMessage = resolveUserErrorMessage(this.error);
-        logSystemMessage(webSystemMessages.mockDataUnknownFailure, {
+        logSystemMessage(systemMessageTree.shared.data.mock.unknownFailure, {
           operation: 'listPermissionsByUser',
           errorKind: this.error.kind,
           entityType: 'permission',
@@ -150,7 +139,7 @@ export const useMockDataStore = defineStore('mock-data', {
       this.isSaving = true;
       this.clearError();
       try {
-        const user = await mockDataService.updateAccountSettings(input);
+        const user = await withMockControllerDelay(async () => mockDataService.updateAccountSettings(input));
         this.dataset = mockDataService.getDataset();
         return user;
       } catch (error) {
@@ -158,7 +147,7 @@ export const useMockDataStore = defineStore('mock-data', {
           ? error
           : new MockDataError(MOCK_DATA_ERROR_KIND.UNKNOWN, 'Failed to update account settings.', { error });
         this.userErrorMessage = resolveUserErrorMessage(this.error);
-        logSystemMessage(webSystemMessages.mockDataValidationFailed, {
+        logSystemMessage(systemMessageTree.shared.data.mock.validationFailed, {
           operation: 'updateAccountSettings',
           errorKind: this.error.kind,
           activeRole: input.updatedByRole,
@@ -174,7 +163,7 @@ export const useMockDataStore = defineStore('mock-data', {
       this.isSaving = true;
       this.clearError();
       try {
-        const institution = await mockDataService.updateInstitutionSettings(input);
+        const institution = await withMockControllerDelay(async () => mockDataService.updateInstitutionSettings(input));
         this.dataset = mockDataService.getDataset();
         return institution;
       } catch (error) {
@@ -182,7 +171,7 @@ export const useMockDataStore = defineStore('mock-data', {
           ? error
           : new MockDataError(MOCK_DATA_ERROR_KIND.UNKNOWN, 'Failed to update institution settings.', { error });
         this.userErrorMessage = resolveUserErrorMessage(this.error);
-        logSystemMessage(webSystemMessages.mockDataValidationFailed, {
+        logSystemMessage(systemMessageTree.shared.data.mock.validationFailed, {
           operation: 'updateInstitutionSettings',
           errorKind: this.error.kind,
           activeRole: input.updatedByRole,
@@ -199,7 +188,7 @@ export const useMockDataStore = defineStore('mock-data', {
       this.isSaving = true;
       this.clearError();
       try {
-        const permission = await mockDataService.createPermission(input);
+        const permission = await withMockControllerDelay(async () => mockDataService.createPermission(input));
         this.dataset = mockDataService.getDataset();
         return permission;
       } catch (error) {
@@ -207,7 +196,7 @@ export const useMockDataStore = defineStore('mock-data', {
           ? error
           : new MockDataError(MOCK_DATA_ERROR_KIND.UNKNOWN, 'Failed to create permission.', { error });
         this.userErrorMessage = resolveUserErrorMessage(this.error);
-        logSystemMessage(webSystemMessages.mockDataConflictDetected, {
+        logSystemMessage(systemMessageTree.shared.data.mock.conflictDetected, {
           operation: 'createPermission',
           errorKind: this.error.kind,
           activeRole: input.updatedByRole,
@@ -223,7 +212,7 @@ export const useMockDataStore = defineStore('mock-data', {
       this.isSaving = true;
       this.clearError();
       try {
-        const permission = await mockDataService.updatePermission(input);
+        const permission = await withMockControllerDelay(async () => mockDataService.updatePermission(input));
         this.dataset = mockDataService.getDataset();
         return permission;
       } catch (error) {
@@ -231,7 +220,7 @@ export const useMockDataStore = defineStore('mock-data', {
           ? error
           : new MockDataError(MOCK_DATA_ERROR_KIND.UNKNOWN, 'Failed to update permission.', { error });
         this.userErrorMessage = resolveUserErrorMessage(this.error);
-        logSystemMessage(webSystemMessages.mockDataNotFound, {
+        logSystemMessage(systemMessageTree.shared.data.mock.notFound, {
           operation: 'updatePermission',
           errorKind: this.error.kind,
           activeRole: input.updatedByRole,
@@ -247,17 +236,14 @@ export const useMockDataStore = defineStore('mock-data', {
       this.isLoading = true;
       this.clearError();
       try {
-        const [contacts] = await Promise.all([
-          Promise.resolve(mockDataService.listContactsByRfc(rfc)),
-          waitMockReadDelay()
-        ]);
+        const contacts = await withMockControllerDelay(async () => mockDataService.listContactsByRfc(rfc));
         return contacts;
       } catch (error) {
         this.error = isMockDataError(error)
           ? error
           : new MockDataError(MOCK_DATA_ERROR_KIND.UNKNOWN, 'Failed to list contacts.', { error });
         this.userErrorMessage = resolveUserErrorMessage(this.error);
-        logSystemMessage(webSystemMessages.mockDataUnknownFailure, {
+        logSystemMessage(systemMessageTree.shared.data.mock.unknownFailure, {
           operation: 'listContactsByRfc',
           errorKind: this.error.kind,
           RFC: rfc,
@@ -272,7 +258,7 @@ export const useMockDataStore = defineStore('mock-data', {
       this.isSaving = true;
       this.clearError();
       try {
-        const contact = await mockDataService.createContact(input);
+        const contact = await withMockControllerDelay(async () => mockDataService.createContact(input));
         this.dataset = mockDataService.getDataset();
         return contact;
       } catch (error) {
@@ -280,7 +266,7 @@ export const useMockDataStore = defineStore('mock-data', {
           ? error
           : new MockDataError(MOCK_DATA_ERROR_KIND.UNKNOWN, 'Failed to create contact.', { error });
         this.userErrorMessage = resolveUserErrorMessage(this.error);
-        logSystemMessage(webSystemMessages.mockDataValidationFailed, {
+        logSystemMessage(systemMessageTree.shared.data.mock.validationFailed, {
           operation: 'createContact',
           errorKind: this.error.kind,
           activeRole: input.updatedByRole,
@@ -296,7 +282,7 @@ export const useMockDataStore = defineStore('mock-data', {
       this.isSaving = true;
       this.clearError();
       try {
-        const contact = await mockDataService.updateContact(input);
+        const contact = await withMockControllerDelay(async () => mockDataService.updateContact(input));
         this.dataset = mockDataService.getDataset();
         return contact;
       } catch (error) {
@@ -304,7 +290,7 @@ export const useMockDataStore = defineStore('mock-data', {
           ? error
           : new MockDataError(MOCK_DATA_ERROR_KIND.UNKNOWN, 'Failed to update contact.', { error });
         this.userErrorMessage = resolveUserErrorMessage(this.error);
-        logSystemMessage(webSystemMessages.mockDataNotFound, {
+        logSystemMessage(systemMessageTree.shared.data.mock.notFound, {
           operation: 'updateContact',
           errorKind: this.error.kind,
           activeRole: input.updatedByRole,
@@ -320,17 +306,14 @@ export const useMockDataStore = defineStore('mock-data', {
       this.isLoading = true;
       this.clearError();
       try {
-        const [requests] = await Promise.all([
-          Promise.resolve(mockDataService.listRequestsByRfc(rfc)),
-          waitMockReadDelay()
-        ]);
+        const requests = await withMockControllerDelay(async () => mockDataService.listRequestsByRfc(rfc));
         return requests;
       } catch (error) {
         this.error = isMockDataError(error)
           ? error
           : new MockDataError(MOCK_DATA_ERROR_KIND.UNKNOWN, 'Failed to list requests.', { error });
         this.userErrorMessage = resolveUserErrorMessage(this.error);
-        logSystemMessage(webSystemMessages.mockDataUnknownFailure, {
+        logSystemMessage(systemMessageTree.shared.data.mock.unknownFailure, {
           operation: 'listRequestsByRfc',
           errorKind: this.error.kind,
           RFC: rfc,
@@ -345,17 +328,14 @@ export const useMockDataStore = defineStore('mock-data', {
       this.isLoading = true;
       this.clearError();
       try {
-        const [findings] = await Promise.all([
-          Promise.resolve(mockDataService.listFindingsByRfc(rfc)),
-          waitMockReadDelay()
-        ]);
+        const findings = await withMockControllerDelay(async () => mockDataService.listFindingsByRfc(rfc));
         return findings;
       } catch (error) {
         this.error = isMockDataError(error)
           ? error
           : new MockDataError(MOCK_DATA_ERROR_KIND.UNKNOWN, 'Failed to list findings.', { error });
         this.userErrorMessage = resolveUserErrorMessage(this.error);
-        logSystemMessage(webSystemMessages.mockDataUnknownFailure, {
+        logSystemMessage(systemMessageTree.shared.data.mock.unknownFailure, {
           operation: 'listFindingsByRfc',
           errorKind: this.error.kind,
           RFC: rfc,
@@ -370,17 +350,14 @@ export const useMockDataStore = defineStore('mock-data', {
       this.isLoading = true;
       this.clearError();
       try {
-        const [logs] = await Promise.all([
-          Promise.resolve(mockDataService.listLogs(filters)),
-          waitMockReadDelay()
-        ]);
+        const logs = await withMockControllerDelay(async () => mockDataService.listLogs(filters));
         return logs;
       } catch (error) {
         this.error = isMockDataError(error)
           ? error
           : new MockDataError(MOCK_DATA_ERROR_KIND.UNKNOWN, 'Failed to list logs.', { error });
         this.userErrorMessage = resolveUserErrorMessage(this.error);
-        logSystemMessage(webSystemMessages.mockDataUnknownFailure, {
+        logSystemMessage(systemMessageTree.shared.data.mock.unknownFailure, {
           operation: 'listLogs',
           errorKind: this.error.kind,
           ...filters,

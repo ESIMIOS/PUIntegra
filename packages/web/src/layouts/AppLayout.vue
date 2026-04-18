@@ -42,13 +42,6 @@ const menuItems = computed(() =>
 <template>
   <DashboardShell
     :menu-items="menuItems"
-    :accent-color="domainShell[DOMAIN.APP].accentColor"
     :domain-title="domainShell[DOMAIN.APP].title"
-    :chip-label="domainShell[DOMAIN.APP].chipLabel"
-    :chip-value="institutionStore.activeRfc"
-    account-name="Pepe Pecas"
-    account-label="user"
-    session-label="Rol"
-    :session-value="authStore.activeRole"
   />
 </template>

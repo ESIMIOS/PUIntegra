@@ -15,6 +15,7 @@
   "dependencies": {
     "@puintegra/shared": "workspace:*",
     "@sentry/vue": "10.48.0",
+    "@vuestic/tailwind": "0.1.5",
     "vue": "3.5.32",
     "vuestic-ui": "1.10.3"
   },
@@ -29,6 +30,7 @@
     "eslint-plugin-vue": "10.8.0",
     "jsdom": "25.0.1",
     "pinia": "2.3.1",
+    "tailwindcss": "4.2.2",
     "typescript": "5.9.3",
     "vite": "5.4.21",
     "vitest": "1.6.1",

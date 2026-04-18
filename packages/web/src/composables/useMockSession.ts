@@ -16,7 +16,7 @@ import { useMockDataStore } from '@/stores/mockDataStore';
 import { useInstitutionStore } from '@/stores/institutionStore';
 import { withMockControllerDelay } from '@/mock/controllers/controllerDelay';
 import { logSystemMessage } from '@/shared/logging/systemLogger';
-import { webSystemMessages } from '@/shared/constants/systemMessages';
+import { systemMessageTree } from '@/shared/constants/systemMessages';
 
 /**
  * @description Provee modelos reactivos para alternar estado de sesión mock desde el panel de desarrollo.
@@ -64,7 +64,7 @@ export function useMockSession() {
    */
   function handleSessionFailure(error: unknown, operation: string, role?: z.infer<typeof RoleSchema>) {
     mockDataStore.captureExternalError(error, 'Failed to sync mock session.');
-    logSystemMessage(webSystemMessages.mockDataUnknownFailure, {
+    logSystemMessage(systemMessageTree.shared.data.mock.unknownFailure, {
       operation,
       errorKind: mockDataStore.error?.kind ?? 'UNKNOWN',
       activeRole: role ?? authStore.activeRole
@@ -134,7 +134,9 @@ export function useMockSession() {
     const requestId = ++latestRoleSyncRequestId;
     void (async () => {
       try {
-        await mockDataStore.hydrate();
+        if (authStore.activeRole !== ROLE.ANONYMOUS) {
+          await mockDataStore.hydrate();
+        }
         await syncSessionForRole(authStore.activeRole, requestId);
       } catch (error) {
         handleSessionFailure(error, 'useMockSession.onMounted');

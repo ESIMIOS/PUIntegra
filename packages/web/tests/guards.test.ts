@@ -11,12 +11,15 @@
 import {
   createPinia,
   createAppRouter,
+  clearMockAuthState,
   ROLE,
   DEFAULT_RFC,
+  saveMockAuthState,
   SYSTEM_RFC,
   useAuthStore,
   useInstitutionStore
 } from '@/bom';
+import { beforeEach } from 'vitest';
 
 function createRouterWithStores() {
   const pinia = createPinia();
@@ -28,6 +31,98 @@ function createRouterWithStores() {
 }
 
 describe('route guards in mock mode', () => {
+  beforeEach(() => {
+    clearMockAuthState();
+  });
+
+  it('allows protected route on first navigation when a persisted valid session exists', async () => {
+    saveMockAuthState({
+      session: {
+        userId: 'mock-user-001',
+        name: 'Usuario Mock',
+        email: 'admin@example.test',
+        emojiIcon: '🧩',
+        activeRole: ROLE.INSTITUTION_ADMIN,
+        activeRfc: DEFAULT_RFC,
+        allowedInstitutionRfcs: [DEFAULT_RFC],
+        availableContexts: [
+          {
+            role: ROLE.INSTITUTION_ADMIN,
+            rfc: DEFAULT_RFC
+          }
+        ]
+      },
+      failedAttemptsByEmail: {}
+    });
+
+    const { router } = createRouterWithStores();
+
+    await router.push(`/app/${DEFAULT_RFC}/dashboard`);
+
+    expect(router.currentRoute.value.path).toBe(`/app/${DEFAULT_RFC}/dashboard`);
+    expect(router.currentRoute.value.query.redirect).toBeUndefined();
+  });
+
+  it('redirects unauthenticated users to /auth/login with redirect query', async () => {
+    const { router } = createRouterWithStores();
+
+    await router.push(`/app/${DEFAULT_RFC}/requests/FUB-0001`);
+
+    expect(router.currentRoute.value.path).toBe('/auth/login');
+    expect(router.currentRoute.value.query.redirect).toBe(`/app/${DEFAULT_RFC}/requests/FUB-0001`);
+  });
+
+  it('redirects authenticated institution role from /auth/login to institution dashboard', async () => {
+    const { router, authStore, institutionStore } = createRouterWithStores();
+
+    authStore.setRole(ROLE.INSTITUTION_ADMIN);
+    authStore.setRequiresSecuritySetup(false);
+    authStore.setAllowedInstitutionRfcs([DEFAULT_RFC]);
+    institutionStore.setActiveRfc(DEFAULT_RFC);
+
+    await router.push('/auth/login');
+
+    expect(router.currentRoute.value.path).toBe(`/app/${DEFAULT_RFC}/dashboard`);
+  });
+
+  it('redirects authenticated system role from /auth/login to /admin/institutions', async () => {
+    const { router, authStore, institutionStore } = createRouterWithStores();
+
+    authStore.setRole(ROLE.SYSTEM_ADMINISTRATOR);
+    authStore.setRequiresSecuritySetup(false);
+    institutionStore.setActiveRfc(SYSTEM_RFC);
+
+    await router.push('/auth/login');
+
+    expect(router.currentRoute.value.path).toBe('/admin/institutions');
+  });
+
+  it('redirects authenticated users requiring security setup to /auth/security-setup from /auth/login', async () => {
+    const { router, authStore, institutionStore } = createRouterWithStores();
+
+    authStore.setRole(ROLE.INSTITUTION_OPERATOR);
+    authStore.setRequiresSecuritySetup(true);
+    authStore.setAllowedInstitutionRfcs([DEFAULT_RFC]);
+    institutionStore.setActiveRfc(DEFAULT_RFC);
+
+    await router.push('/auth/login');
+
+    expect(router.currentRoute.value.path).toBe('/auth/security-setup');
+  });
+
+  it('redirects authenticated users from /auth/login to requested redirect target when valid', async () => {
+    const { router, authStore, institutionStore } = createRouterWithStores();
+
+    authStore.setRole(ROLE.INSTITUTION_ADMIN);
+    authStore.setRequiresSecuritySetup(false);
+    authStore.setAllowedInstitutionRfcs([DEFAULT_RFC]);
+    institutionStore.setActiveRfc(DEFAULT_RFC);
+
+    await router.push(`/auth/login?redirect=${encodeURIComponent(`/app/${DEFAULT_RFC}/requests`)}`);
+
+    expect(router.currentRoute.value.path).toBe(`/app/${DEFAULT_RFC}/requests`);
+  });
+
   it('redirects to /error/403 on role mismatch', async () => {
     const { router, authStore, institutionStore } = createRouterWithStores();
 

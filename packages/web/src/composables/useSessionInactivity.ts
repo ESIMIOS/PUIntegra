@@ -11,6 +11,7 @@
 import { ref, onMounted, onUnmounted, watchEffect } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
+import { useInstitutionStore } from '@/stores/institutionStore';
 import { 
   SECONDS_TO_CLOSE_SESSION_FOR_INACTIVITY, 
   SECONDS_TO_SHOW_INACTIVITY_ALERT 
@@ -28,6 +29,7 @@ let listenerCleanup: (() => void) | null = null;
  */
 export function useSessionInactivity() {
   const authStore = useAuthStore();
+  const institutionStore = useInstitutionStore();
   const router = useRouter();
 
   const resetTimer = () => {
@@ -56,7 +58,8 @@ export function useSessionInactivity() {
         isAlerting.value = secondsRemaining.value <= SECONDS_TO_SHOW_INACTIVITY_ALERT;
       } else {
         stopTimer();
-        authStore.resetToAnonymous();
+        authStore.logout();
+        institutionStore.clearActiveRfc();
         router.push(routePaths.authLogout);
       }
     }, 1000);

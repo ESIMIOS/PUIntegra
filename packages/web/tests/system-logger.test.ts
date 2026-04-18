@@ -10,7 +10,7 @@
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { SystemMessage } from '@shared';
-import { webSystemMessages } from '@/shared/constants/systemMessages';
+import { systemMessageTree } from '@/shared/constants/systemMessages';
 import {
   logSystemMessage,
   logSystemMessageVerbose,
@@ -32,14 +32,14 @@ describe('system logger', () => {
   });
 
   it('logs non-error system messages through console.warn', () => {
-    logSystemMessage(webSystemMessages.guardAuthRequired, { path: '/auth/login' });
+    logSystemMessage(systemMessageTree.web.guard.authRequired, { path: '/auth/login' });
 
     expect(warnSpy).toHaveBeenCalledTimes(1);
     expect(errorSpy).toHaveBeenCalledTimes(0);
   });
 
   it('logs verbose helper as info for INFO severity', () => {
-    logSystemMessageVerbose(webSystemMessages.guardAuthRequired, { path: '/auth/login' });
+    logSystemMessageVerbose(systemMessageTree.web.guard.authRequired, { path: '/auth/login' });
 
     expect(infoSpy).toHaveBeenCalledTimes(1);
     expect(warnSpy).toHaveBeenCalledTimes(0);
@@ -47,7 +47,7 @@ describe('system logger', () => {
   });
 
   it('logs verbose helper as warn for WARNING severity', () => {
-    logSystemMessageVerbose(webSystemMessages.guardRoleMismatch, { path: '/app/x/admin/plan' });
+    logSystemMessageVerbose(systemMessageTree.web.guard.roleMismatch, { path: '/app/x/admin/plan' });
 
     expect(warnSpy).toHaveBeenCalledTimes(1);
     expect(infoSpy).toHaveBeenCalledTimes(0);
@@ -55,7 +55,7 @@ describe('system logger', () => {
   });
 
   it('logs verbose helper as error for ERROR severity', () => {
-    logSystemMessageVerbose(webSystemMessages.guardUnexpectedError, { path: '/app/x' });
+    logSystemMessageVerbose(systemMessageTree.web.guard.unexpectedError, { path: '/app/x' });
 
     expect(errorSpy).toHaveBeenCalledTimes(1);
     expect(infoSpy).toHaveBeenCalledTimes(0);
@@ -80,14 +80,14 @@ describe('system logger', () => {
 
   it('logs warning helper with code:message/error pattern through console.warn', () => {
     const error = new Error('warning de prueba');
-    logSystemMessageWarning(webSystemMessages.guardSecuritySetupRequired, error, {
+    logSystemMessageWarning(systemMessageTree.web.guard.securitySetupRequired, error, {
       path: '/admin/institutions'
     });
 
     expect(warnSpy).toHaveBeenCalledTimes(1);
     const [payload] = warnSpy.mock.calls[0] as [Record<string, unknown>];
     expect(payload.message).toBe(
-      `${webSystemMessages.guardSecuritySetupRequired.code}:${webSystemMessages.guardSecuritySetupRequired.message}/${String(error)}`
+      `${systemMessageTree.web.guard.securitySetupRequired.code}:${systemMessageTree.web.guard.securitySetupRequired.message}/${String(error)}`
     );
     expect(errorSpy).toHaveBeenCalledTimes(0);
     expect(infoSpy).toHaveBeenCalledTimes(0);
@@ -96,12 +96,12 @@ describe('system logger', () => {
 
   it('logs caught errors with code:message/error pattern', () => {
     const error = new Error('fallo de prueba');
-    logSystemMessageError(webSystemMessages.guardUnexpectedError, error, { path: '/app/x' });
+    logSystemMessageError(systemMessageTree.web.guard.unexpectedError, error, { path: '/app/x' });
 
     expect(errorSpy).toHaveBeenCalledTimes(1);
     const [payload] = errorSpy.mock.calls[0] as [Record<string, unknown>];
     expect(payload.message).toBe(
-      `${webSystemMessages.guardUnexpectedError.code}:${webSystemMessages.guardUnexpectedError.message}/${String(error)}`
+      `${systemMessageTree.web.guard.unexpectedError.code}:${systemMessageTree.web.guard.unexpectedError.message}/${String(error)}`
     );
     expect(warnSpy).toHaveBeenCalledTimes(0);
     expect(infoSpy).toHaveBeenCalledTimes(0);

@@ -46,6 +46,7 @@ Define project-wide engineering documentation and code conventions that apply ac
 - Package dependencies must use pinned versions in `package.json` (no `^` or `~`).
 - Root `.npmrc` must preserve `save-exact=true` and `save-prefix=`.
 - In a file, imports from the same module specifier must be consolidated into a single `import` statement.
+- **Dead code and unused symbols**: All unused imports, variables, and exports MUST be removed after every refactor or change. Maintaining file hygiene is an active responsibility during every task.
 
 ## TypeScript quality policy
 

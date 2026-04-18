@@ -1,3 +1,6 @@
+@import "./tailwind.css";
+@import "vuestic-ui/css";
+
 :root {
   --puintegra-radius-sm: 4px;
   --puintegra-radius-md: 8px;
@@ -20,12 +23,29 @@ a {
   color: inherit;
 }
 
+.bg-bg-primary {
+  background-color: var(--va-background-primary);
+}
+
+.bg-bg-secondary {
+  background-color: var(--va-background-secondary);
+}
+
+.bg-primary {
+  background-color: var(--va-primary);
+}
+
+.bg-secondary {
+  background-color: var(--va-secondary);
+}
+
 .layout-shell {
   min-height: 100vh;
 }
 
 .app-root {
-  min-height: 100vh;
+  height: 100vh;
+  width: 100vw;
 }
 
 .d-flex {
@@ -47,4 +67,74 @@ a {
 .debug {
   outline: 3px dotted red;
   background-color: khaki;
-} 
+}
+
+.debug1 {
+  outline: 3px dotted red;
+  background-color: orange;
+}
+
+.debug2 {
+  outline: 3px double red;
+  background-color: aqua;
+}
+
+.debug3 {
+  outline: 3px solid red;
+  background-color: lime;
+}
+
+/* Typography Utilities */
+.text--bold {
+  font-weight: 700 !important;
+}
+
+.text--uppercase {
+  text-transform: uppercase !important;
+}
+
+.text--left {
+  text-align: left !important;
+}
+
+.text--secondary {
+  color: var(--va-text-secondary) !important;
+  font-size: 0.9rem;
+}
+
+/* Global Component Rules */
+.va-card__title {
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.025em;
+}
+
+/* Form alignment fixes for centered layouts */
+.form--left-aligned {
+  text-align: left !important;
+}
+
+.flex-gap-2 {
+  gap: 0.75rem !important;
+}
+
+/** position **/
+.pf {
+  position: fixed !important;
+}
+
+.pa {
+  position: absolute !important;
+}
+
+.pr {
+  position: relative !important;
+}
+
+/**Height and Width **/
+.h100p {
+  height: 100% !important;
+}
+.w100p {
+  width: 100% !important;
+}

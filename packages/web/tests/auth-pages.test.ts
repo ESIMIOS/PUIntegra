@@ -1,22 +1,24 @@
 /**
  * @package web
  * @name auth-pages.test.ts
- * @version 0.0.1
- * @description Verifica lógica de inicio y cierre de sesión mock.
+ * @version 0.0.2
+ * @description Verifica login con credenciales/contexto y logout con cuenta regresiva.
  * @author @antigravity
  * @changelog
+ * - 0.0.2	(2026-04-15)	Se actualiza cobertura para flujo productivo mock de login/logout.	@tirsomartinezreyes
  * - 0.0.1	(2026-04-15)	Versión inicial.	@antigravity
  */
 
 import { mount } from '@vue/test-utils';
 import { createPinia, setActivePinia, getActivePinia } from 'pinia';
-import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { createAppVuestic } from '@/plugins/vuestic';
 import { useAuthStore } from '@/stores/authStore';
+import { useInstitutionStore } from '@/stores/institutionStore';
 import AuthLoginPage from '@/pages/auth/AuthLoginPage.vue';
 import AuthLogoutPage from '@/pages/auth/AuthLogoutPage.vue';
 import { ROLE } from '@shared';
 import { routePaths } from '@/shared/constants/routePaths';
-import { createAppVuestic } from '@/plugins/vuestic';
 
 const push = vi.fn();
 vi.mock('vue-router', () => ({
@@ -34,63 +36,91 @@ describe('Auth Pages', () => {
     vi.useRealTimers();
   });
 
-  function mountWithContext(component: any, options: any = {}) {
+  function mountWithContext(component: any) {
     return mount(component, {
       global: {
         plugins: [getActivePinia()!, createAppVuestic()],
-        ...options.global
-      },
-      ...options
+        stubs: {
+          VaSelect: {
+            props: ['modelValue', 'options'],
+            emits: ['update:modelValue'],
+            template: `
+              <select :value="modelValue" @change="$emit('update:modelValue', $event.target.value)">
+                <option v-for="option in options" :key="option.value" :value="option.value">{{ option.text }}</option>
+              </select>
+            `
+          }
+        }
+      }
     });
   }
 
-  describe('AuthLoginPage', () => {
-    it('renders a role selection dropdown and a sign-in button', () => {
-      const wrapper = mountWithContext(AuthLoginPage);
-      
-      expect(wrapper.find('.va-select').exists()).toBe(true);
-      expect(wrapper.find('button').exists()).toBe(true);
-    });
+  it('renders email/password form', () => {
+    const wrapper = mountWithContext(AuthLoginPage);
 
-    it('updates authStore on login with selected role', async () => {
-      const authStore = useAuthStore();
-      const wrapper = mountWithContext(AuthLoginPage);
-
-      // Trigger login
-      await wrapper.find('form').trigger('submit');
-      
-      // Since it uses a timeout, we need to advance timers
-      vi.advanceTimersByTime(1000);
-      
-      expect(authStore.isAuthenticated).toBe(true);
-      expect(authStore.activeRole).toBe(ROLE.INSTITUTION_ADMIN); // Default selectedRole
-      expect(push).toHaveBeenCalled();
-    });
-
-    it('redirects to the appropriate domain based on the selected role', async () => {
-      const wrapper = mountWithContext(AuthLoginPage);
-      
-      // We need to bypass the local ref selectedRole to test the logic in handleLogin
-      // or rather, just simulate the select change.
-      // But VaSelect is hard to trigger from Test Utils easily without stubs. 
-      // However, we can just trigger the submit and check what it does with the default.
-      
-      await wrapper.find('form').trigger('submit');
-      vi.advanceTimersByTime(1000);
-      expect(push).toHaveBeenCalledWith(routePaths.appInstitutions);
-    });
+    expect(wrapper.find('[data-testid="auth-login-email"]').exists()).toBe(true);
+    expect(wrapper.find('[data-testid="auth-login-password"]').exists()).toBe(true);
+    expect(wrapper.text()).toContain('Validar credenciales');
   });
 
-  describe('AuthLogoutPage', () => {
-    it('resets the session and redirects to login on mount', async () => {
-      const authStore = useAuthStore();
-      authStore.setRole(ROLE.INSTITUTION_ADMIN);
-      
-      mountWithContext(AuthLogoutPage);
+  it('shows validation message when password is missing', async () => {
+    const wrapper = mountWithContext(AuthLoginPage);
+    await wrapper.find('[data-testid="auth-login-email"] input').setValue('admin@example.test');
+    await wrapper.find('form').trigger('submit.prevent');
 
-      expect(authStore.isAuthenticated).toBe(false);
-      expect(authStore.activeRole).toBe(ROLE.ANONYMOUS);
-      expect(push).toHaveBeenCalledWith(routePaths.authLogin);
+    expect(wrapper.text()).toContain('Revisa los campos marcados');
+  });
+
+  it('shows context selector after valid credentials', async () => {
+    const wrapper = mountWithContext(AuthLoginPage);
+    await wrapper.find('[data-testid="auth-login-email"] input').setValue('admin@example.test');
+    await wrapper.find('[data-testid="auth-login-password"] input').setValue('Puintegra123!');
+    await wrapper.find('form').trigger('submit.prevent');
+
+    expect(wrapper.find('[data-testid="auth-login-context"]').exists()).toBe(true);
+    expect(wrapper.text()).toContain('Selecciona el contexto');
+  });
+
+  it('establishes session and redirects after context selection', async () => {
+    const authStore = useAuthStore();
+    const institutionStore = useInstitutionStore();
+    const wrapper = mountWithContext(AuthLoginPage);
+    await wrapper.find('[data-testid="auth-login-email"] input').setValue('admin@example.test');
+    await wrapper.find('[data-testid="auth-login-password"] input').setValue('Puintegra123!');
+    await wrapper.find('form').trigger('submit.prevent');
+
+    const optionValue = `${ROLE.INSTITUTION_ADMIN}::XAXX010101000`;
+    const select = wrapper.get('select');
+    await select.setValue(optionValue);
+    await wrapper.find('form').trigger('submit.prevent');
+
+    expect(authStore.isAuthenticated).toBe(true);
+    expect(authStore.activeRole).toBe(ROLE.INSTITUTION_ADMIN);
+    expect(institutionStore.activeRfc).toBe('XAXX010101000');
+    expect(push).toHaveBeenCalledWith(routePaths.appDashboard('XAXX010101000'));
+  });
+
+  it('logs out on mount and redirects to login after 15 seconds', () => {
+    const authStore = useAuthStore();
+    authStore.setRole(ROLE.INSTITUTION_ADMIN);
+    authStore.setIdentity({
+      uid: 'mock-user-001',
+      email: 'admin@example.test',
+      name: 'Usuario Mock',
+      emojiIcon: '🧩'
     });
+
+    const wrapper = mountWithContext(AuthLogoutPage);
+    expect(wrapper.text()).toContain('Sesión cerrada');
+    expect(authStore.isAuthenticated).toBe(false);
+
+    vi.advanceTimersByTime(15000);
+    expect(push).toHaveBeenCalledWith(routePaths.authLogin);
+  });
+
+  it('allows immediate redirect button from logout page', async () => {
+    const wrapper = mountWithContext(AuthLogoutPage);
+    await wrapper.find('button').trigger('click');
+    expect(push).toHaveBeenCalledWith(routePaths.authLogin);
   });
 });

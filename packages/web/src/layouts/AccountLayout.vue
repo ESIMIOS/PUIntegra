@@ -8,13 +8,12 @@
  * @changelog
  * - 0.0.1	(2026-04-10)	Versión inicial del archivo.	@tirsomartinezreyes
  */
-import { buildNavigationLinks, defaultNavigationContext, DOMAIN, domainShell, routePaths, useAuthStore } from '@/bom';
+import { buildNavigationLinks, defaultNavigationContext, DOMAIN, routePaths } from '@/bom';
 import AppFooter from '@/components/shared/AppFooter.vue';
 import AppLogo from '@/components/shared/AppLogo.vue';
 import HeaderSessionContext from '@/components/shared/HeaderSessionContext.vue';
 import ThemeToggle from '@/components/shared/ThemeToggle.vue';
 
-const authStore = useAuthStore();
 const accountLinks = buildNavigationLinks(DOMAIN.ACCOUNT, defaultNavigationContext);
 const returnLinks = [
   {
@@ -33,7 +32,7 @@ const returnLinks = [
 </script>
 
 <template>
-  <VaLayout class="layout-shell account-layout" :style="{ '--domain-accent': domainShell[DOMAIN.ACCOUNT].accentColor }">
+  <VaLayout class="layout-shell account-layout">
     <template #top>
       <VaNavbar class="account-layout__navbar" color="backgroundSecondary" fixed>
         <template #left>
@@ -43,12 +42,7 @@ const returnLinks = [
         </template>
         <template #right>
           <div class="account-layout__right">
-            <HeaderSessionContext account-name="Pepe Pecas" account-label="user">
-              <div class="account-layout__session-item">
-                <span class="account-layout__session-label">Rol</span>
-                <strong class="account-layout__session-value">{{ authStore.activeRole }}</strong>
-              </div>
-            </HeaderSessionContext>
+            <HeaderSessionContext />
             <div class="account-layout__actions">
               <ThemeToggle />
             </div>
@@ -91,8 +85,10 @@ const returnLinks = [
         </nav>
       </VaSidebar>
     </template>
-    <main class="account-layout__main">
-      <router-view />
+    <main class="account-layout__content">
+      <div class="account-layout__container">
+        <router-view />
+      </div>
     </main>
     <AppFooter />
   </VaLayout>
@@ -164,32 +160,18 @@ const returnLinks = [
   color: var(--va-primary);
 }
 
-.account-layout__session-item {
-  display: grid;
-  gap: 0.1rem;
-}
-
-.account-layout__session-label {
-  color: var(--va-text-secondary);
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0;
-  line-height: 1;
-  text-transform: uppercase;
-}
-
-.account-layout__session-value {
-  color: var(--va-text-primary);
-  font-size: 0.82rem;
-  line-height: 1.15;
-}
-
-.account-layout__main {
+.account-layout__content {
   box-sizing: border-box;
-  width: min(72rem, 100%);
   min-height: calc(100vh - var(--account-layout-footer-height));
-  margin: 0 auto;
   padding: calc(var(--account-layout-header-height) + clamp(1rem, 2vw, 2rem)) clamp(1rem, 2vw, 2rem) clamp(1rem, 2vw, 2rem);
+}
+
+.account-layout__container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  width: min(100%, 72rem);
+  margin: 0 auto;
 }
 
 @media (max-width: 768px) {
@@ -198,5 +180,4 @@ const returnLinks = [
     flex-direction: column;
   }
 }
-
 </style>

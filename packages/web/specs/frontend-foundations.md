@@ -80,6 +80,20 @@ Define the baseline webapp architecture for local development and navigable skel
 - User-facing copy in Spanish must preserve correct accents and orthography (for example: `sesión`, `acción`, `ocurrió`).
 - Shared message catalogs (`src/shared/constants/*Messages.ts`) are the source of truth and must be reviewed for orthographic consistency before merge.
 
+### Error reporting and message source of truth
+- User-facing technical failures must follow the pattern `ERROR_CODE: message`.
+- For backend/system/mock domain failures, the canonical source is `src/shared/constants/systemMessages.ts`.
+- `src/shared/constants/webUIMessages.ts` is reserved for UI/form guidance and validation UX copy; do not duplicate domain/system error messages there.
+- The same failure path must surface one canonical user-facing error message to avoid conflicting alerts.
+- Console/system logging must include: error code, route, operation/action, and minimal raw error context.
+- Avoid duplicated logging for one failure event unless each log has a distinct audience (for example observability sink vs UI state).
+
+### Error placement and feedback hierarchy (Nielsen-aligned)
+- Frontend-only validation errors (for example required fields, local format checks, disabled-action prerequisites) must be shown in component context, near the control that needs correction (input, selector, button area).
+- Backend/domain/service errors must be shown in a dedicated alert area, clearly separated from field validation feedback.
+- Do not render backend/service failures as input-level validation markers unless the backend explicitly returns a field-scoped error contract.
+- Keep one dominant error surface per failure event to reduce ambiguity and support clear recovery actions.
+
 ### Shared composable state (Singletons)
 - By default, Vue 3 `ref()` defined inside a composable function scope is unique to each component instance.
 - **Requirement**: For global state (for example session timers or global notifications), define the state variables **outside** the exported function scope to ensure a singleton instance across the application.
