@@ -64,6 +64,38 @@ a {
   margin-top: 0.5rem;
 }
 
+.m1 {
+  margin: 0.25rem;
+}
+.m2 {
+  margin: 0.5rem;
+}
+.m3 {
+  margin: 0.75rem;
+}
+.m4 {
+  margin: 1rem;
+}
+.m5 {
+  margin: 1.25rem;
+}
+
+.mb1 {
+  margin-bottom: 0.25rem;
+}
+.mb2 {
+  margin-bottom: 0.5rem;
+}
+.mb3 {
+  margin-bottom: 0.75rem;
+}
+.mb4 {
+  margin-bottom: 1rem;
+}
+.mb5 {
+  margin-bottom: 1.25rem;
+}
+
 .debug {
   outline: 3px dotted red;
   background-color: khaki;
@@ -135,6 +167,7 @@ a {
 .h100p {
   height: 100% !important;
 }
+
 .w100p {
   width: 100% !important;
 }

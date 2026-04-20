@@ -2,37 +2,30 @@
  * @package web
  * @name authStore.ts
  * @version 0.0.3
- * @description Gestiona sesión autenticada mock, identidad visible y contextos seleccionables por permiso.
+ * @description Gestiona sesión autenticada Firebase, identidad visible y contextos seleccionables por permiso.
  * @author @tirsomartinezreyes
  * @changelog
- * - 0.0.3	(2026-04-15)	Se integra capa mock-auth para hidratar, establecer, cambiar y cerrar sesión persistida.	@tirsomartinezreyes
+ * - 0.0.3	(2026-04-15)	Se integra capa inicial de auth para hidratar, establecer, cambiar y cerrar sesión persistida.	@tirsomartinezreyes
  * - 0.0.2	(2026-04-14)	Extracted anonymousState factory; resetToAnonymous delegates to $reset().	@tirsomartinezreyes
  * - 0.0.1	(2026-04-10)	Versión inicial del archivo.	@tirsomartinezreyes
  */
 
 import { defineStore, AuthenticatedRoleSchema, RoleSchema, ROLE, z } from '@/bom';
-import { createMockAuthService } from '@/mock/auth/mockAuthService';
-import { withMockControllerDelay } from '@/mock/controllers/controllerDelay';
+import {
+  LoginResultSchema,
+  SessionContextSchema,
+  clearSavedContext,
+  establishSession,
+  hydrateSession,
+  logout,
+  switchContext,
+  validateCredentials
+} from '@/gateways/firebaseAuthGateway';
 
 type Role = z.infer<typeof RoleSchema>;
 
-export const SessionContextSchema = z.object({
-  role: RoleSchema,
-  rfc: z.string().min(1)
-});
-
-export const LoginResultSchema = z.object({
-  userId: z.string().min(1),
-  name: z.string().min(1),
-  email: z.string().email(),
-  emojiIcon: z.string().min(1).nullable(),
-  contexts: z.array(SessionContextSchema).min(1)
-});
-
 type SessionContext = z.infer<typeof SessionContextSchema>;
 type LoginResult = z.infer<typeof LoginResultSchema>;
-
-const mockAuthService = createMockAuthService();
 
 /**
  * Single source of truth for the unauthenticated state shape.
@@ -55,7 +48,7 @@ function anonymousState() {
 }
 
 /**
- * @description Store de sesión mock para autenticación, rol activo y estado de bootstrap de seguridad.
+ * @description Store de sesión Firebase para autenticación, rol activo y estado de bootstrap de seguridad.
  */
 export const useAuthStore = defineStore('auth', {
   state: () => ({
@@ -95,9 +88,7 @@ export const useAuthStore = defineStore('auth', {
       this.pendingLogin = result;
     },
     async validateCredentials(email: string, password: string) {
-      const login = await withMockControllerDelay(async () => {
-        return mockAuthService.validateCredentials(email, password);
-      });
+      const login = await validateCredentials(email, password);
       const validated = LoginResultSchema.parse(login);
       this.pendingLogin = validated;
       return validated;
@@ -131,14 +122,12 @@ export const useAuthStore = defineStore('auth', {
       if (!this.pendingLogin) {
         throw new Error('No pending login result to establish session.');
       }
-      const session = await withMockControllerDelay(async () => {
-        return mockAuthService.establishSession(this.pendingLogin!, context);
-      });
+      const session = await establishSession(this.pendingLogin, context);
       this.applyEstablishedSession(session);
       return session;
     },
     async hydrateSession() {
-      const session = await withMockControllerDelay(async () => mockAuthService.hydrateSession(), { simulateFailure: false });
+      const session = await hydrateSession();
       if (!session) {
         this.hasHydratedSession = true;
         return null;
@@ -147,12 +136,17 @@ export const useAuthStore = defineStore('auth', {
       return session;
     },
     async switchContext(context: SessionContext) {
-      const session = await withMockControllerDelay(async () => mockAuthService.switchContext(context));
+      const session = await switchContext(context);
       this.applyEstablishedSession(session);
       return session;
     },
-    logout() {
-      mockAuthService.logout();
+    async logout() {
+      const logoutPromise = logout();
+      this.resetToAnonymous();
+      await logoutPromise;
+    },
+    clearLocalSession() {
+      clearSavedContext();
       this.resetToAnonymous();
     },
     resetToAnonymous() {

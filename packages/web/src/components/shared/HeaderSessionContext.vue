@@ -2,10 +2,11 @@
 /**
  * @package web
  * @name HeaderSessionContext.vue
- * @version 0.0.2
+ * @version 0.0.3
  * @description Muestra identidad y contexto de sesión real con menú de cuenta y selector de contextos disponibles.
  * @author @antigravity
  * @changelog
+ * - 0.0.3	(2026-04-19)	Reutiliza modal compartido para cambio de contexto.	@codex
  * - 0.0.2	(2026-04-15)	Se vuelve componente standalone con menú, logout confirmado y cambio de contexto.	@tirsomartinezreyes
  * - 0.0.1	(2026-04-12)	Contexto visual de sesión para headers autenticados.	@antigravity
  */
@@ -13,8 +14,10 @@
 import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { RoleSchema } from '@shared';
+import { z } from 'zod';
 import { routePaths } from '@/shared/constants/routePaths';
 import { useAuthSession } from '@/composables/useAuthSession';
+import SessionContextModal from '@/components/shared/SessionContextModal.vue';
 
 const router = useRouter();
 const { authStore, applyContext } = useAuthSession();
@@ -23,19 +26,12 @@ const showAccountMenu = ref(false);
 const showLogoutModal = ref(false);
 const showContextModal = ref(false);
 const switchingContext = ref(false);
-const selectedContextValue = ref<string | null>(null);
 
 const displayName = computed(() => authStore.name ?? 'Sin nombre');
 const displayEmail = computed(() => authStore.email ?? 'Sin correo');
 const displayRole = computed(() => authStore.activeRole);
 const displayRfc = computed(() => authStore.activeContext?.rfc ?? '');
 const displayIcon = computed(() => authStore.emojiIcon || 'person');
-const contextOptions = computed(() =>
-  authStore.availableContexts.map((context) => ({
-    text: `${context.role} · ${context.rfc}`,
-    value: `${context.role}::${context.rfc}`
-  }))
-);
 
 async function goToAccountSettings() {
   showAccountMenu.value = false;
@@ -53,29 +49,10 @@ async function confirmLogout() {
   await router.push(routePaths.authLogout);
 }
 
-function parseSelectedContext(value: string | null) {
-  if (!value) {
-    return null;
-  }
-  const [role, rfc] = value.split('::');
-  if (!role || !rfc) {
-    return null;
-  }
-  const parsedRole = RoleSchema.safeParse(role);
-  if (!parsedRole.success) {
-    return null;
-  }
-  return { role: parsedRole.data, rfc };
-}
-
-async function applySelectedContext() {
-  const parsed = parseSelectedContext(selectedContextValue.value);
-  if (!parsed) {
-    return;
-  }
+async function applySelectedContext(context: { role: z.infer<typeof RoleSchema>; rfc: string }) {
   switchingContext.value = true;
   try {
-    const path = await applyContext(parsed);
+    const path = await applyContext(context);
     showContextModal.value = false;
     await router.push(path);
   } finally {
@@ -114,7 +91,7 @@ async function applySelectedContext() {
       class="header-session-context__context-trigger"
       type="button"
       aria-label="Cambiar contexto de rol y RFC"
-      @click="showContextModal = true"
+      @click="authStore.availableContexts.length>1 && !switchingContext ? showContextModal = true : null"
     >
       <span class="header-session-context__context-label">Rol</span>
       <strong class="header-session-context__context-value">{{ displayRole }}</strong>
@@ -142,31 +119,14 @@ async function applySelectedContext() {
     </template>
   </VaModal>
 
-  <VaModal
+  <SessionContextModal
     v-model="showContextModal"
-    title="Seleccionar contexto"
-    hide-default-actions
-    max-width="28rem"
-  >
-    <VaSelect
-      v-model="selectedContextValue"
-      :options="contextOptions"
-      text-by="text"
-      value-by="value"
-      track-by="value"
-      label="Contexto disponible"
-    />
-    <template #footer>
-      <div class="header-session-context__modal-actions">
-        <VaButton preset="secondary" @click="showContextModal = false">
-          Cancelar
-        </VaButton>
-        <VaButton :disabled="!selectedContextValue" :loading="switchingContext" @click="applySelectedContext">
-          Aplicar contexto
-        </VaButton>
-      </div>
-    </template>
-  </VaModal>
+    :contexts="authStore.availableContexts"
+    :initial-context="authStore.activeContext"
+    :loading="switchingContext"
+    confirm-text="Aplicar contexto"
+    @confirm="applySelectedContext"
+  />
 </template>
 
 <style scoped>

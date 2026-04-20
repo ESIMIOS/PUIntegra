@@ -34,6 +34,12 @@ function createRouterWithInstitutionAdminContext() {
   return { router, authStore, institutionStore };
 }
 
+function createAnonymousRouter() {
+  const pinia = createPinia();
+  const router = createAppRouter(pinia);
+  return { router };
+}
+
 describe('routing contract', () => {
   it('registers all documented paths', () => {
     const { router } = createRouterWithInstitutionAdminContext();
@@ -46,12 +52,13 @@ describe('routing contract', () => {
 
   it('applies documented default redirects', async () => {
     const { router } = createRouterWithInstitutionAdminContext();
+    const { router: anonymousRouter } = createAnonymousRouter();
 
     await router.push('/site');
     expect(router.currentRoute.value.path).toBe('/site/home');
 
-    await router.push('/auth');
-    expect(router.currentRoute.value.path).toBe('/auth/login');
+    await anonymousRouter.push('/auth');
+    expect(anonymousRouter.currentRoute.value.path).toBe('/auth/login');
 
     await router.push(`/app/${DEFAULT_RFC}`);
     expect(router.currentRoute.value.path).toBe(`/app/${DEFAULT_RFC}/dashboard`);

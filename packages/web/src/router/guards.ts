@@ -1,10 +1,12 @@
 /**
  * @package web
  * @name guards.ts
- * @version 0.0.1
+ * @version 0.0.3
  * @description Implements guards for session, role, institution context, and security bootstrap.
  * @author @tirsomartinezreyes
  * @changelog
+ * - 0.0.3	(2026-04-19)	Skips blocking Firebase hydration for all public routes.	@codex
+ * - 0.0.2	(2026-04-19)	Skips Firebase hydration for public non-auth routes to improve reload latency.	@codex
  * - 0.0.1	(2026-04-10)	Versión inicial del archivo.	@tirsomartinezreyes
  */
 
@@ -216,6 +218,13 @@ function resolveGuardRedirect(to: GuardRoute, meta: MergedMeta, authStore: AuthS
 }
 
 /**
+ * @description Limits Firebase session hydration to protected routes that need auth state for access.
+ */
+function shouldHydrateForRoute(meta: MergedMeta) {
+  return meta.requiresAuth;
+}
+
+/**
  * @description Ensures route guards evaluate against hydrated auth state on first navigation.
  */
 async function ensureGuardHydration(authStore: AuthStore, institutionStore: InstitutionStore) {
@@ -230,12 +239,12 @@ async function ensureGuardHydration(authStore: AuthStore, institutionStore: Inst
         if (session?.activeRfc) {
           institutionStore.setActiveRfc(session.activeRfc);
         } else {
-          authStore.resetToAnonymous();
+          authStore.clearLocalSession();
           institutionStore.clearActiveRfc();
         }
       } catch (hydrationError) {
-        logSystemMessageWarning(systemMessageTree.web.mock.hydrationFailed, hydrationError);
-        authStore.resetToAnonymous();
+        logSystemMessageWarning(systemMessageTree.web.app.sessionHydrationFailed, hydrationError);
+        authStore.clearLocalSession();
         institutionStore.clearActiveRfc();
       }
     })().finally(() => {
@@ -265,7 +274,9 @@ export function registerRouteGuards(router: Router, pinia: Pinia) {
         return true;
       }
 
-      await ensureGuardHydration(authStore, institutionStore);
+      if (shouldHydrateForRoute(meta)) {
+        await ensureGuardHydration(authStore, institutionStore);
+      }
 
       const redirect = resolveGuardRedirect(to, meta, authStore, institutionStore);
       if (redirect) {

@@ -2,7 +2,7 @@
  * @package web
  * @name guards.test.ts
  * @version 0.0.1
- * @description Verifica el comportamiento de guards mock para rol, contexto y seguridad.
+ * @description Verifica el comportamiento de guards para rol, contexto y seguridad.
  * @author @tirsomartinezreyes
  * @changelog
  * - 0.0.1	(2026-04-10)	Versión inicial del archivo.	@tirsomartinezreyes
@@ -11,15 +11,25 @@
 import {
   createPinia,
   createAppRouter,
-  clearMockAuthState,
   ROLE,
   DEFAULT_RFC,
-  saveMockAuthState,
   SYSTEM_RFC,
   useAuthStore,
   useInstitutionStore
 } from '@/bom';
-import { beforeEach } from 'vitest';
+import { hydrateSession } from '@/gateways/firebaseAuthGateway';
+import { beforeEach, vi } from 'vitest';
+
+vi.mock('@/gateways/firebaseAuthGateway', async () => {
+  const actual = await vi.importActual<typeof import('@/gateways/firebaseAuthGateway')>('@/gateways/firebaseAuthGateway');
+  return {
+    ...actual,
+    clearSavedContext: vi.fn(),
+    hydrateSession: vi.fn()
+  };
+});
+
+const mockedHydrateSession = vi.mocked(hydrateSession);
 
 function createRouterWithStores() {
   const pinia = createPinia();
@@ -30,29 +40,27 @@ function createRouterWithStores() {
   return { router, authStore, institutionStore };
 }
 
-describe('route guards in mock mode', () => {
+describe('route guards', () => {
   beforeEach(() => {
-    clearMockAuthState();
+    mockedHydrateSession.mockReset();
+    mockedHydrateSession.mockResolvedValue(null);
   });
 
-  it('allows protected route on first navigation when a persisted valid session exists', async () => {
-    saveMockAuthState({
-      session: {
-        userId: 'mock-user-001',
-        name: 'Usuario Mock',
-        email: 'admin@example.test',
-        emojiIcon: '🧩',
-        activeRole: ROLE.INSTITUTION_ADMIN,
-        activeRfc: DEFAULT_RFC,
-        allowedInstitutionRfcs: [DEFAULT_RFC],
-        availableContexts: [
-          {
-            role: ROLE.INSTITUTION_ADMIN,
-            rfc: DEFAULT_RFC
-          }
-        ]
-      },
-      failedAttemptsByEmail: {}
+  it('allows protected route on first navigation when a hydrated valid session exists', async () => {
+    mockedHydrateSession.mockResolvedValueOnce({
+      userId: 'dev-user-001',
+      name: 'Usuario Firebase',
+      email: 'admin@example.test',
+      emojiIcon: 'FI',
+      activeRole: ROLE.INSTITUTION_ADMIN,
+      activeRfc: DEFAULT_RFC,
+      allowedInstitutionRfcs: [DEFAULT_RFC],
+      availableContexts: [
+        {
+          role: ROLE.INSTITUTION_ADMIN,
+          rfc: DEFAULT_RFC
+        }
+      ]
     });
 
     const { router } = createRouterWithStores();
@@ -61,6 +69,21 @@ describe('route guards in mock mode', () => {
 
     expect(router.currentRoute.value.path).toBe(`/app/${DEFAULT_RFC}/dashboard`);
     expect(router.currentRoute.value.query.redirect).toBeUndefined();
+    expect(mockedHydrateSession).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not hydrate Firebase session for public routes', async () => {
+    const { router } = createRouterWithStores();
+
+    await router.push('/site/home');
+
+    expect(router.currentRoute.value.path).toBe('/site/home');
+    expect(mockedHydrateSession).not.toHaveBeenCalled();
+
+    await router.push('/auth/login');
+
+    expect(router.currentRoute.value.path).toBe('/auth/login');
+    expect(mockedHydrateSession).not.toHaveBeenCalled();
   });
 
   it('redirects unauthenticated users to /auth/login with redirect query', async () => {

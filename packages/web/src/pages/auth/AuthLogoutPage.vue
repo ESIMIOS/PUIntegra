@@ -26,7 +26,7 @@ function goToLogin() {
 }
 
 onMounted(() => {
-  clearSession();
+  void clearSession();
   intervalId = setInterval(() => {
     secondsLeft.value -= 1;
     if (secondsLeft.value <= 0) {

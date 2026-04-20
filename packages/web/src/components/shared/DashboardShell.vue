@@ -14,7 +14,7 @@ import HeaderSessionContext from '@/components/shared/HeaderSessionContext.vue';
 import ThemeToggle from '@/components/shared/ThemeToggle.vue';
 import type { NavigationLink } from '@/shared/constants/navigationCatalog';
 
-const props = defineProps<{
+defineProps<{
   menuItems: NavigationLink[];
   domainTitle: string;
 }>();

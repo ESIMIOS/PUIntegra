@@ -15,13 +15,8 @@ import { ROLE } from '@shared';
 import { useAuthStore } from '@/stores/authStore';
 
 describe('AccountLayout', () => {
-  it('renders account session context in the fixed header', () => {
-    const pinia = createPinia();
-    setActivePinia(pinia);
-    const authStore = useAuthStore();
-    authStore.setRole(ROLE.INSTITUTION_OPERATOR);
-
-    const wrapper = mount(AccountLayout, {
+  function mountLayout(pinia = createPinia()) {
+    return mount(AccountLayout, {
       global: {
         plugins: [pinia],
         stubs: {
@@ -74,6 +69,14 @@ describe('AccountLayout', () => {
         }
       }
     });
+  }
+
+  it('renders account session context in the fixed header', () => {
+    const pinia = createPinia();
+    setActivePinia(pinia);
+    const authStore = useAuthStore();
+    authStore.setRole(ROLE.INSTITUTION_OPERATOR);
+    const wrapper = mountLayout(pinia);
 
     expect(wrapper.get('[data-testid="account-navbar"]').attributes('data-fixed')).toBe('true');
     expect(wrapper.get('[data-testid="session-context"]').element).toBeTruthy();

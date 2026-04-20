@@ -54,8 +54,8 @@ export function useAuthSession() {
   /**
    * @description Clears authenticated session and active institution context.
    */
-  function clearSession() {
-    authStore.logout();
+  async function clearSession() {
+    await authStore.logout();
     institutionStore.clearActiveRfc();
   }
 

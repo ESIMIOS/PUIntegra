@@ -126,7 +126,7 @@ const roleOptions = roleValues.map((role) => ({
 }))
 ```
 
-For fixed or floating panels such as the mock session switcher:
+For fixed or floating panels:
 
 - Use `teleport="body"` for dropdown content.
 - Add a specific `content-class`.
@@ -135,12 +135,12 @@ For fixed or floating panels such as the mock session switcher:
 ```vue
 <VaSelect
   teleport="body"
-  content-class="mock-switcher__select-dropdown"
+  content-class="floating-panel__select-dropdown"
 />
 ```
 
 ```css
-:global(.mock-switcher__select-dropdown) {
+:global(.floating-panel__select-dropdown) {
   z-index: 1200 !important;
 }
 ```

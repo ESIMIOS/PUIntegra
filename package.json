@@ -6,7 +6,10 @@
     "test:coverage": "pnpm -r test:coverage",
     "typecheck": "pnpm -r typecheck",
     "lint": "pnpm -r lint",
-    "build": "pnpm -r build"
+    "build": "pnpm -r build",
+    "dev:web": "pnpm run seed:emulators && pnpm --filter @puintegra/web dev",
+    "dev:emulators": "firebase emulators:start",
+    "seed:emulators": "pnpm --filter @puintegra/api seed:emulators"
   },
   "engines": {
     "node": ">=24.0.0",
@@ -17,7 +20,8 @@
       "esbuild",
       "farmhash",
       "protobufjs",
-      "vue-demi"
+      "vue-demi",
+      "@firebase/util"
     ]
   },
   "packageManager": "pnpm@10.33.0+sha512.10568bb4a6afb58c9eb3630da90cc9516417abebd3fabbe6739f0ae795728da1491e9db5a544c76ad8eb7570f5c4bb3d6c637b2cb41bfdcdb47fa823c8649319",

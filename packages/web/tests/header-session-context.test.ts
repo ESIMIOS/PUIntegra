@@ -8,7 +8,7 @@
  * - 0.0.1	(2026-04-15)	Versión inicial del archivo.	@tirsomartinezreyes
  */
 
-import { mount } from '@vue/test-utils';
+import { flushPromises, mount } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ROLE } from '@shared';
@@ -16,30 +16,57 @@ import HeaderSessionContext from '@/components/shared/HeaderSessionContext.vue';
 import { useAuthStore } from '@/stores/authStore';
 import { useInstitutionStore } from '@/stores/institutionStore';
 import { routePaths } from '@/shared/constants/routePaths';
+import { switchContext } from '@/gateways/firebaseAuthGateway';
 
 const push = vi.fn();
 vi.mock('vue-router', () => ({
   useRouter: () => ({ push })
 }));
 
+vi.mock('@/gateways/firebaseAuthGateway', async () => {
+  const actual = await vi.importActual<typeof import('@/gateways/firebaseAuthGateway')>('@/gateways/firebaseAuthGateway');
+  return {
+    ...actual,
+    switchContext: vi.fn()
+  };
+});
+
+const mockedSwitchContext = vi.mocked(switchContext);
+
 describe('HeaderSessionContext', () => {
   beforeEach(() => {
     const pinia = createPinia();
     setActivePinia(pinia);
     push.mockClear();
-    const authStore = useAuthStore();
-    const institutionStore = useInstitutionStore();
-    authStore.setPendingLogin({
-      userId: 'mock-user-001',
-      name: 'Usuario Mock',
+    mockedSwitchContext.mockReset();
+    mockedSwitchContext.mockResolvedValue({
+      userId: 'dev-user-001',
+      name: 'Usuario Firebase',
       email: 'admin@example.test',
-      emojiIcon: '🧩',
-      contexts: [
+      emojiIcon: 'FI',
+      activeRole: ROLE.SYSTEM_ADMINISTRATOR,
+      activeRfc: 'IEC120914FV8',
+      allowedInstitutionRfcs: ['XAXX010101000'],
+      availableContexts: [
         { role: ROLE.INSTITUTION_ADMIN, rfc: 'XAXX010101000' },
         { role: ROLE.SYSTEM_ADMINISTRATOR, rfc: 'IEC120914FV8' }
       ]
     });
-    authStore.establishSession({ role: ROLE.INSTITUTION_ADMIN, rfc: 'XAXX010101000' });
+    const authStore = useAuthStore();
+    const institutionStore = useInstitutionStore();
+    authStore.applyEstablishedSession({
+      userId: 'dev-user-001',
+      name: 'Usuario Firebase',
+      email: 'admin@example.test',
+      emojiIcon: 'FI',
+      activeRole: ROLE.INSTITUTION_ADMIN,
+      activeRfc: 'XAXX010101000',
+      allowedInstitutionRfcs: ['XAXX010101000'],
+      availableContexts: [
+        { role: ROLE.INSTITUTION_ADMIN, rfc: 'XAXX010101000' },
+        { role: ROLE.SYSTEM_ADMINISTRATOR, rfc: 'IEC120914FV8' }
+      ]
+    });
     institutionStore.setActiveRfc('XAXX010101000');
   });
 
@@ -60,7 +87,12 @@ describe('HeaderSessionContext', () => {
           VaModal: {
             props: ['modelValue', 'title'],
             emits: ['update:modelValue'],
-            template: '<div><slot /><slot name="footer" /></div>'
+            template: `
+              <div v-if="modelValue">
+                <slot />
+                <slot name="footer" />
+              </div>
+            `
           },
           VaSelect: {
             props: ['modelValue', 'options'],
@@ -84,7 +116,7 @@ describe('HeaderSessionContext', () => {
 
   it('renders current user identity and context', () => {
     const wrapper = mountComponent();
-    expect(wrapper.text()).toContain('Usuario Mock');
+    expect(wrapper.text()).toContain('Usuario Firebase');
     expect(wrapper.text()).toContain('admin@example.test');
     expect(wrapper.text()).toContain('INSTITUTION_ADMIN');
     expect(wrapper.text()).toContain('XAXX010101000');
@@ -118,6 +150,14 @@ describe('HeaderSessionContext', () => {
 
   it('switches context and routes to safe landing page', async () => {
     const wrapper = mountComponent();
+    const contextTrigger = wrapper.findAll('button').find((button) =>
+      button.attributes('aria-label') === 'Cambiar contexto de rol y RFC'
+    );
+    if (!contextTrigger) {
+      throw new Error('Context trigger not found.');
+    }
+    await contextTrigger.trigger('click');
+
     const select = wrapper.get('select');
     await select.setValue(`${ROLE.SYSTEM_ADMINISTRATOR}::IEC120914FV8`);
     const applyButton = wrapper.findAll('button').find((button) => button.text().includes('Aplicar contexto'));
@@ -125,6 +165,7 @@ describe('HeaderSessionContext', () => {
       throw new Error('Apply context button not found.');
     }
     await applyButton.trigger('click');
+    await flushPromises();
     expect(push).toHaveBeenCalledWith(routePaths.adminInstitutions);
   });
 });

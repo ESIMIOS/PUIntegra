@@ -17,6 +17,15 @@ export default [
       }
     }
   },
+  {
+    files: ['**/*.cjs'],
+    languageOptions: {
+      globals: {
+        module: 'readonly',
+        require: 'readonly'
+      }
+    }
+  },
   js.configs.recommended,
   ...vuePlugin.configs['flat/recommended'],
   {

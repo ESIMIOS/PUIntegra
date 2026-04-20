@@ -35,31 +35,31 @@ type BuildSystemMessagesOptions = {
 
 export const sharedSystemMessageTree = {
   data: {
-    mock: {
+    operation: {
       validationFailed: {
-        code: 'DATA-MOCK-001',
+        code: 'DATA-OPERATION-001',
         severity: LOG_SEVERITY.WARNING,
-        message: 'La operación de datos mock falló por validación.'
+        message: 'La operación de datos falló por validación.'
       },
       notFound: {
-        code: 'DATA-MOCK-002',
+        code: 'DATA-OPERATION-002',
         severity: LOG_SEVERITY.WARNING,
-        message: 'No se encontró la entidad solicitada en datos mock.'
+        message: 'No se encontró la entidad solicitada.'
       },
       conflictDetected: {
-        code: 'DATA-MOCK-003',
+        code: 'DATA-OPERATION-003',
         severity: LOG_SEVERITY.WARNING,
-        message: 'Se detectó un conflicto de datos mock.'
+        message: 'Se detectó un conflicto de datos.'
       },
       forbiddenOperation: {
-        code: 'DATA-MOCK-004',
+        code: 'DATA-OPERATION-004',
         severity: LOG_SEVERITY.WARNING,
-        message: 'La sesión actual no puede ejecutar la operación de datos mock.'
+        message: 'La sesión actual no puede ejecutar la operación de datos.'
       },
       unknownFailure: {
-        code: 'DATA-MOCK-005',
+        code: 'DATA-OPERATION-005',
         severity: LOG_SEVERITY.ERROR,
-        message: 'Falló inesperadamente en operaciones de datos mock.'
+        message: 'Falló inesperadamente en operaciones de datos.'
       }
     }
   },

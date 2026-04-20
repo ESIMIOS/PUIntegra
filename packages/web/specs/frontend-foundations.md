@@ -15,7 +15,7 @@ Define the baseline webapp architecture for local development and navigable skel
 - Error observability (Sentry) lives in [`error-observability.md`](./error-observability.md).
 - Deployment environments live in [`environments.md`](./environments.md).
 - Full documented route skeleton with placeholders and default redirects.
-- Guard pipeline with mock-mode control for local browsing.
+- Guard pipeline backed by Firebase Auth state and app session context.
 
 ## Route and guard contract
 
@@ -58,22 +58,23 @@ Define the baseline webapp architecture for local development and navigable skel
 - Do not create local pass-through wrappers that only re-export `@shared` contracts (for example role constants). Import from `@shared` directly.
 - Avoid unnecessary local type aliases when a type can be directly derived from shared constants/schemas.
 - Avoid arbitrary primitive types for constrained domains (`role`, `domain`, etc.); use schema/enum-derived types in store actions, composables, and route metadata.
-- Product-only mock defaults remain in `packages/web` (`DEFAULT_RFC`, `DEFAULT_FUB`).
+- Product-only UI/navigation defaults remain in `packages/web` (`DEFAULT_RFC`, `DEFAULT_FUB`).
 
 ## Navigation source of truth
 
 - Navigation labels and route-target mapping must be defined in a shared navigation catalog constant under `src/shared/constants`.
-- Navigation consumers (mock panel, composables, future real navigation UI) must consume this catalog instead of redefining string labels or duplicated route-link arrays.
+- Navigation consumers (shells, composables, and future navigation UI) must consume this catalog instead of redefining string labels or duplicated route-link arrays.
 - Avoid duplicated navigation strings in components and composables.
 - Placeholder page title/description content must also be centralized in the same navigation catalog module.
 - Route records must copy title/description from the catalog into `route.meta` so placeholders can render directly from route data.
 
 
-## Mock mode
+## Firebase emulator mode
 
-- The project keeps a mock mode for local browsing without backend integration.
-- The detailed mock behavior contract lives in [`mock-mode.md`](./mock-mode.md).
-- This file only preserves the architectural relationship: guards and routes depend on mock state to enable local browsable navigation.
+- Local development uses Firebase Auth and Firestore emulators instead of a frontend runtime backend simulation.
+- The detailed emulator behavior contract lives in [`firebase-emulator-mode.md`](./firebase-emulator-mode.md).
+- Data gateway behavior lives in [`firebase-data-gateway.md`](./firebase-data-gateway.md).
+- Guards and routes depend on Firebase auth state plus selected app session context.
 
 ## Shared state and testing patterns
 ### Spanish UI copy quality
@@ -82,7 +83,7 @@ Define the baseline webapp architecture for local development and navigable skel
 
 ### Error reporting and message source of truth
 - User-facing technical failures must follow the pattern `ERROR_CODE: message`.
-- For backend/system/mock domain failures, the canonical source is `src/shared/constants/systemMessages.ts`.
+- For backend/system/domain failures, the canonical source is `src/shared/constants/systemMessages.ts`.
 - `src/shared/constants/webUIMessages.ts` is reserved for UI/form guidance and validation UX copy; do not duplicate domain/system error messages there.
 - The same failure path must surface one canonical user-facing error message to avoid conflicting alerts.
 - Console/system logging must include: error code, route, operation/action, and minimal raw error context.
@@ -118,6 +119,6 @@ Define the baseline webapp architecture for local development and navigable skel
 
 ## Non-goals in this phase
 
-- No real Firebase/Auth/API data operations.
+- No production Firebase/Auth/API data operations.
 - No business workflows.
 - No changes to shared schema contracts.

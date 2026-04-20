@@ -13,7 +13,7 @@ import {
   sharedSystemMessageTree,
   type MessageTree
 } from '@shared';
-import { MOCK_DATA_ERROR_KIND } from '@/mock/errors/mockDataError';
+import { APP_DATA_ERROR_KIND } from '@/shared/errors/appErrors';
 
 const webSystemMessageTree = {
   guard: {
@@ -75,23 +75,28 @@ const webSystemMessageTree = {
       code: 'WEB-APP-001',
       severity: 'ERROR',
       message: 'Error durante la inicialización del enrutador de la aplicación.'
+    },
+    sessionHydrationFailed: {
+      code: 'WEB-APP-002',
+      severity: 'ERROR',
+      message: 'No fue posible hidratar la sesión de Firebase.'
     }
   },
-  mock: {
-    hydrationFailed: {
-      code: 'WEB-MOCK-001',
+  data: {
+    firebaseReadFailed: {
+      code: 'WEB-DATA-001',
       severity: 'ERROR',
-      message: 'No fue posible hidratar el estado mock persistido.'
+      message: 'No fue posible leer datos desde Firebase.'
     },
-    persistenceFailed: {
-      code: 'WEB-MOCK-002',
+    firebaseWriteFailed: {
+      code: 'WEB-DATA-002',
       severity: 'ERROR',
-      message: 'No fue posible persistir el estado mock.'
+      message: 'No fue posible guardar datos en Firebase.'
     },
-    resetFailed: {
-      code: 'WEB-MOCK-003',
-      severity: 'ERROR',
-      message: 'No fue posible restablecer el estado mock.'
+    firebaseValidationFailed: {
+      code: 'WEB-DATA-003',
+      severity: 'WARNING',
+      message: 'La respuesta de Firebase no cumple el contrato esperado.'
     }
   },
   ui: {
@@ -126,7 +131,7 @@ const webSystemMessageTree = {
       storage: {
         code: 'WEB-UI-005',
         severity: 'ERROR',
-        message: 'No pudimos guardar los cambios locales. Intenta restablecer los datos mock.'
+        message: 'No pudimos guardar los cambios locales. Intenta de nuevo.'
       },
       unknown: {
         code: 'WEB-UI-006',
@@ -142,17 +147,26 @@ const webSystemMessageTree = {
   }
 } as const satisfies MessageTree;
 
-export const systemMessageTree = buildUnifiedSystemMessageTree({
+const unifiedSystemMessageTree = buildUnifiedSystemMessageTree({
   web: webSystemMessageTree,
   shared: sharedSystemMessageTree
 });
 
+if (!unifiedSystemMessageTree.web || !unifiedSystemMessageTree.shared) {
+  throw new Error('Unified system message tree is missing required web or shared roots.');
+}
+
+export const systemMessageTree = {
+  web: unifiedSystemMessageTree.web,
+  shared: unifiedSystemMessageTree.shared
+} as const;
+
 export const webUiDataErrorByKind = {
-  [MOCK_DATA_ERROR_KIND.VALIDATION]: systemMessageTree.web!.ui.data.validation,
-  [MOCK_DATA_ERROR_KIND.NOT_FOUND]: systemMessageTree.web!.ui.data.notFound,
-  [MOCK_DATA_ERROR_KIND.CONFLICT]: systemMessageTree.web!.ui.data.conflict,
-  [MOCK_DATA_ERROR_KIND.FORBIDDEN]: systemMessageTree.web!.ui.data.forbidden,
-  [MOCK_DATA_ERROR_KIND.STORAGE]: systemMessageTree.web!.ui.data.storage,
-  [MOCK_DATA_ERROR_KIND.SERVER_ERROR]: systemMessageTree.web!.ui.data.serverError,
-  [MOCK_DATA_ERROR_KIND.UNKNOWN]: systemMessageTree.web!.ui.data.unknown
+  [APP_DATA_ERROR_KIND.VALIDATION]: webSystemMessageTree.ui.data.validation,
+  [APP_DATA_ERROR_KIND.NOT_FOUND]: webSystemMessageTree.ui.data.notFound,
+  [APP_DATA_ERROR_KIND.CONFLICT]: webSystemMessageTree.ui.data.conflict,
+  [APP_DATA_ERROR_KIND.FORBIDDEN]: webSystemMessageTree.ui.data.forbidden,
+  [APP_DATA_ERROR_KIND.STORAGE]: webSystemMessageTree.ui.data.storage,
+  [APP_DATA_ERROR_KIND.SERVER_ERROR]: webSystemMessageTree.ui.data.serverError,
+  [APP_DATA_ERROR_KIND.UNKNOWN]: webSystemMessageTree.ui.data.unknown
 } as const;

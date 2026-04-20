@@ -1,6 +1,69 @@
+/**
+ * @component firestore
+ * @name firestore.rules
+ * @version 0.0.3
+ * @description Restricts client access to least-privilege session collections (`users`, `permissions`) and denies all others.
+ * @author @codex
+ * @changelog
+ * - 0.0.3	(2026-04-19)	Elimina fallback por userId en permissions; acceso queda ligado al email autenticado.	@codex
+ * - 0.0.2	(2026-04-19)	Endurece acceso: solo users/permissions con reglas por identidad y correo autenticado.	@codex
+ * - 0.0.1	(2026-04-19)	Adds authenticated emulator read policy while keeping client writes denied.	@codex
+ */
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function signedEmail() {
+      return isSignedIn() && request.auth.token.email is string
+        ? request.auth.token.email.lower()
+        : null;
+    }
+
+    function canReadOwnUser(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function canReadOwnPermission(permission) {
+      return isSignedIn() && (
+        (permission.email is string && signedEmail() != null && permission.email.lower() == signedEmail())
+      );
+    }
+
+    match /users/{documentId} {
+      allow read: if canReadOwnUser(documentId);
+      allow write: if false;
+    }
+
+    match /permissions/{documentId} {
+      allow read: if canReadOwnPermission(resource.data);
+      allow write: if false;
+    }
+
+    // Disabled collections until explicit secure access policies are implemented.
+    match /institutions/{documentId} {
+      allow read, write: if false;
+    }
+
+    match /contacts/{documentId} {
+      allow read, write: if false;
+    }
+
+    match /requests/{documentId} {
+      allow read, write: if false;
+    }
+
+    match /findings/{documentId} {
+      allow read, write: if false;
+    }
+
+    match /logs/{documentId} {
+      allow read, write: if false;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }
