@@ -79,7 +79,7 @@ Required for local emulator-backed development:
 | `VITE_FIREBASE_AUTH_EMULATOR_URL` | Auth Emulator URL, default `http://127.0.0.1:9099` |
 | `VITE_FIRESTORE_EMULATOR_HOST` | Firestore Emulator host, default `127.0.0.1` |
 | `VITE_FIRESTORE_EMULATOR_PORT` | Firestore Emulator port, default `8081` |
-| `VITE_API_BASE_URL` | Optional base URL for the Functions API when the web app is not served behind Hosting rewrites or Vite's local `/api` proxy |
+| `VITE_API_BASE_URL` | Base URL for Functions API. Example: `http://127.0.0.1:5001/<project>/<region>`. Note: do not include the `/api` function name suffix if your routes (e.g., `AUTH_EVENT_API_PATH`) already provide it. |
 
 Local seed scripts also require a process environment variable for emulator-only institution data. This is not a Vite variable, is loaded by API emulator scripts from root env files, and must not be committed with real values.
 

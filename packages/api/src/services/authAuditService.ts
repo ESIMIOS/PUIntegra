@@ -12,17 +12,10 @@
  * - 0.0.1	(2026-04-19)	Agrega builders para perfil Auth, alta de cuenta, login y logout.	@codex
  */
 
-import {
-  LOG_CATEGORIES,
-  LOG_ORIGIN,
-  LogSchema,
-  UserSchema,
-  type Log,
-  type User
-} from '@puintegra/shared';
-import { z } from 'zod';
+import { LOG_CATEGORIES, LOG_ORIGIN, LogSchema, UserSchema, type Log, type User } from "@puintegra/shared";
+import { z } from "zod";
 
-export const AuthEventNameSchema = z.enum(['login', 'logout']);
+export const AuthEventNameSchema = z.enum(["login", "logout"]);
 export type AuthEventName = z.infer<typeof AuthEventNameSchema>;
 
 type AuthUserProfileInput = {
@@ -49,32 +42,38 @@ type UserCreatedLogInput = {
 
 const AUTH_EVENT_CATEGORY = {
   login: LOG_CATEGORIES.USER_ACCOUNT_LOGIN,
-  logout: LOG_CATEGORIES.USER_ACCOUNT_LOGOUT
-} as const satisfies Record<AuthEventName, typeof LOG_CATEGORIES.USER_ACCOUNT_LOGIN | typeof LOG_CATEGORIES.USER_ACCOUNT_LOGOUT>;
+  logout: LOG_CATEGORIES.USER_ACCOUNT_LOGOUT,
+} as const satisfies Record<
+  AuthEventName,
+  typeof LOG_CATEGORIES.USER_ACCOUNT_LOGIN | typeof LOG_CATEGORIES.USER_ACCOUNT_LOGOUT
+>;
 
 /**
  * @description Construye el perfil de dominio a partir del usuario creado en Firebase Auth.
  */
 export function buildUserProfileFromAuthUser(authUser: AuthUserProfileInput, now: number): User {
   if (!authUser.email) {
-    throw new Error('Firebase Auth user email is required to create a PUIntegra user profile.');
+    throw new Error("Firebase Auth user email is required to create a PUIntegra user profile.");
   }
 
   const profile = {
     userId: authUser.uid,
     name: authUser.displayName?.trim() || authUser.email,
     email: authUser.email,
-    emojiIcon:'😎',
-    phone: authUser.phoneNumber ?? null,
+    emojiIcon: "😎",
     updates: [],
     createdAt: now,
-    updatedAt: now
+    updatedAt: now,
   };
 
-  return UserSchema.parse(authUser.phoneNumber ? {
-    ...profile,
-    phone: authUser.phoneNumber
-  } : profile);
+  return UserSchema.parse(
+    authUser.phoneNumber
+      ? {
+          ...profile,
+          phone: authUser.phoneNumber,
+        }
+      : profile,
+  );
 }
 
 /**
@@ -90,11 +89,11 @@ export function buildAuthEventLog(input: AuthEventLogInput, now: number): Log {
     userId: input.userId,
     execution: {
       executedByUserId: input.userId,
-      executedByUserEmail: input.email ?? null
+      executedByUserEmail: input.email ?? null,
     },
     impact: {},
     searchRequest: {},
-    createdAt: now
+    createdAt: now,
   });
 }
 
@@ -112,9 +111,9 @@ export function buildUserCreatedLog(input: UserCreatedLogInput, now: number): Lo
     execution: {},
     impact: {
       impactedUserId: input.userId,
-      impactedUserEmail: input.email
+      impactedUserEmail: input.email,
     },
     searchRequest: {},
-    createdAt: now
+    createdAt: now,
   });
 }

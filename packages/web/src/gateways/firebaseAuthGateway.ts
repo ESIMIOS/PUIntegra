@@ -143,7 +143,11 @@ function assertFirebaseUser(value: FirebaseUser | null): FirebaseUser {
  * @description Resuelve URL del API HTTP usando base opcional para emuladores.
  */
 function resolveApiUrl(path: string) {
-  const baseUrl = import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, '') ?? '';
+  const baseUrl = import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, "") ?? "";
+  // Evitamos duplicidad si la URL base ya termina en /api y el path ya empieza con /api/
+  if (baseUrl.endsWith("/api") && path.startsWith("/api/")) {
+    return `${baseUrl}${path.substring(4)}`;
+  }
   return `${baseUrl}${path}`;
 }
 

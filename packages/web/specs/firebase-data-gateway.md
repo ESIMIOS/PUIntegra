@@ -24,7 +24,7 @@ Define the local Firestore Emulator-backed data architecture used by `packages/w
   - `findings`
   - `logs`
 - `SYSTEM_RFC` remains a reserved provider context and is not modeled as a tenant institution document.
-- Permissions are tied to Firebase Auth users via `Permission.userId`.
+- Permissions are tied to Firebase Auth users via `Permission.email`.
 
 ## Layer boundaries
 

@@ -14,7 +14,7 @@ Define practical rules for using Vuestic UI in `packages/web` so pages, layouts,
 ## Source Of Truth
 
 - Vuestic plugin configuration lives in `src/plugins/vuestic.ts`.
-- Global Vuestic styles are imported in `src/main.ts` with `import 'vuestic-ui/css'`.
+- Global Vuestic styles are imported in `src/styles/main.css'`.
 - Font links required by Vuestic live in `index.html`.
 - Design tokens and unified color semantics are documented in [`design-system.md`](./design-system.md).
 - UX strategies and visual contracts are documented in [`design-system.md`](./design-system.md).
