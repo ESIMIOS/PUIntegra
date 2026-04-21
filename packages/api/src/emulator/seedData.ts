@@ -25,6 +25,7 @@ export const EMULATOR_AUTH_PASSWORD = 'local-password'; //NOSONAR - Contraseña 
 const NOW = 1710000000000;
 const TODAY = new Date(NOW).toISOString().slice(0, 10);
 const SYSTEM_RFC = 'IEC120914FV8';
+const permissionDocumentId = (email: string, RFC: string) => `${email.toLowerCase()}__${RFC.toLowerCase()}`;
 const INSTITUTION_SHARED_SECRET_ENV = 'PUINTEGRA_EMULATOR_INSTITUTION_SHARED_SECRET';
 const institutionSharedSecret = process.env[INSTITUTION_SHARED_SECRET_ENV];
 
@@ -48,7 +49,7 @@ const institution = {
 
 const permissions = [
   {
-    permissionId: 'perm-system-admin-001',
+    permissionId: permissionDocumentId(EMULATOR_AUTH_USER.email, SYSTEM_RFC),
     RFC: SYSTEM_RFC,
     email: EMULATOR_AUTH_USER.email,
     role: 'SYSTEM_ADMINISTRATOR',
@@ -58,7 +59,7 @@ const permissions = [
     updatedAt: NOW
   },
   {
-    permissionId: 'perm-institution-admin-001',
+    permissionId: permissionDocumentId(EMULATOR_AUTH_USER.email, EMULATOR_DEFAULT_RFC),
     RFC: EMULATOR_DEFAULT_RFC,
     email: EMULATOR_AUTH_USER.email,
     role: 'INSTITUTION_ADMIN',

@@ -10,10 +10,11 @@
  * - 0.0.1	(2026-04-10)	Versión inicial del archivo.	@tirsomartinezreyes
  */
 
-import { onMounted, onUnmounted, ref } from 'vue';
-import { useRouter } from 'vue-router';
-import { routePaths } from '@/shared/constants/routePaths';
-import { useAuthSession } from '@/composables/useAuthSession';
+import { onMounted, onUnmounted, ref } from "vue";
+import { useRouter } from "vue-router";
+import { routePaths } from "@/shared/constants/routePaths";
+import { useAuthSession } from "@/composables/useAuthSession";
+import { logSystemMessageError, systemMessageTree } from "@/bom";
 
 const LOGOUT_REDIRECT_SECONDS = 15;
 const router = useRouter();
@@ -25,8 +26,10 @@ function goToLogin() {
   router.push(routePaths.authLogin);
 }
 
-onMounted(() => {
-  void clearSession();
+onMounted(async () => {
+  await clearSession().catch((err) => {
+    logSystemMessageError(systemMessageTree.web.auth.logout.logoutFailure, err);
+  });
   intervalId = setInterval(() => {
     secondsLeft.value -= 1;
     if (secondsLeft.value <= 0) {
@@ -53,12 +56,12 @@ onUnmounted(() => {
     <VaCardContent class="auth-logout__content">
       <p>Tu sesión fue cerrada correctamente.</p>
       <p>
-        Te redirigiremos a login en <strong>{{ secondsLeft }}</strong> segundos.
+        Te redirigiremos a login en
+        <strong>{{ secondsLeft }}</strong>
+        segundos.
       </p>
       <VaProgressBar :model-value="((LOGOUT_REDIRECT_SECONDS - secondsLeft) / LOGOUT_REDIRECT_SECONDS) * 100" />
-      <VaButton @click="goToLogin">
-        Ir a login ahora
-      </VaButton>
+      <VaButton @click="goToLogin">Ir a login ahora</VaButton>
     </VaCardContent>
   </VaCard>
 </template>

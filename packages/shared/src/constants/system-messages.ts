@@ -8,11 +8,11 @@
  * - 0.0.1	(2026-04-17)	Versión inicial del archivo.	@tirsomartinezreyes
  */
 
-import { LOG_SEVERITY, type SystemMessage } from '../schemas/system-message.schema';
+import { LOG_SEVERITY, type SystemMessage } from "../schemas/system-message.schema";
 
 export type SystemMessageTemplate = {
   code: string;
-  severity: SystemMessage['severity'];
+  severity: SystemMessage["severity"];
   message: string;
 };
 
@@ -21,12 +21,11 @@ export type MessageTree = {
 };
 
 export type BuiltMessageTree<T extends MessageTree> = {
-  [K in keyof T]:
-    T[K] extends SystemMessageTemplate
-      ? SystemMessage
-      : T[K] extends MessageTree
-        ? BuiltMessageTree<T[K]>
-        : never;
+  [K in keyof T]: T[K] extends SystemMessageTemplate
+    ? SystemMessage
+    : T[K] extends MessageTree
+      ? BuiltMessageTree<T[K]>
+      : never;
 };
 
 type BuildSystemMessagesOptions = {
@@ -37,60 +36,67 @@ export const sharedSystemMessageTree = {
   data: {
     operation: {
       validationFailed: {
-        code: 'DATA-OPERATION-001',
+        code: "DATA-OPERATION-001",
         severity: LOG_SEVERITY.WARNING,
-        message: 'La operación de datos falló por validación.'
+        message: "La operación de datos falló por validación.",
       },
       notFound: {
-        code: 'DATA-OPERATION-002',
+        code: "DATA-OPERATION-002",
         severity: LOG_SEVERITY.WARNING,
-        message: 'No se encontró la entidad solicitada.'
+        message: "No se encontró la entidad solicitada.",
       },
       conflictDetected: {
-        code: 'DATA-OPERATION-003',
+        code: "DATA-OPERATION-003",
         severity: LOG_SEVERITY.WARNING,
-        message: 'Se detectó un conflicto de datos.'
+        message: "Se detectó un conflicto de datos.",
       },
       forbiddenOperation: {
-        code: 'DATA-OPERATION-004',
+        code: "DATA-OPERATION-004",
         severity: LOG_SEVERITY.WARNING,
-        message: 'La sesión actual no puede ejecutar la operación de datos.'
+        message: "La sesión actual no puede ejecutar la operación de datos.",
       },
       unknownFailure: {
-        code: 'DATA-OPERATION-005',
+        code: "DATA-OPERATION-005",
         severity: LOG_SEVERITY.ERROR,
-        message: 'Falló inesperadamente en operaciones de datos.'
-      }
-    }
+        message: "Falló inesperadamente en operaciones de datos.",
+      },
+    },
   },
   auth: {
     login: {
       invalidCredentialsAttempt: {
-        code: 'AUTH-LOGIN-003',
+        code: "AUTH-LOGIN-003",
         severity: LOG_SEVERITY.WARNING,
-        message: 'Se registró un intento de autenticación con credenciales inválidas.'
+        message: "Se registró un intento de autenticación con credenciales inválidas.",
       },
       locked: {
-        code: 'AUTH-LOGIN-002',
+        code: "AUTH-LOGIN-002",
         severity: LOG_SEVERITY.WARNING,
-        message: 'La cuenta se encuentra temporalmente bloqueada por intentos fallidos.'
+        message: "La cuenta se encuentra temporalmente bloqueada por intentos fallidos.",
       },
       noPermissions: {
-        code: 'AUTH-LOGIN-004',
+        code: "AUTH-LOGIN-004",
         severity: LOG_SEVERITY.WARNING,
-        message: 'El usuario no tiene permisos activos para iniciar sesión.'
+        message: "El usuario no tiene permisos activos para iniciar sesión.",
       },
       invalidContext: {
-        code: 'AUTH-LOGIN-005',
+        code: "AUTH-LOGIN-005",
         severity: LOG_SEVERITY.WARNING,
-        message: 'El contexto seleccionado no es válido para la sesión actual.'
-      }
-    }
-  }
+        message: "El contexto seleccionado no es válido para la sesión actual.",
+      },
+    },
+    logout: {
+      logoutFailure: {
+        code: "AUTH-LOGOUT-001",
+        severity: LOG_SEVERITY.ERROR,
+        message: "Falló inesperadamente el cierre de sesión.",
+      },
+    },
+  },
 } as const satisfies MessageTree;
 
 function isSystemMessageTemplate(value: MessageTree | SystemMessageTemplate): value is SystemMessageTemplate {
-  return typeof value === 'object' && value !== null && 'code' in value && 'severity' in value && 'message' in value;
+  return typeof value === "object" && value !== null && "code" in value && "severity" in value && "message" in value;
 }
 
 /**
@@ -98,8 +104,8 @@ function isSystemMessageTemplate(value: MessageTree | SystemMessageTemplate): va
  */
 function toSnakeCase(input: string) {
   return input
-    .replaceAll(/([a-z0-9])([A-Z])/g, '$1_$2')
-    .replaceAll('-', '_')
+    .replaceAll(/([a-z0-9])([A-Z])/g, "$1_$2")
+    .replaceAll("-", "_")
     .toLowerCase();
 }
 
@@ -108,7 +114,7 @@ function toSnakeCase(input: string) {
  * Example: AUTH-LOGIN-002 -> ["auth", "login", "002"]
  */
 function extractCodeTokens(code: string) {
-  return code.split('-').map((token) => token.toLowerCase());
+  return code.split("-").map((token) => token.toLowerCase());
 }
 
 /**
@@ -120,7 +126,7 @@ function assertTaxonomicPathMatchesCode(path: string[], code: string) {
   const [codeTokenOne, codeTokenTwo] = codeTokens;
   if (!pathLevelOne || !pathLevelTwo || pathLevelOne !== codeTokenOne || pathLevelTwo !== codeTokenTwo) {
     throw new Error(
-      `Invalid system message taxonomy for code "${code}". Expected path prefix "${codeTokenOne}.${codeTokenTwo}".`
+      `Invalid system message taxonomy for code "${code}". Expected path prefix "${codeTokenOne}.${codeTokenTwo}".`,
     );
   }
 }
@@ -131,7 +137,7 @@ function assertTaxonomicPathMatchesCode(path: string[], code: string) {
 export function buildSystemMessagesTree(
   tree: MessageTree,
   options: BuildSystemMessagesOptions,
-  path: string[] = []
+  path: string[] = [],
 ): MessageTree | SystemMessage {
   const entries = Object.entries(tree).map(([segment, value]) => {
     if (isSystemMessageTemplate(value)) {
@@ -139,18 +145,16 @@ export function buildSystemMessagesTree(
       const codeTokens = extractCodeTokens(value.code);
       const packageToken = toSnakeCase(options.packageName);
       const shouldPrefixPackage = codeTokens[0] === packageToken;
-      const pathWithPackage = shouldPrefixPackage
-        ? [packageToken, ...basePath]
-        : basePath;
+      const pathWithPackage = shouldPrefixPackage ? [packageToken, ...basePath] : basePath;
 
       assertTaxonomicPathMatchesCode(pathWithPackage, value.code);
-      const keyPath = pathWithPackage.join('.');
+      const keyPath = pathWithPackage.join(".");
       const message: SystemMessage = {
         code: value.code,
         key: keyPath,
         severity: value.severity,
         package: options.packageName,
-        message: value.message
+        message: value.message,
       };
       return [segment, message];
     }
@@ -165,7 +169,7 @@ export function buildSystemMessagesTree(
  */
 export function buildTypedSystemMessagesTree<T extends MessageTree>(
   tree: T,
-  options: BuildSystemMessagesOptions
+  options: BuildSystemMessagesOptions,
 ): BuiltMessageTree<T> {
   return buildSystemMessagesTree(tree, options) as BuiltMessageTree<T>;
 }
@@ -177,7 +181,7 @@ export function buildTypedSystemMessagesTree<T extends MessageTree>(
 export function buildUnifiedSystemMessageTree<
   TWeb extends MessageTree = MessageTree,
   TShared extends MessageTree = MessageTree,
-  TApi extends MessageTree = MessageTree
+  TApi extends MessageTree = MessageTree,
 >(trees: { web?: TWeb; shared?: TShared; api?: TApi } = {}) {
   const output: {
     web?: BuiltMessageTree<TWeb>;
@@ -186,16 +190,16 @@ export function buildUnifiedSystemMessageTree<
   } = {};
 
   if (trees.web) {
-    output.web = buildTypedSystemMessagesTree(trees.web, { packageName: 'web' });
+    output.web = buildTypedSystemMessagesTree(trees.web, { packageName: "web" });
   }
   if (trees.shared) {
-    output.shared = buildTypedSystemMessagesTree(trees.shared, { packageName: 'shared' });
+    output.shared = buildTypedSystemMessagesTree(trees.shared, { packageName: "shared" });
   }
   if (trees.api) {
-    output.api = buildTypedSystemMessagesTree(trees.api, { packageName: 'api' });
+    output.api = buildTypedSystemMessagesTree(trees.api, { packageName: "api" });
   }
 
   return output;
 }
 
-export const sharedSystemMessages = buildTypedSystemMessagesTree(sharedSystemMessageTree, { packageName: 'shared' });
+export const sharedSystemMessages = buildTypedSystemMessagesTree(sharedSystemMessageTree, { packageName: "shared" });

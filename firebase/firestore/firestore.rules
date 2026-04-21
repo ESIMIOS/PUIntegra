@@ -1,10 +1,12 @@
 /**
  * @component firestore
  * @name firestore.rules
- * @version 0.0.3
- * @description Restricts client access to least-privilege session collections (`users`, `permissions`) and denies all others.
+ * @version 0.0.5
+ * @description Restricts client reads to own identity or granted tenant scope (`users`, `permissions`, tenant collections) and denies all writes.
  * @author @codex
  * @changelog
+ * - 0.0.5	(2026-04-20)	Permite lectura de permissions por correo propio o por alcance tenant concedido.	@codex
+ * - 0.0.4	(2026-04-20)	Habilita lecturas por tenant RFC con permiso GRANTED y excepción SYSTEM_ADMINISTRATOR.	@codex
  * - 0.0.3	(2026-04-19)	Elimina fallback por userId en permissions; acceso queda ligado al email autenticado.	@codex
  * - 0.0.2	(2026-04-19)	Endurece acceso: solo users/permissions con reglas por identidad y correo autenticado.	@codex
  * - 0.0.1	(2026-04-19)	Adds authenticated emulator read policy while keeping client writes denied.	@codex
@@ -13,6 +15,10 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    function normalizedSystemRfc() {
+      return "iec120914fv8";
+    }
+
     function isSignedIn() {
       return request.auth != null;
     }
@@ -23,14 +29,70 @@ service cloud.firestore {
         : null;
     }
 
+    function normalizedRfc(value) {
+      return value is string
+        ? value.lower()
+        : null;
+    }
+
+    function permissionDocumentId(email, rfc) {
+      return email + "__" + rfc;
+    }
+
+    function hasGrantedPermission(email, rfc) {
+      let permission = get(/databases/$(database)/documents/permissions/$(permissionDocumentId(email, rfc)));
+      return permission.data != null &&
+        permission.data.email is string &&
+        permission.data.email.lower() == email &&
+        permission.data.RFC is string &&
+        permission.data.RFC.lower() == rfc &&
+        permission.data.status == "GRANTED";
+    }
+
+    function hasSystemAdministratorGrantForEmail(email) {
+      let systemPermission = get(/databases/$(database)/documents/permissions/$(permissionDocumentId(email, normalizedSystemRfc())));
+      return systemPermission.data != null &&
+        systemPermission.data.role == "SYSTEM_ADMINISTRATOR" &&
+        hasGrantedPermission(email, normalizedSystemRfc());
+    }
+
+    function hasTenantReadGrant(rfc) {
+      return isSignedIn() &&
+        signedEmail() != null &&
+        normalizedRfc(rfc) != null &&
+        (
+          hasSystemAdministratorGrantForEmail(signedEmail()) ||
+          hasGrantedPermission(signedEmail(), normalizedRfc(rfc))
+        );
+    }
+
     function canReadOwnUser(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    function canReadOwnPermission(permission) {
-      return isSignedIn() && (
-        (permission.email is string && signedEmail() != null && permission.email.lower() == signedEmail())
-      );
+    function canReadPermission(permission) {
+      return isSignedIn() &&
+        (
+          (
+            permission.email is string &&
+            signedEmail() != null &&
+            permission.email.lower() == signedEmail()
+          ) ||
+          (
+            permission.RFC is string &&
+            hasTenantReadGrant(permission.RFC)
+          )
+        );
+    }
+
+    function canReadTenantByRfcField(data) {
+      return data.RFC is string && hasTenantReadGrant(data.RFC);
+    }
+
+    function canReadInstitution(documentId, data) {
+      return data.RFC is string &&
+        normalizedRfc(data.RFC) == normalizedRfc(documentId) &&
+        hasTenantReadGrant(documentId);
     }
 
     match /users/{documentId} {
@@ -39,29 +101,33 @@ service cloud.firestore {
     }
 
     match /permissions/{documentId} {
-      allow read: if canReadOwnPermission(resource.data);
+      allow read: if canReadPermission(resource.data);
       allow write: if false;
     }
 
-    // Disabled collections until explicit secure access policies are implemented.
     match /institutions/{documentId} {
-      allow read, write: if false;
+      allow read: if canReadInstitution(documentId, resource.data);
+      allow write: if false;
     }
 
     match /contacts/{documentId} {
-      allow read, write: if false;
+      allow read: if canReadTenantByRfcField(resource.data);
+      allow write: if false;
     }
 
     match /requests/{documentId} {
-      allow read, write: if false;
+      allow read: if canReadTenantByRfcField(resource.data);
+      allow write: if false;
     }
 
     match /findings/{documentId} {
-      allow read, write: if false;
+      allow read: if canReadTenantByRfcField(resource.data);
+      allow write: if false;
     }
 
     match /logs/{documentId} {
-      allow read, write: if false;
+      allow read: if canReadTenantByRfcField(resource.data);
+      allow write: if false;
     }
 
     match /{document=**} {

@@ -65,7 +65,7 @@ export function buildUserProfileFromAuthUser(authUser: AuthUserProfileInput, now
     name: authUser.displayName?.trim() || authUser.email,
     email: authUser.email,
     emojiIcon:'😎',
-    phone: authUser.phoneNumber ?? '',
+    phone: authUser.phoneNumber ?? null,
     updates: [],
     createdAt: now,
     updatedAt: now
