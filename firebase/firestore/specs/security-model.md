@@ -12,7 +12,7 @@ Define the Firestore access model used by PUIntegra during local emulator-backed
 
 ## Emulator Read Contract
 
-- Authenticated Firebase users may read seeded domain collections from the Firestore Emulator.
+- Authenticated Firebase users may read authorized seeded domain collections from the Firestore Emulator.
 - Anonymous users must not read seeded domain collections.
 - Client writes remain denied until a production security model is specified and approved.
 - The web app must still validate every Firestore payload with shared Zod schemas before writing to Pinia state.
