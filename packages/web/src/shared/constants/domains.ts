@@ -41,34 +41,28 @@ export const domainOptions = domainValues.map((key) => ({
 export const domainShell = {
 	[DOMAIN.SITE]: {
 		title: 'PUIntegra - Sitio público',
-		accentColor: '#0B1F4C',
 		structure: 'navbar + footer'
 	},
 	[DOMAIN.AUTH]: {
 		title: 'PUIntegra - Autenticación',
-		accentColor: '#1A3A6B',
 		structure: 'centered auth surface'
 	},
 	[DOMAIN.APP]: {
 		title: 'Operación institucional',
-		accentColor: '#3BB54A',
 		structure: 'sidebar + top bar',
 		chipLabel: 'RFC Institución'
 	},
 	[DOMAIN.ADMIN]: {
 		title: 'Backoffice del proveedor',
-		accentColor: '#7E57C2',
 		structure: 'sidebar + top bar',
 		chipLabel: 'RFC Institución'
 	},
 	[DOMAIN.ACCOUNT]: {
 		title: 'Cuenta personal',
-		accentColor: '#2C88D9',
 		structure: 'top bar + subnavigation'
 	},
 	[DOMAIN.ERROR]: {
 		title: 'Dominio de errores',
-		accentColor: '#D3455B',
 		structure: 'centered error display'
 	}
 } as const

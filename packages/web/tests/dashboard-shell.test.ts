@@ -34,13 +34,7 @@ function mountShell() {
     props: {
       menuItems,
       accentColor: '#3BB54A',
-      domainTitle: 'Operación institucional',
-      chipLabel: 'RFC activo',
-      chipValue: 'XAXX010101000',
-      accountName: 'Pepe Pecas',
-      accountLabel: 'user',
-      sessionLabel: 'Rol',
-      sessionValue: 'INSTITUTION_ADMIN'
+      domainTitle: 'Operación institucional'
     },
     global: {
       stubs: {
@@ -54,8 +48,8 @@ function mountShell() {
         ThemeToggle: {
           template: '<button data-testid="theme-toggle" />'
         },
-        VaAvatar: {
-          template: '<span data-testid="session-avatar"><slot /></span>'
+        HeaderSessionContext: {
+          template: '<div data-testid="session-context">Contexto</div>'
         },
         AppLogo: {
           template: '<img data-testid="app-logo" alt="PUIntegra">'
@@ -82,9 +76,6 @@ function mountShell() {
           emits: ['click'],
           template: '<button type="button" @click="$emit(\'click\')"><slot /></button>'
         },
-        VaChip: {
-          template: '<span data-testid="context-chip"><slot /></span>'
-        },
         VaIcon: {
           props: ['name'],
           template: '<span data-testid="sidebar-icon">{{ name }}</span>'
@@ -104,13 +95,7 @@ describe('DashboardShell', () => {
     expect(wrapper.findAll('[data-testid="app-logo"]')).toHaveLength(1);
     expect(wrapper.text()).toContain('Dashboard');
     expect(wrapper.text()).toContain('Logs');
-    expect(wrapper.get('[data-testid="session-avatar"]').element).toBeTruthy();
-    expect(wrapper.text()).toContain('Pepe Pecas');
-    expect(wrapper.text()).toContain('user');
-    expect(wrapper.text()).toContain('Rol');
-    expect(wrapper.text()).toContain('INSTITUTION_ADMIN');
-    expect(wrapper.text()).toContain('RFC activo');
-    expect(wrapper.text()).toContain('XAXX010101000');
+    expect(wrapper.get('[data-testid="session-context"]').element).toBeTruthy();
     expect(wrapper.get('[data-testid="router-view"]').element).toBeTruthy();
   });
 

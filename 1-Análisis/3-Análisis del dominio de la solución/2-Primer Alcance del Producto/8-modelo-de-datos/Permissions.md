@@ -8,7 +8,7 @@
 | Aspecto | Definición |
 |---|---|
 | Propósito | Relacionar institución, correo y rol, mostrando además el estado vigente del acceso y su historial. |
-| Propiedad | Pertenece al dominio de acceso institucional asociado al `RFC` y, cuando exista, al `userId` relacionado, incluyendo el contexto sistémico reservado `SYSTEM_RFC` para el proveedor SaaS. |
+| Propiedad | Pertenece al dominio de acceso institucional asociado al `RFC` relacionado, incluyendo el contexto sistémico reservado `SYSTEM_RFC` para el proveedor SaaS. |
 | Papel dentro del alcance 1 | Gobernar creación de cuenta, selección de contexto y autorización efectiva sobre instituciones. |
 
 ## Estructura de datos
@@ -18,7 +18,6 @@
 | `permissionId` | Identificador único del documento en la colección `Permissions`. |
 | `RFC` | Institución sobre la que el permiso aplica. |
 | `email` | Correo al que se habilita el permiso. |
-| `userId` | Referencia al usuario operativo cuando la cuenta ya existe. |
 | `role` | Rol autorizado para la combinación institución-correo. |
 | `status` | Estado vigente del permiso. |
 | `createdAt` | Fecha de creación del permiso. |
@@ -67,8 +66,6 @@
 | `RFC` | Consultar permisos por institución. |
 | `email` | Consultar permisos asociados a un correo. |
 | `email` + `status` | Resolver altas e inicios de sesión sobre permisos vigentes asociados al correo. |
-| `userId` | Consultar permisos asociados a un usuario operativo ya materializado. |
-| `userId` + `status` | Resolver contextos activos posteriores sobre permisos vigentes de un usuario operativo. |
 | `RFC` + `email` + `role` | Verificar unicidad funcional de la combinación autorizada. |
 
 ## Eventos de log asociados

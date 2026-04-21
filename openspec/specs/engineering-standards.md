@@ -40,12 +40,23 @@ Define project-wide engineering documentation and code conventions that apply ac
 - `@changelog` entries use tab-separated columns (real tab character, not `/t`):
   - `<version>\t(<YYYY-MM-DD>)\t<change summary>\t<author>`
 - The first changelog entry for every file is the literal text: `Versión inicial del archivo`.
+- New or modified Firebase configuration files must include an equivalent traceability header when the file format supports comments.
+  This includes `.rules` files and other Firebase config artifacts with comment syntax.
+- Firebase config traceability headers must record:
+  - file name or component,
+  - semantic version,
+  - purpose/description,
+  - author,
+  - changelog entries with date, summary, and author.
+- Use the native comment syntax for each Firebase file type instead of forcing TypeScript JSDoc syntax into formats where it is not valid.
+- JSON files that do not support comments must document their version/changelog in the nearest `firebase/*/specs/` live spec instead.
 
 ## Dependency and versioning policy
 
 - Package dependencies must use pinned versions in `package.json` (no `^` or `~`).
 - Root `.npmrc` must preserve `save-exact=true` and `save-prefix=`.
 - In a file, imports from the same module specifier must be consolidated into a single `import` statement.
+- **Dead code and unused symbols**: All unused imports, variables, and exports MUST be removed after every refactor or change. Maintaining file hygiene is an active responsibility during every task.
 
 ## TypeScript quality policy
 

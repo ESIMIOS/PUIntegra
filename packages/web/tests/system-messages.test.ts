@@ -10,25 +10,42 @@
 
 import { describe, expect, it } from 'vitest';
 import { MessageCodeSchema, MessageKeySchema, SystemMessageSchema } from '@shared';
-import { webSystemMessages } from '@/shared/constants/systemMessages';
+import { systemMessageTree } from '@/shared/constants/systemMessages';
+
+function isSystemMessageLeaf(value: unknown): value is { code: string; key: string } {
+  return typeof value === 'object'
+    && value !== null
+    && 'code' in value
+    && 'key' in value;
+}
+
+function collectMessages(tree: unknown): Array<{ code: string; key: string }> {
+  if (isSystemMessageLeaf(tree)) {
+    return [tree];
+  }
+  if (typeof tree !== 'object' || tree === null) {
+    return [];
+  }
+  return Object.values(tree).flatMap((value) => collectMessages(value));
+}
 
 describe('web system messages', () => {
   it('uses valid schema envelopes', () => {
-    for (const message of Object.values(webSystemMessages)) {
+    for (const message of collectMessages(systemMessageTree)) {
       const parsed = SystemMessageSchema.safeParse(message);
       expect(parsed.success).toBe(true);
     }
   });
 
   it('uses valid code and key formats', () => {
-    for (const message of Object.values(webSystemMessages)) {
+    for (const message of collectMessages(systemMessageTree)) {
       expect(MessageCodeSchema.safeParse(message.code).success).toBe(true);
       expect(MessageKeySchema.safeParse(message.key).success).toBe(true);
     }
   });
 
   it('keeps unique codes and keys', () => {
-    const messages = Object.values(webSystemMessages);
+    const messages = collectMessages(systemMessageTree);
     const codes = messages.map((message) => message.code);
     const keys = messages.map((message) => message.key);
 

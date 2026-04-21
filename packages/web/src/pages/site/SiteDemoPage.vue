@@ -51,7 +51,6 @@ const colorTokens = computed(() =>
 const layoutRows = domainValues.map((domain) => ({
   domain,
   label: domainLabels[domain],
-  accentColor: domainShell[domain].accentColor,
   structure: domainShell[domain].structure
 }));
 </script>
@@ -106,9 +105,7 @@ const layoutRows = domainValues.map((domain) => ({
       <h2>Layouts</h2>
       <div class="design-demo__layouts">
         <article v-for="layout in layoutRows" :key="layout.domain" class="design-demo__layout">
-          <span :style="{ background: layout.accentColor }" />
           <strong>{{ layout.label }}</strong>
-          <code>{{ layout.accentColor }}</code>
           <p>{{ layout.structure }}</p>
         </article>
       </div>

@@ -2,20 +2,20 @@
  * @package web
  * @name institutionStore.ts
  * @version 0.0.1
- * @description Gestiona el RFC activo para navegación protegida y contexto mock.
+ * @description Gestiona el RFC activo para navegación protegida y contexto de sesión.
  * @author @tirsomartinezreyes
  * @changelog
  * - 0.0.1	(2026-04-10)	Versión inicial del archivo.	@tirsomartinezreyes
  */
 
-import { defineStore, DEFAULT_RFC } from '@/bom';
+import { defineStore } from '@/bom';
 
 /**
  * @description Store del RFC activo con soporte de limpieza para sesión anónima.
  */
 export const useInstitutionStore = defineStore('institution', {
   state: () => ({
-    activeRfc: DEFAULT_RFC
+    activeRfc: ''
   }),
   actions: {
     setActiveRfc(rfc: string) {

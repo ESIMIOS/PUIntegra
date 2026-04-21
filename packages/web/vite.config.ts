@@ -1,10 +1,11 @@
 /**
  * @package web
  * @name vite.config.ts
- * @version 0.0.3
+ * @version 0.0.4
  * @description Configura Vite para desarrollo y build del frontend. El config de Vitest está en vitest.config.ts.
  * @author @tirsomartinezreyes
  * @changelog
+ * - 0.0.4	(2026-04-19)	Proxy local de /api hacia Functions Emulator.	@codex
  * - 0.0.3	(2026-04-14)	Separated Vitest config to vitest.config.ts to avoid Plugin type conflicts.	@tirsomartinezreyes
  * - 0.0.2	(2026-04-14)	Added build-time env validation plugin.	@tirsomartinezreyes
  * - 0.0.1	(2026-04-10)	Versión inicial del archivo.	@tirsomartinezreyes
@@ -13,6 +14,9 @@
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import { resolve } from 'node:path';
+
+const LOCAL_FUNCTIONS_EMULATOR_ORIGIN = 'http://127.0.0.1:5001';
+const LOCAL_FUNCTIONS_API_PREFIX = '/puintegra-dev/us-central1/api';
 
 /**
  * Vite plugin that asserts required env vars are set after all .env files
@@ -50,11 +54,21 @@ function checkEnvPlugin() {
 }
 
 export default defineConfig({
+	envDir: resolve(__dirname, '../..'),
 	plugins: [vue(), checkEnvPlugin()],
 	resolve: {
 		alias: {
 			'@': resolve(__dirname, 'src'),
 			'@shared': resolve(__dirname, '../shared/src')
+		}
+	},
+	server: {
+		proxy: {
+			'/api': {
+				target: LOCAL_FUNCTIONS_EMULATOR_ORIGIN,
+				changeOrigin: true,
+				rewrite: (path) => `${LOCAL_FUNCTIONS_API_PREFIX}${path}`
+			}
 		}
 	}
 });

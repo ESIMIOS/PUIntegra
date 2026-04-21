@@ -100,6 +100,36 @@ Use ecosystem commands instead — they understand the format and make atomic ch
 Raw text edits on package.json risk dropping keys (invalid JSON) and leave pnpm-lock.yaml out of sync.
 If a direct package.json edit was unavoidable, always run `pnpm install` immediately after to resync the lockfile.
 
+**Hygiene and Dead Code**: ALWAYS remove unused imports, variables, and dead code after editing or refactoring a file. Do not leave build-time warnings or unnecessary symbols behind.
+
+**Clean Code Principles**: ALWAYS apply Clean Code defaults in every change. In particular:
+- **KISS (Keep It Simple, Stupid)**: Prefer the simplest solution that satisfies current requirements.
+- **DRY (Don’t Repeat Yourself)**: Avoid duplicated logic, messages, and mapping rules; extract and reuse shared abstractions when duplication appears.
+- **SRP (Single Responsibility Principle)**: Keep modules, components, stores, and functions focused on one clear responsibility.
+- **Small Functions**: Prefer small, composable functions with descriptive names instead of large multi-purpose blocks.
+- **Low Cognitive Complexity**: Keep control flow easy to reason about; split condition-heavy logic into focused helpers before it becomes hard to read or test.
+
+## Token Budget Protocol
+- Default response mode for agents is concise and patch-oriented.
+- Prefer minimal diffs and focused edits over full-file rewrites.
+- Never paste full files/logs unless explicitly requested by a human.
+- For debugging reports, share only the minimal failing snippet (for logs: max 30 relevant lines).
+- Avoid repeating already established context; reference paths/symbols instead.
+- Batch related changes in one pass when possible to reduce conversational overhead.
+
+## Request Template (for Humans and Agents)
+When opening a new coding request, use this compact structure to reduce ambiguity and token usage:
+- **Goal**: the exact behavior or bug to fix.
+- **Scope**: file paths, symbols, or routes involved.
+- **Constraints**: boundaries (no refactor, no version bumps, keep API contract, etc.).
+- **Validation**: exact checks to run (specific test/lint/typecheck commands).
+- **Expected Output**: patch-only, summary-only, or patch + short rationale.
+
+## Temporal Communication Rule
+- When the user writes in English with serious mistakes, provide a brief and kind correction.
+- Place that correction at the end of the response (never before the requested work).
+- Keep corrections minimal (one short line) to avoid unnecessary token usage.
+
 
 All types must be inferred from Zod:
   import { z } from 'zod'

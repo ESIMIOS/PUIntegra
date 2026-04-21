@@ -100,9 +100,9 @@ describe('error pages', () => {
     setInstitutionSession();
 
     const expectations = [
-      [Error403Page, '403', 'El guardia se puso intenso', 'shield_lock'],
-      [Error404Page, '404', 'Esta página se fue a buscar el café', 'travel_explore'],
-      [Error500Page, '500', 'El sistema tropezó con sus propios cables', 'smart_toy']
+      [Error403Page, '403', 'El guardia se puso intenso', 'security'],
+      [Error404Page, '404', 'Esta página se fue a buscar el café', 'cloud_off'],
+      [Error500Page, '500', 'El sistema tropezó con sus propios cables', 'local_fire_department']
     ] as const;
 
     for (const [component, status, title, icon] of expectations) {
