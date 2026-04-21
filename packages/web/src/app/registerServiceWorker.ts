@@ -8,7 +8,7 @@
  * - 0.0.1	(2026-04-10)	Versión inicial del archivo.	@tirsomartinezreyes
  */
 
-import { webSystemMessages } from '@/shared/constants/systemMessages';
+import { systemMessageTree } from '@/shared/constants/systemMessages';
 import { logSystemMessageError } from '@/shared/logging/systemLogger';
 
 /**
@@ -23,7 +23,7 @@ export function registerServiceWorker() {
     try {
       await navigator.serviceWorker.register('/sw.js');
     } catch (error) {
-      logSystemMessageError(webSystemMessages.serviceWorkerRegistrationFailed, error);
+      logSystemMessageError(systemMessageTree.web.sw.registrationFailed, error);
     }
   });
 }

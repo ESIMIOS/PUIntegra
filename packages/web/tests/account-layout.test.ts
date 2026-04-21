@@ -15,13 +15,8 @@ import { ROLE } from '@shared';
 import { useAuthStore } from '@/stores/authStore';
 
 describe('AccountLayout', () => {
-  it('renders account session context in the fixed header', () => {
-    const pinia = createPinia();
-    setActivePinia(pinia);
-    const authStore = useAuthStore();
-    authStore.setRole(ROLE.INSTITUTION_OPERATOR);
-
-    const wrapper = mount(AccountLayout, {
+  function mountLayout(pinia = createPinia()) {
+    return mount(AccountLayout, {
       global: {
         plugins: [pinia],
         stubs: {
@@ -37,6 +32,9 @@ describe('AccountLayout', () => {
           },
           ThemeToggle: {
             template: '<button data-testid="theme-toggle" />'
+          },
+          HeaderSessionContext: {
+            template: '<aside data-testid="session-context">Session context</aside>'
           },
           VaLayout: {
             template: '<section data-testid="va-layout"><slot name="top" /><slot name="left" /><slot /></section>'
@@ -61,9 +59,6 @@ describe('AccountLayout', () => {
           VaSidebarItemTitle: {
             template: '<span><slot /></span>'
           },
-          VaAvatar: {
-            template: '<span data-testid="session-avatar"><slot /></span>'
-          },
           VaDivider: {
             template: '<hr>'
           },
@@ -74,13 +69,17 @@ describe('AccountLayout', () => {
         }
       }
     });
+  }
+
+  it('renders account session context in the fixed header', () => {
+    const pinia = createPinia();
+    setActivePinia(pinia);
+    const authStore = useAuthStore();
+    authStore.setRole(ROLE.INSTITUTION_OPERATOR);
+    const wrapper = mountLayout(pinia);
 
     expect(wrapper.get('[data-testid="account-navbar"]').attributes('data-fixed')).toBe('true');
-    expect(wrapper.get('[data-testid="session-avatar"]').element).toBeTruthy();
-    expect(wrapper.text()).toContain('Pepe Pecas');
-    expect(wrapper.text()).toContain('user');
-    expect(wrapper.text()).toContain('Rol');
-    expect(wrapper.text()).toContain('INSTITUTION_OPERATOR');
+    expect(wrapper.get('[data-testid="session-context"]').element).toBeTruthy();
     expect(wrapper.get('[data-testid="theme-toggle"]').element).toBeTruthy();
   });
 });

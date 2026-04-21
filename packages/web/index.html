@@ -1,22 +1,84 @@
 <!doctype html>
 <html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#0057b8" />
-    <link rel="manifest" href="/manifest.webmanifest" />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:ital,wght@0,400;1,700&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      href="https://fonts.googleapis.com/icon?family=Material+Icons"
-      rel="stylesheet"
-    />
-    <title>PUIntegra Web</title>
-  </head>
-  <body>
-    <div id="app"></div>
-    <script type="module" src="/src/main.ts"></script>
-  </body>
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0057b8" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,400;0,700;1,400;1,700&display=swap"
+    rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+  <style>
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      background: #f5f7fb;
+      font-family: "Source Sans 3", sans-serif;
+    }
+
+    .startup-splash {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      box-sizing: border-box;
+    }
+
+    .startup-splash__card {
+      width: min(420px, 100%);
+      padding: 32px 28px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, #ffffff 0%, #edf2ff 100%);
+      box-shadow: 0 12px 36px rgba(0, 23, 64, 0.14);
+      text-align: center;
+    }
+
+    .startup-splash__title {
+      margin: 0 0 10px;
+      color: #0f214a;
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    .startup-splash__subtitle {
+      margin: 0;
+      color: #344a76;
+      font-size: 1rem;
+    }
+
+    .startup-splash__spinner {
+      width: 42px;
+      height: 42px;
+      margin: 0 auto 16px;
+      border-radius: 50%;
+      border: 4px solid #cfddff;
+      border-top-color: #0057b8;
+      animation: startup-spin 0.9s linear infinite;
+    }
+
+    @keyframes startup-spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+  </style>
+  <title>PUIntegra Web</title>
+</head>
+
+<body>
+  <div id="app">
+    <main class="startup-splash" aria-live="polite" aria-busy="true">
+      <section class="startup-splash__card" aria-label="Carga inicial">
+        <div class="startup-splash__spinner" aria-hidden="true"></div>
+        <h1 class="startup-splash__title">PUIntegra</h1>
+        <p class="startup-splash__subtitle">Cargando sesión y contexto seguro...</p>
+      </section>
+    </main>
+  </div>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+
 </html>

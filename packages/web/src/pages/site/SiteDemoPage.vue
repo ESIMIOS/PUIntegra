@@ -51,7 +51,6 @@ const colorTokens = computed(() =>
 const layoutRows = domainValues.map((domain) => ({
   domain,
   label: domainLabels[domain],
-  accentColor: domainShell[domain].accentColor,
   structure: domainShell[domain].structure
 }));
 </script>
@@ -95,6 +94,10 @@ const layoutRows = domainValues.map((domain) => ({
         <VaChip color="success">Integración lista</VaChip>
         <VaAlert color="info" outline>Estado informativo de operación.</VaAlert>
         <VaInput label="RFC" placeholder="XAXX010101000" />
+        <div class="design-demo__progress">
+          <span>Progreso de sincronización</span>
+          <VaProgressBar :model-value="72" color="success" rounded />
+        </div>
       </div>
     </section>
 
@@ -102,9 +105,7 @@ const layoutRows = domainValues.map((domain) => ({
       <h2>Layouts</h2>
       <div class="design-demo__layouts">
         <article v-for="layout in layoutRows" :key="layout.domain" class="design-demo__layout">
-          <span :style="{ background: layout.accentColor }" />
           <strong>{{ layout.label }}</strong>
-          <code>{{ layout.accentColor }}</code>
           <p>{{ layout.structure }}</p>
         </article>
       </div>
@@ -185,5 +186,10 @@ const layoutRows = domainValues.map((domain) => ({
   border-radius: 8px;
   padding: 1rem;
   background: var(--va-background-secondary);
+}
+
+.design-demo__progress {
+  display: grid;
+  gap: 0.35rem;
 }
 </style>

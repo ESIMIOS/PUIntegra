@@ -15,6 +15,7 @@
   "dependencies": {
     "@puintegra/shared": "workspace:*",
     "@sentry/vue": "10.48.0",
+    "firebase": "12.12.0",
     "vue": "3.5.32",
     "vuestic-ui": "1.10.3"
   },
@@ -30,7 +31,7 @@
     "jsdom": "25.0.1",
     "pinia": "2.3.1",
     "typescript": "5.9.3",
-    "vite": "5.4.21",
+    "vite": "6.4.2",
     "vitest": "1.6.1",
     "vue-eslint-parser": "10.4.0",
     "vue-router": "4.6.4",

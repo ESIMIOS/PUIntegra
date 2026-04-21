@@ -1,21 +1,20 @@
 /**
  * @package web
  * @name useSessionInactivity.ts
- * @version 0.0.1
+ * @version 0.0.2
  * @description Composable para monitorear la inactividad del usuario y gestionar el cierre de sesión.
  * @author @antigravity
  * @changelog
+ * - 0.0.2	(2026-04-20)	Evita await en tick de inactividad para preservar redirección inmediata y estabilidad de pruebas.	@codex
  * - 0.0.1	(2026-04-12)	Versión inicial del composable.	@antigravity
  */
 
-import { ref, onMounted, onUnmounted, watchEffect } from 'vue';
-import { useRouter } from 'vue-router';
-import { useAuthStore } from '@/stores/authStore';
-import { 
-  SECONDS_TO_CLOSE_SESSION_FOR_INACTIVITY, 
-  SECONDS_TO_SHOW_INACTIVITY_ALERT 
-} from '@shared';
-import { routePaths } from '@/shared/constants/routePaths';
+import { ref, onMounted, onUnmounted, watchEffect } from "vue";
+import { useRouter } from "vue-router";
+import { useAuthStore } from "@/stores/authStore";
+import { useInstitutionStore } from "@/stores/institutionStore";
+import { SECONDS_TO_CLOSE_SESSION_FOR_INACTIVITY, SECONDS_TO_SHOW_INACTIVITY_ALERT } from "@shared";
+import { routePaths } from "@/shared/constants/routePaths";
 
 // State compartido (Singleton)
 const secondsRemaining = ref(SECONDS_TO_CLOSE_SESSION_FOR_INACTIVITY);
@@ -28,6 +27,7 @@ let listenerCleanup: (() => void) | null = null;
  */
 export function useSessionInactivity() {
   const authStore = useAuthStore();
+  const institutionStore = useInstitutionStore();
   const router = useRouter();
 
   const resetTimer = () => {
@@ -56,7 +56,10 @@ export function useSessionInactivity() {
         isAlerting.value = secondsRemaining.value <= SECONDS_TO_SHOW_INACTIVITY_ALERT;
       } else {
         stopTimer();
-        authStore.resetToAnonymous();
+        authStore.logout().catch((err) => {
+          console.warn("Inactivity logout network failure:", err);
+        });
+        institutionStore.clearActiveRfc();
         router.push(routePaths.authLogout);
       }
     }, 1000);
@@ -71,11 +74,11 @@ export function useSessionInactivity() {
 
   const setupListeners = () => {
     if (listenerCleanup) return;
-    const events = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart'];
+    const events = ["mousedown", "mousemove", "keydown", "scroll", "touchstart"];
     const handler = () => handleActivity();
-    events.forEach(event => globalThis.addEventListener(event, handler));
+    events.forEach((event) => globalThis.addEventListener(event, handler));
     listenerCleanup = () => {
-      events.forEach(event => globalThis.removeEventListener(event, handler));
+      events.forEach((event) => globalThis.removeEventListener(event, handler));
     };
   };
 
@@ -87,7 +90,7 @@ export function useSessionInactivity() {
   // El cleanup se vuelve opcional si se desea que persista durante toda la vida de la app,
   // pero lo mantenemos para consistencia si se llegara a destruir el componente raíz.
   onUnmounted(() => {
-    // No limpiamos si hay otros componentes usándolo? 
+    // No limpiamos si hay otros componentes usándolo?
     // En este caso, AppRoot siempre estará vivo, así que lo dejamos así.
   });
 
@@ -101,7 +104,7 @@ export function useSessionInactivity() {
   return {
     secondsRemaining,
     isAlerting,
-    resetTimer
+    resetTimer,
   };
 }
 

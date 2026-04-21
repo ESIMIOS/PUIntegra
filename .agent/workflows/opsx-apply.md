@@ -6,6 +6,10 @@ Implement tasks from an OpenSpec change.
 
 **Input**: Optionally specify a change name (e.g., `/opsx:apply add-auth`). If omitted, check if it can be inferred from conversation context. If vague or ambiguous you MUST prompt for available changes.
 
+**Explicit execution rule:** Only run this workflow after a direct apply/implement request
+such as `/opsx:apply`, "implement this", or "apply the tasks". A human confirming a plan
+is not enough; stop so the human can choose which model or agent should execute it.
+
 **Steps**
 
 1. **Select the change**
@@ -134,6 +138,7 @@ What would you like to do?
 **Guardrails**
 - Keep going through tasks until done or blocked
 - Always read context files before starting (from the apply instructions output)
+- Do not start from plan confirmation alone; require an explicit apply/implement request
 - If task is ambiguous, pause and ask before implementing
 - If implementation reveals issues, pause and suggest artifact updates
 - Keep code changes minimal and scoped to each task

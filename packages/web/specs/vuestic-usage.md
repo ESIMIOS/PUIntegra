@@ -4,22 +4,27 @@
 
 Define practical rules for using Vuestic UI in `packages/web` so pages, layouts, tests, and future AI-generated code stay consistent.
 
+## Component-First Policy
+
+- Prefer Vuestic components for UI primitives and interaction surfaces before creating custom HTML/CSS equivalents.
+- Typical examples: use `VaProgressBar`, `VaAlert`, `VaInput`, `VaButton`, and `VaCard` instead of re-implementing them with native elements and heavy custom CSS.
+- If a custom rendering is required, justify why Vuestic cannot express the need cleanly in the same change.
+- When custom CSS is needed, prefer global/shared style utilities and reusable classes over many per-component one-off scoped classes.
+
 ## Source Of Truth
 
 - Vuestic plugin configuration lives in `src/plugins/vuestic.ts`.
-- Global Vuestic styles are imported in `src/main.ts` with `import 'vuestic-ui/css'`.
+- Global Vuestic styles are imported in `src/styles/main.css'`.
 - Font links required by Vuestic live in `index.html`.
-- Design tokens and domain accents are documented in [`design-system.md`](./design-system.md).
+- Design tokens and unified color semantics are documented in [`design-system.md`](./design-system.md).
+- UX strategies and visual contracts are documented in [`design-system.md`](./design-system.md).
 
 ## Installation Contract
 
 `index.html` must keep the Vuestic-documented font links:
 
 ```html
-<link
-  href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:ital,wght@0,400;1,700&display=swap"
-  rel="stylesheet"
-/>
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet" />
 <link
   href="https://fonts.googleapis.com/icon?family=Material+Icons"
   rel="stylesheet"
@@ -121,7 +126,7 @@ const roleOptions = roleValues.map((role) => ({
 }))
 ```
 
-For fixed or floating panels such as the mock session switcher:
+For fixed or floating panels:
 
 - Use `teleport="body"` for dropdown content.
 - Add a specific `content-class`.
@@ -130,12 +135,12 @@ For fixed or floating panels such as the mock session switcher:
 ```vue
 <VaSelect
   teleport="body"
-  content-class="mock-switcher__select-dropdown"
+  content-class="floating-panel__select-dropdown"
 />
 ```
 
 ```css
-:global(.mock-switcher__select-dropdown) {
+:global(.floating-panel__select-dropdown) {
   z-index: 1200 !important;
 }
 ```
@@ -193,7 +198,43 @@ Avoid:
 - Avoid excessive SFC-scoped CSS for generic styling.
 - CSS utility rules live in [`css-utilities.md`](./css-utilities.md).
 
-## Registration Strategy
+## Grid System Implementation
+
+Reference: [Design System Strategy](./design-system.md#grid-system-strategy).
+
+- **Grid Classes**: Use single-hyphen syntax.
+- **Responsiveness**: Use the responsive modifiers (`xs`, `sm`, `md`, `lg`, `xl`).
+- **Offsets**: Use `offset-[size]` (e.g., `offset-md`).
+- **Alineación & Justification**:
+    - `justify-[start|center|end|space-between|space-around|space-evenly]`
+    - `align-[start|center|end|baseline]`
+- **Smart Helpers**: 
+    - `.va-gutter-[1-5]` for cell spacing (gutter).
+    - `.va-spacing-[x|y]-[1-5]` for item margins (spacing).
+
+## Error Prevention Tactics
+
+Reference: [Error Prevention Philosophy](./design-system.md#error-prevention-philosophy).
+
+- **Disabled State**: Use `:disabled="!isValid"` on `VaButton`.
+- **Validation feedback**: Use `error` and `error-messages` props on `VaInput` or `VaSelect`.
+- **Placeholder pattern**: Always provide a descriptive `placeholder`.
+
+## Destructive Actions Implementation
+
+Reference: [Destructive Actions Contract](./design-system.md#destructive-actions-contract).
+
+- **Modal setup**: Use `VaModal` with `color="danger"`, `no-outside-dismiss` and `hide-default-actions`.
+- **Button Slot**: Implement the footer slot with a flex container and `ga-2` gap.
+
+```vue
+<template #footer>
+  <div class="d-flex justify-end ga-2">
+    <VaButton preset="secondary" @click="close">Cancelar</VaButton>
+    <VaButton color="danger" @click="confirm">Eliminar</VaButton>
+  </div>
+</template>
+```
 
 - The MVP uses `createVuestic()` for global component registration.
 - Do not mix global registration with partial Vuestic registration casually.
@@ -213,6 +254,20 @@ VaNavbar: {
 ```
 
 - Tests may stub `VaIcon` by rendering its `name` prop, but production code must use real `VaIcon`.
+
+## Progress Indicators
+
+- Prefer `<VaProgressBar>` for standard progress bars that fit the Vuestic design system.
+- Prefer native `<progress :max :value>` when custom styling is required — it has equivalent semantics with zero ARIA boilerplate.
+- **Never use** `<div role="progressbar" aria-valuemin aria-valuemax aria-valuenow>` as a workaround.
+  - It triggers SonarCloud `Web:S6819` at IDE level (SonarLint), which `sonar-project.properties` suppressions cannot silence.
+- When styling native `<progress>`, reset browser defaults and use pseudo-elements:
+  ```css
+  progress { appearance: none; border: none; }
+  progress::-webkit-progress-bar  { background: transparent; }
+  progress::-webkit-progress-value { background: var(--va-primary); }
+  progress::-moz-progress-bar      { background: var(--va-primary); }
+  ```
 
 ## Common Failure Modes
 

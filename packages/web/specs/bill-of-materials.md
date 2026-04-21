@@ -70,7 +70,7 @@ Documented exception:
 Project-wide contract rule:
 - System-wide constants and enums must live in `packages/shared` and be consumed in web from `@shared`.
 - Avoid local pass-through files that only re-export `@shared` symbols; consume those symbols directly from `@shared`.
-- Product-only defaults (for local mock or UI scaffolding) remain in `packages/web`.
+- Product-only defaults (for local emulator development or UI scaffolding) remain in `packages/web`.
 - Navigation labels and route-target catalogs are shared product contracts and must be centralized in `src/shared/constants` and consumed through `@/bom`.
 
 2. **Documentation**

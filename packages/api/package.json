@@ -5,26 +5,31 @@
   "type": "module",
   "main": "./dist/index.js",
   "scripts": {
-    "build": "tsc",
-    "typecheck": "tsc --noEmit",
-    "test": "vitest run",
-    "test:coverage": "vitest run --coverage",
+    "build": "pnpm --filter @puintegra/shared build && tsc",
+    "typecheck": "pnpm --filter @puintegra/shared build && tsc --noEmit",
+    "test": "pnpm --filter @puintegra/shared build && vitest run --exclude tests/firestore.rules.test.ts",
+    "test:coverage": "pnpm --filter @puintegra/shared build && vitest run --coverage --exclude tests/firestore.rules.test.ts",
     "lint": "eslint src/**/*.ts",
-    "dev": "firebase emulators:start --only functions"
+    "dev": "firebase emulators:start --only functions",
+    "seed:emulators": "pnpm run build && node dist/emulator/seedEmulators.js",
+    "test:firestore-rules": "firebase emulators:exec --config ../../firebase.json --only firestore \"vitest run tests/firestore.rules.test.ts\""
   },
   "dependencies": {
     "@puintegra/shared": "workspace:*",
     "firebase-admin": "12.7.0",
-    "firebase-functions": "5.1.1",
+    "firebase-functions": "7.2.5",
     "hono": "4.12.12",
     "zod": "3.25.76"
   },
   "devDependencies": {
     "@eslint/js": "9.39.4",
+    "@firebase/rules-unit-testing": "5.0.0",
+    "@types/node": "25.6.0",
     "@typescript-eslint/eslint-plugin": "8.58.2",
     "@typescript-eslint/parser": "8.58.2",
     "@vitest/coverage-v8": "1.6.1",
     "eslint": "9.39.4",
+    "firebase": "12.12.0",
     "typescript": "5.9.3",
     "vitest": "1.6.1"
   }

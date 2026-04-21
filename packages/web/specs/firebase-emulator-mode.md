@@ -1,0 +1,52 @@
+# Firebase Emulator Mode (Live Spec)
+
+## Purpose
+
+Define the local development contract for `packages/web` after removing the frontend runtime backend simulation.
+
+## Scope
+
+- Applies to Firebase client initialization in `packages/web`.
+- Applies to Auth Emulator login, logout, auth-state hydration, and app context selection.
+- Applies to Firestore Emulator reads and writes through neutral gateways.
+- Does not define production Firebase Auth providers, MFA, blocking functions, or Firestore security rules.
+
+## Firebase client runtime
+
+- `packages/web/src/plugins/firebase.ts` owns singleton Firebase app, Auth, and Firestore instances.
+- Public Vite variables use the `VITE_FIREBASE_*` prefix and contain no secrets.
+- Development and test runtimes connect to:
+  - Auth Emulator: `VITE_FIREBASE_AUTH_EMULATOR_URL`, default `http://127.0.0.1:9099`
+  - Firestore Emulator: `VITE_FIRESTORE_EMULATOR_HOST`, default `127.0.0.1`
+  - Firestore Emulator port: `VITE_FIRESTORE_EMULATOR_PORT`, default `8081`
+- Production mode must not connect to emulators.
+
+## Auth and session contract
+
+- The first supported local auth flow is Firebase Auth email/password through the Auth Emulator.
+- MFA is deferred and must not be simulated in web runtime.
+- After Firebase sign-in, the app resolves the domain user and granted permissions from Firestore.
+- If more than one permission context exists, the user selects an active role/RFC context.
+- The active app context is persisted separately from Firebase Auth and validated during hydration.
+- Invalid or missing saved context clears local app context and treats the user as not authorized for protected domains.
+
+## Guard constraints
+
+- No Firebase user means anonymous.
+- Firebase user without granted permission contexts means authenticated identity but no authorized app context.
+- If a route requires authentication and the effective role is `ANONYMOUS`, redirect to `/auth/login`.
+- If role is `SYSTEM_ADMINISTRATOR` without `SYSTEM_RFC`, redirect to `/error/403`.
+- If role is institutional while using `SYSTEM_RFC`, redirect to `/error/403`.
+- `/error/*` routes must not enter redirection loops because of these validations.
+
+## Runtime removal rule
+
+- `packages/web` must not contain runtime backend simulation modules, stores, composables, or app-facing `MOCK_*` contracts.
+- Test doubles may use Vitest module mocks at test boundaries, but application code must depend on Firebase/auth/data gateways rather than mock services.
+
+## Out of scope
+
+- Real production Firebase Auth provider rollout.
+- MFA.
+- Firestore rules changes.
+- Production Firebase project configuration changes.

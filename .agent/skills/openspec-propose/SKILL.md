@@ -18,6 +18,10 @@ I'll create a change with artifacts:
 
 When ready to implement, run /opsx:apply
 
+**Plan confirmation rule:** A human confirming or approving a plan only approves the plan content.
+Do not immediately apply or implement after plan confirmation. Stop and wait for an explicit
+apply/implement request so the human can choose which model or agent should execute the plan.
+
 ---
 
 **Input**: The user's request should include a change name (kebab-case) OR a description of what they want to build.
@@ -90,7 +94,7 @@ After completing all artifacts, summarize:
 - Change name and location
 - List of artifacts created with brief descriptions
 - What's ready: "All artifacts created! Ready for implementation."
-- Prompt: "Run `/opsx:apply` or ask me to implement to start working on the tasks."
+- Prompt: "When you have chosen the model or agent that should execute this, run `/opsx:apply` or ask me to implement."
 
 **Artifact Creation Guidelines**
 
@@ -108,3 +112,4 @@ After completing all artifacts, summarize:
 - If context is critically unclear, ask the user - but prefer making reasonable decisions to keep momentum
 - If a change with that name already exists, ask if user wants to continue it or create a new one
 - Verify each artifact file exists after writing before proceeding to next
+- Do not treat plan confirmation as permission to apply tasks; wait for an explicit apply/implement request
