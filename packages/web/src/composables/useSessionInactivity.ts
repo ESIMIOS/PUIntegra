@@ -1,10 +1,11 @@
 /**
  * @package web
  * @name useSessionInactivity.ts
- * @version 0.0.1
+ * @version 0.0.2
  * @description Composable para monitorear la inactividad del usuario y gestionar el cierre de sesión.
  * @author @antigravity
  * @changelog
+ * - 0.0.2	(2026-04-20)	Evita await en tick de inactividad para preservar redirección inmediata y estabilidad de pruebas.	@codex
  * - 0.0.1	(2026-04-12)	Versión inicial del composable.	@antigravity
  */
 
@@ -44,7 +45,7 @@ export function useSessionInactivity() {
 
   const startTimer = () => {
     if (timerInterval) return;
-    timerInterval = setInterval(async () => {
+    timerInterval = setInterval(() => {
       if (!authStore.isAuthenticated) {
         resetTimer();
         return;
@@ -55,7 +56,7 @@ export function useSessionInactivity() {
         isAlerting.value = secondsRemaining.value <= SECONDS_TO_SHOW_INACTIVITY_ALERT;
       } else {
         stopTimer();
-        await authStore.logout().catch((err) => {
+        authStore.logout().catch((err) => {
           console.warn("Inactivity logout network failure:", err);
         });
         institutionStore.clearActiveRfc();
