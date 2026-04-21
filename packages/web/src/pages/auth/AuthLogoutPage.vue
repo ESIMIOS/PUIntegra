@@ -2,10 +2,11 @@
 /**
  * @package web
  * @name AuthLogoutPage.vue
- * @version 0.0.2
+ * @version 0.0.3
  * @description Cierra sesión activa, muestra progreso de salida y redirige a login tras 15 segundos.
  * @author @tirsomartinezreyes
  * @changelog
+ * - 0.0.3	(2026-04-20)	Desacopla clearSession del inicio del timer para evitar drift en navegación y pruebas con fake timers.	@codex
  * - 0.0.2	(2026-04-15)	Se reemplaza placeholder por cierre de sesión con cuenta regresiva.	@tirsomartinezreyes
  * - 0.0.1	(2026-04-10)	Versión inicial del archivo.	@tirsomartinezreyes
  */
@@ -26,8 +27,8 @@ function goToLogin() {
   router.push(routePaths.authLogin);
 }
 
-onMounted(async () => {
-  await clearSession().catch((err) => {
+onMounted(() => {
+  clearSession().catch((err) => {
     logSystemMessageError(systemMessageTree.web.auth.logout.logoutFailure, err);
   });
   intervalId = setInterval(() => {

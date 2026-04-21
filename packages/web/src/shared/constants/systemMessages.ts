@@ -144,7 +144,7 @@ const webSystemMessageTree = {
   auth: {
     logout: {
       logoutFailure: {
-        code: "AUTH-LOGOUT-001",
+        code: "WEB-AUTH-001",
         severity: "ERROR",
         message: "Falló inesperadamente el cierre de sesión.",
       },
