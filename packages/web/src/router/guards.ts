@@ -232,8 +232,7 @@ async function ensureGuardHydration(authStore: AuthStore, institutionStore: Inst
     return;
   }
 
-  if (!guardHydrationPromise) {
-    guardHydrationPromise = (async () => {
+  guardHydrationPromise ??= (async () => {
       try {
         const session = await authStore.hydrateSession();
         if (session?.activeRfc) {
@@ -250,7 +249,6 @@ async function ensureGuardHydration(authStore: AuthStore, institutionStore: Inst
     })().finally(() => {
       guardHydrationPromise = null;
     });
-  }
 
   await guardHydrationPromise;
 }
