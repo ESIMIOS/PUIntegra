@@ -52,7 +52,7 @@ describe('SiteLayout', () => {
     expect(wrapper.get('[data-testid="navbar-center"]').text()).toContain('Inicio');
     expect(wrapper.get('[data-testid="navbar-center"]').text()).toContain('Demo');
     const homeNavigationLink = wrapper.get('[data-testid="navbar-center"]').get('[href="/site/home"]');
-    expect(homeNavigationLink.classes()).toContain('site-layout__link');
+    expect(homeNavigationLink.classes()).toContain('layout__link');
     expect(homeNavigationLink.classes()).toContain('router-link-active');
     expect(wrapper.get('[data-testid="navbar-right"]').text()).toContain('Ingresar');
     expect(wrapper.get('[data-testid="navbar-right"]').find('[data-testid="theme-toggle"]').exists()).toBe(true);

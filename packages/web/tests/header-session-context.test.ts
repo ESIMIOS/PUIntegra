@@ -74,16 +74,17 @@ describe('HeaderSessionContext', () => {
     return mount(HeaderSessionContext, {
       global: {
         stubs: {
-          VaMenu: {
-            props: ['modelValue'],
-            emits: ['update:modelValue'],
-            template: '<div><slot name="anchor" /><slot /></div>'
-          },
+          VaDropdown: { template: '<div><slot name="anchor" /><slot /></div>' },
+          VaDropdownContent: { template: '<div><slot /></div>' },
           VaList: { template: '<ul><slot /></ul>' },
+          VaListLabel: { template: '<li><slot /></li>' },
           VaListItem: {
             emits: ['click'],
             template: '<li><button type="button" @click="$emit(\'click\')"><slot /></button></li>'
           },
+          VaListItemSection: { template: '<span><slot /></span>' },
+          VaListItemLabel: { template: '<span><slot /></span>' },
+          VaListSeparator: { template: '<hr />' },
           VaModal: {
             props: ['modelValue', 'title'],
             emits: ['update:modelValue'],
@@ -94,6 +95,7 @@ describe('HeaderSessionContext', () => {
               </div>
             `
           },
+          // SessionContextModal (child component) uses VaSelect for context selection.
           VaSelect: {
             props: ['modelValue', 'options'],
             emits: ['update:modelValue'],
@@ -124,7 +126,7 @@ describe('HeaderSessionContext', () => {
 
   it('opens account links actions', async () => {
     const wrapper = mountComponent();
-    const settingsButton = wrapper.findAll('button').find((button) => button.text().includes('Cuenta: ajustes'));
+    const settingsButton = wrapper.findAll('button').find((button) => button.text().includes('Configuración'));
     if (!settingsButton) {
       throw new Error('Settings action not found.');
     }
