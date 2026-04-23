@@ -5,11 +5,12 @@
  * @description Inicializa Firebase client SDK y conecta emuladores en desarrollo local.
  * @author @codex
  * @changelog
+ * - 0.0.2	(2026-04-19)	Agrega normalización de URLs para emuladores en localhost (evita delay en first load de Auth) y mejora lectura de configuración.	@tirsomartinezreyes
  * - 0.0.1	(2026-04-18)	Agrega inicialización Firebase para Auth y Firestore Emulator.	@codex
  */
 
 import { initializeApp, getApps, type FirebaseApp } from "firebase/app";
-import { connectAuthEmulator, getAuth, type Auth } from "firebase/auth";
+import { connectAuthEmulator, getAuth, initializeAuth, type Auth, browserSessionPersistence } from "firebase/auth";
 import { connectFirestoreEmulator, getFirestore, type Firestore } from "firebase/firestore";
 
 type FirebaseRuntime = {
@@ -59,8 +60,9 @@ export function getFirebaseRuntime(): FirebaseRuntime {
   }
 
   const app = getApps()[0] ?? initializeApp(readFirebaseConfig());
-  const auth = getAuth(app);
+  const auth = shouldUseEmulators() && !emulatorsConnected ? initializeAuth(app, {persistence: browserSessionPersistence}) : getAuth(app);
   const firestore = getFirestore(app);
+
   const authEmulatorUrl = normalizeLoopbackUrl(
     import.meta.env.VITE_FIREBASE_AUTH_EMULATOR_URL ?? "http://127.0.0.1:9099",
   );

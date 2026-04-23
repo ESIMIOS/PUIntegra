@@ -6,6 +6,7 @@
  * @description Muestra identidad y contexto de sesión real con menú de cuenta y selector de contextos disponibles.
  * @author @antigravity
  * @changelog
+ * - 0.0.4	(2026-04-21)	Corrección de estilos para mejor visualización de menu de usuario.	@tirsomartinezreyes
  * - 0.0.3	(2026-04-19)	Reutiliza modal compartido para cambio de contexto.	@codex
  * - 0.0.2	(2026-04-15)	Se vuelve componente standalone con menú, logout confirmado y cambio de contexto.	@tirsomartinezreyes
  * - 0.0.1	(2026-04-12)	Contexto visual de sesión para headers autenticados.	@antigravity
@@ -122,7 +123,14 @@ async function applySelectedContext(context: { role: z.infer<typeof RoleSchema>;
     </button>
   </aside>
 
-  <VaModal v-model="showLogoutModal" title="Confirmar cierre de sesión" color="danger" hide-default-actions max-width="28rem" no-outside-dismiss>
+  <VaModal
+    v-model="showLogoutModal"
+    title="Confirmar cierre de sesión"
+    color="danger"
+    hide-default-actions
+    max-width="28rem"
+    no-outside-dismiss
+  >
     <p>¿Deseas cerrar la sesión actual?</p>
     <template #footer>
       <div class="header-session-context__modal-actions">
@@ -143,6 +151,10 @@ async function applySelectedContext(context: { role: z.infer<typeof RoleSchema>;
 </template>
 
 <style scoped>
+
+.va-list-item-label {
+  color: var(--va-text-primary);
+}
 .header-session-context {
   display: flex;
   align-items: center;
