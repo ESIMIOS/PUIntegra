@@ -29,7 +29,7 @@ defineProps<{
           <RouterLink
             v-for="item in menuItems"
             :key="item.id"
-            class="dashboard-layout__sidebar__link"
+            class="layout__sidebar__link"
             :class="{ 'layout__sidebar__link--disabled': item.disabled }"
             :to="item.to"
             :aria-disabled="item.disabled"

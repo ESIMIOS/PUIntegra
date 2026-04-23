@@ -1,19 +1,19 @@
 /**
  * @package web
  * @name auth-pages.test.ts
- * @version 0.0.3
+ * @version 0.0.4
  * @description Verifica login con credenciales/contexto y logout con cuenta regresiva.
  * @author @antigravity
  * @changelog
+ * - 0.0.4	(2026-04-23)	Migra montaje a mountWithVuestic y extrae helper de montaje a alcance de módulo.	@codex
  * - 0.0.3	(2026-04-19)	Cubre redirección no bloqueante para sesiones existentes en login.	@codex
  * - 0.0.2	(2026-04-15)	Se actualiza cobertura para flujo productivo de login/logout.	@tirsomartinezreyes
  * - 0.0.1	(2026-04-15)	Versión inicial.	@antigravity
  */
 
-import { flushPromises, mount } from '@vue/test-utils';
+import { flushPromises } from '@vue/test-utils';
 import { createPinia, setActivePinia, getActivePinia } from 'pinia';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { createAppVuestic } from '@/plugins/vuestic';
 import { useAuthStore } from '@/stores/authStore';
 import { useInstitutionStore } from '@/stores/institutionStore';
 import AuthLoginPage from '@/pages/auth/AuthLoginPage.vue';
@@ -22,6 +22,7 @@ import { ROLE } from '@shared';
 import { routePaths } from '@/shared/constants/routePaths';
 import { APP_AUTH_ERROR_KIND, APP_DATA_ERROR_KIND, AppAuthError, AppDataError } from '@/shared/errors/appErrors';
 import { establishSession, hydrateSession, logout, validateCredentials } from '@/gateways/firebaseAuthGateway';
+import { mountWithVuestic } from './utils/mount';
 
 const push = vi.fn();
 const replace = vi.fn();
@@ -45,6 +46,35 @@ const mockedEstablishSession = vi.mocked(establishSession);
 const mockedHydrateSession = vi.mocked(hydrateSession);
 const mockedLogout = vi.mocked(logout);
 const mockedValidateCredentials = vi.mocked(validateCredentials);
+
+function mountWithContext(component: any) {
+  return mountWithVuestic(component, {
+    global: {
+      plugins: [getActivePinia()!],
+      stubs: {
+        VaModal: {
+          props: ['modelValue', 'title'],
+          emits: ['update:modelValue'],
+          template: `
+            <div v-if="modelValue">
+              <slot />
+              <slot name="footer" />
+            </div>
+          `
+        },
+        VaSelect: {
+          props: ['modelValue', 'options'],
+          emits: ['update:modelValue'],
+          template: `
+            <select :value="modelValue" @change="$emit('update:modelValue', $event.target.value)">
+              <option v-for="option in options" :key="option.value" :value="option.value">{{ option.text }}</option>
+            </select>
+          `
+        }
+      }
+    }
+  });
+}
 
 describe('Auth Pages', () => {
   beforeEach(() => {
@@ -87,35 +117,6 @@ describe('Auth Pages', () => {
   afterEach(() => {
     vi.useRealTimers();
   });
-
-  function mountWithContext(component: any) {
-    return mount(component, {
-      global: {
-        plugins: [getActivePinia()!, createAppVuestic()],
-        stubs: {
-          VaModal: {
-            props: ['modelValue', 'title'],
-            emits: ['update:modelValue'],
-            template: `
-              <div v-if="modelValue">
-                <slot />
-                <slot name="footer" />
-              </div>
-            `
-          },
-          VaSelect: {
-            props: ['modelValue', 'options'],
-            emits: ['update:modelValue'],
-            template: `
-              <select :value="modelValue" @change="$emit('update:modelValue', $event.target.value)">
-                <option v-for="option in options" :key="option.value" :value="option.value">{{ option.text }}</option>
-              </select>
-            `
-          }
-        }
-      }
-    });
-  }
 
   it('renders email/password form', () => {
     const wrapper = mountWithContext(AuthLoginPage);

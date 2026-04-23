@@ -1,14 +1,15 @@
 /**
  * @package web
  * @name header-session-context.test.ts
- * @version 0.0.1
- * @description Cubre render de identidad, menú de cuenta, confirmación de logout y selector de contexto.
+ * @version 0.0.2
+ * @description Cubre render de identidad, menú de cuenta, confirmación de logout y selector de contexto usando montaje con Vuestic.
  * @author @tirsomartinezreyes
  * @changelog
+ * - 0.0.2	(2026-04-23)	Refactoriza pruebas para usar mountWithVuestic y reducir stubs a los estrictamente necesarios.	@codex
  * - 0.0.1	(2026-04-15)	Versión inicial del archivo.	@tirsomartinezreyes
  */
 
-import { flushPromises, mount } from '@vue/test-utils';
+import { flushPromises } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ROLE } from '@shared';
@@ -17,6 +18,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { useInstitutionStore } from '@/stores/institutionStore';
 import { routePaths } from '@/shared/constants/routePaths';
 import { switchContext } from '@/gateways/firebaseAuthGateway';
+import { mountWithVuestic } from './utils/mount';
 
 const push = vi.fn();
 vi.mock('vue-router', () => ({
@@ -32,6 +34,50 @@ vi.mock('@/gateways/firebaseAuthGateway', async () => {
 });
 
 const mockedSwitchContext = vi.mocked(switchContext);
+
+function mountComponent() {
+  return mountWithVuestic(HeaderSessionContext, {
+    global: {
+      stubs: {
+        VaDropdown: { template: '<div><slot name="anchor" /><slot /></div>' },
+        VaDropdownContent: { template: '<div><slot /></div>' },
+        VaList: { template: '<ul><slot /></ul>' },
+        VaListLabel: { template: '<li><slot /></li>' },
+        VaListItem: {
+          emits: ['click'],
+          template: '<li><button type="button" @click="$emit(\'click\')"><slot /></button></li>'
+        },
+        VaListItemSection: { template: '<span><slot /></span>' },
+        VaListItemLabel: { template: '<span><slot /></span>' },
+        VaListSeparator: { template: '<hr />' },
+        VaModal: {
+          props: ['modelValue', 'title'],
+          emits: ['update:modelValue'],
+          template: `
+            <div v-if="modelValue">
+              <slot />
+              <slot name="footer" />
+            </div>
+          `
+        },
+        SessionContextModal: {
+          props: ['modelValue'],
+          emits: ['confirm', 'update:modelValue'],
+          template: `
+            <div v-if="modelValue">
+              <button
+                type="button"
+                @click="$emit('confirm', { role: 'SYSTEM_ADMINISTRATOR', rfc: 'IEC120914FV8' })"
+              >
+                Aplicar contexto
+              </button>
+            </div>
+          `
+        }
+      }
+    }
+  });
+}
 
 describe('HeaderSessionContext', () => {
   beforeEach(() => {
@@ -69,52 +115,6 @@ describe('HeaderSessionContext', () => {
     });
     institutionStore.setActiveRfc('XAXX010101000');
   });
-
-  function mountComponent() {
-    return mount(HeaderSessionContext, {
-      global: {
-        stubs: {
-          VaDropdown: { template: '<div><slot name="anchor" /><slot /></div>' },
-          VaDropdownContent: { template: '<div><slot /></div>' },
-          VaList: { template: '<ul><slot /></ul>' },
-          VaListLabel: { template: '<li><slot /></li>' },
-          VaListItem: {
-            emits: ['click'],
-            template: '<li><button type="button" @click="$emit(\'click\')"><slot /></button></li>'
-          },
-          VaListItemSection: { template: '<span><slot /></span>' },
-          VaListItemLabel: { template: '<span><slot /></span>' },
-          VaListSeparator: { template: '<hr />' },
-          VaModal: {
-            props: ['modelValue', 'title'],
-            emits: ['update:modelValue'],
-            template: `
-              <div v-if="modelValue">
-                <slot />
-                <slot name="footer" />
-              </div>
-            `
-          },
-          // SessionContextModal (child component) uses VaSelect for context selection.
-          VaSelect: {
-            props: ['modelValue', 'options'],
-            emits: ['update:modelValue'],
-            template: `
-              <select :value="modelValue" @change="$emit('update:modelValue', $event.target.value)">
-                <option v-for="option in options" :key="option.value" :value="option.value">{{ option.text }}</option>
-              </select>
-            `
-          },
-          VaButton: {
-            emits: ['click'],
-            template: '<button type="button" @click="$emit(\'click\')"><slot /></button>'
-          },
-          VaAvatar: { template: '<span><slot /></span>' },
-          VaIcon: { props: ['name'], template: '<span>{{ name }}</span>' }
-        }
-      }
-    });
-  }
 
   it('renders current user identity and context', () => {
     const wrapper = mountComponent();
@@ -160,8 +160,6 @@ describe('HeaderSessionContext', () => {
     }
     await contextTrigger.trigger('click');
 
-    const select = wrapper.get('select');
-    await select.setValue(`${ROLE.SYSTEM_ADMINISTRATOR}::IEC120914FV8`);
     const applyButton = wrapper.findAll('button').find((button) => button.text().includes('Aplicar contexto'));
     if (!applyButton) {
       throw new Error('Apply context button not found.');

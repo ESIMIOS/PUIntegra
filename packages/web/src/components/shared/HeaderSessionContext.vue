@@ -122,7 +122,7 @@ async function applySelectedContext(context: { role: z.infer<typeof RoleSchema>;
     </button>
   </aside>
 
-  <VaModal v-model="showLogoutModal" title="Confirmar cierre de sesión" hide-default-actions max-width="28rem">
+  <VaModal v-model="showLogoutModal" title="Confirmar cierre de sesión" color="danger" hide-default-actions max-width="28rem" no-outside-dismiss>
     <p>¿Deseas cerrar la sesión actual?</p>
     <template #footer>
       <div class="header-session-context__modal-actions">

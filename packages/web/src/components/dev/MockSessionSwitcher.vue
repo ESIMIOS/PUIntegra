@@ -2,26 +2,31 @@
 /**
  * @package web
  * @name MockSessionSwitcher.vue
- * @version 0.0.1
+ * @version 0.0.2
  * @description Panel de desarrollo para alternar sesión, rol, seguridad y contexto institucional.
  * @author @tirsomartinezreyes
  * @changelog
+ * - 0.0.2	(2026-04-23)	Tipa el rol activo con contrato derivado de `@shared` para evitar primitivas arbitrarias.	@codex
  * - 0.0.1	(2026-04-10)	Versión inicial del archivo.	@tirsomartinezreyes
  */
 import { computed, ref } from "vue";
-import { ROLE } from "@shared";
+import { ROLE, roleValues } from "@shared";
 import { domainOptions } from "@/shared/constants/domains";
 import { DEFAULT_RFC, DEFAULT_FUB } from "@/shared/constants/routePaths";
 import { buildNavigationLinks } from "@/shared/constants/navigationCatalog";
-import { useAuthStore } from "@/stores/authStore";
-import { useInstitutionStore } from "@/stores/institutionStore";
 import { useSessionInactivity } from "@/composables/useSessionInactivity";
 import { useRoute } from "vue-router";
 import { useBreakpoint } from "vuestic-ui";
 
+type Role = (typeof roleValues)[number];
+
+const props = defineProps<{
+  activeRole: Role;
+  activeRfc: string | null;
+  requiresSecuritySetup: boolean;
+}>();
+
 const route = useRoute();
-const authStore = useAuthStore();
-const institutionStore = useInstitutionStore();
 const { secondsRemaining, isAlerting } = useSessionInactivity();
 
 const breakpoints = useBreakpoint();
@@ -29,25 +34,16 @@ const currentBreakpoint = computed(() => breakpoints.current);
 
 const selectedDomain = ref<(typeof domainOptions)[number]["key"]>("site");
 
-const activeRole = computed(() => authStore.activeRole);
-const activeRfc = computed(() => institutionStore.activeRfc);
-const requiresSecuritySetup = computed(() => authStore.requiresSecuritySetup);
-const isAuthenticated = computed(() => activeRole.value !== ROLE.ANONYMOUS);
-const isSystemRole = computed(
-  () => activeRole.value === ROLE.SYSTEM_ADMINISTRATOR,
-);
+const isAuthenticated = computed(() => props.activeRole !== ROLE.ANONYMOUS);
+const isSystemRole = computed(() => props.activeRole === ROLE.SYSTEM_ADMINISTRATOR);
 const isInstitutionRole = computed(
-  () =>
-    activeRole.value === ROLE.INSTITUTION_ADMIN ||
-    activeRole.value === ROLE.INSTITUTION_OPERATOR,
+  () => props.activeRole === ROLE.INSTITUTION_ADMIN || props.activeRole === ROLE.INSTITUTION_OPERATOR,
 );
-const isInstitutionAdmin = computed(
-  () => activeRole.value === ROLE.INSTITUTION_ADMIN,
-);
+const isInstitutionAdmin = computed(() => props.activeRole === ROLE.INSTITUTION_ADMIN);
 
 const contextualLinks = computed(() => {
   return buildNavigationLinks(selectedDomain.value, {
-    activeRfc: activeRfc.value || DEFAULT_RFC,
+    activeRfc: props.activeRfc || DEFAULT_RFC,
     adminInspectionRfc: DEFAULT_RFC,
     defaultFub: DEFAULT_FUB,
     isAuthenticated: isAuthenticated.value,
@@ -63,16 +59,17 @@ const contextualLinks = computed(() => {
     <VaCardTitle>Mock Session Switcher ({{ currentBreakpoint }})</VaCardTitle>
     <VaCardContent>
       <VaAlert color="info" dense>
-        Rol activo: <strong>{{ activeRole }}</strong>
+        Rol activo:
+        <strong>{{ activeRole }}</strong>
         <span class="mx-1">·</span>
-        RFC activo: <strong>{{ activeRfc || "N/A" }}</strong>
+        RFC activo:
+        <strong>{{ activeRfc || "N/A" }}</strong>
         <span class="mx-1">·</span>
-        Security setup: <strong>{{ requiresSecuritySetup ? "required" : "ok" }}</strong>
+        Security setup:
+        <strong>{{ requiresSecuritySetup ? "required" : "ok" }}</strong>
       </VaAlert>
       <div v-if="isAuthenticated" class="mt-2">
-        <VaChip :color="isAlerting ? 'danger' : 'info'" size="small">
-          Session ends in: {{ secondsRemaining }}s
-        </VaChip>
+        <VaChip :color="isAlerting ? 'danger' : 'info'" size="small">Session ends in: {{ secondsRemaining }}s</VaChip>
       </div>
       <VaDivider />
       <section class="mock-switcher__section" aria-label="Layout">

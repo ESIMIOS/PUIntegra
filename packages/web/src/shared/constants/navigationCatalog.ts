@@ -353,6 +353,9 @@ export function buildNavigationLinks(domain: NavigationDomain, context: Navigati
   }));
 }
 
+/**
+ * @description Construye los links de navegación de retorno para dominios específicos con base en el contexto activo.
+ */
 export function buildNavigationBackLinks(domain: NavigationDomain, context: NavigationContext): NavigationLink[] {
   const domainLinks: NavigationLink[] = [];
   if (domain == DOMAIN.ACCOUNT) {

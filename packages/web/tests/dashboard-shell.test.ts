@@ -1,16 +1,17 @@
 /**
  * @package web
  * @name dashboard-shell.test.ts
- * @version 0.0.1
+ * @version 0.0.2
  * @description Verifica estructura base del shell dashboard compartido por dominios autenticados.
  * @author @antigravity
  * @changelog
+ * - 0.0.2	(2026-04-23)	Migra montaje de pruebas a mountWithVuestic.	@codex
  * - 0.0.1  (2026-04-12)  Cobertura inicial de DashboardShell.  @antigravity
  */
 
-import { mount } from '@vue/test-utils';
 import DashboardShell from '@/components/shared/DashboardShell.vue';
 import type { NavigationLink } from '@/shared/constants/navigationCatalog';
+import { mountWithVuestic } from './utils/mount';
 
 const menuItems: NavigationLink[] = [
   {
@@ -30,7 +31,7 @@ const menuItems: NavigationLink[] = [
 ];
 
 function mountShell() {
-  return mount(DashboardShell, {
+  return mountWithVuestic(DashboardShell, {
     props: {
       menuItems,
       accentColor: '#3BB54A',
