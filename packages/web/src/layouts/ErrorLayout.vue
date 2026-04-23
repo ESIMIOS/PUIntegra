@@ -12,43 +12,17 @@ import AppLogo from "@/components/shared/AppLogo.vue";
 </script>
 
 <template>
-  <VaLayout class="error-layout">
-    <main class="error-layout__container">
-      <AppLogo size="prominent" />
-      <VaDivider />
-      <router-view />
-    </main>
+  <VaLayout class="layout">
+    <template #content>
+      <div class="h-full w-full p-4">
+        <main class="flex row h-full align-center justify-center">
+          <div class="flex flex-col sm12 md12 lg10 align-center justify-center">
+            <AppLogo size="prominent" />
+            <VaDivider class="p-4" />
+            <RouterView />
+          </div>
+        </main>
+      </div>
+    </template>
   </VaLayout>
 </template>
-
-<style scoped>
-.error-layout {
-  display: grid;
-  place-items: center;
-  min-height: 100vh;
-  padding: 1.5rem;
-  background: var(--va-background-primary);
-}
-
-.error-layout__container {
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
-  width: min(100%, 52rem);
-  text-align: center;
-}
-
-.error-layout__container > :first-child {
-  align-self: center;
-}
-
-:deep(.va-divider) {
-  margin: 0;
-}
-
-.error-layout__container :deep(h1) {
-  color: var(--va-danger);
-  font-size: 1.5rem;
-  letter-spacing: 0;
-}
-</style>

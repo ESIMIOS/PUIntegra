@@ -124,6 +124,7 @@ export {
 
 export {
   buildNavigationLinks,
+  buildNavigationBackLinks,
   defaultNavigationContext,
   getPageContent,
   isPageId,
