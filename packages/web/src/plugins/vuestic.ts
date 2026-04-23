@@ -37,6 +37,7 @@ export const lightThemeColors = {
   shadow: "rgba(11, 31, 76, 0.16)",
   focus: "#3BB54A",
   transparent: "rgba(255, 255, 255, 0)",
+  
 };
 
 export const darkThemeColors = {
@@ -96,7 +97,7 @@ export const appVuesticConfig = defineVuesticConfig({
       outlined: false,
     },
     VaCardTitle: {
-      class: "text--bold text--uppercase",
+      class: "bold uppercase",
     },
     VaInput: {},
     VaSelect: {

@@ -1,15 +1,26 @@
+<script setup lang="ts">
+/**
+ * @package web
+ * @name AppFooter.vue
+ * @version 0.0.1
+ * @description Componente de pie de página global para la aplicación.
+ * @author @tirsomartinezreyes
+ * @changelog
+ * - 0.0.1	(2026-04-10)	Versión inicial del archivo.	@tirsomartinezreyes
+ */
+
+const props = withDefaults(
+  defineProps<{
+    class?: string;
+  }>(),
+  {
+    class: "layout__footer",
+  },
+);
+</script>
+
 <template>
-  <footer class="app-footer">
+  <footer :class="props.class">
     <slot>PUIntegra © 2026</slot>
   </footer>
 </template>
-
-<style scoped>
-.app-footer {
-  border-top: 1px solid var(--va-primary);
-  min-height: var(--app-footer-height, 3.5rem);
-  padding: 1rem clamp(1rem, 2vw, 2rem);
-  background: var(--va-primary);
-  color: var(--va-text-inverted);
-}
-</style>

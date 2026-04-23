@@ -23,20 +23,20 @@ a {
   color: inherit;
 }
 
-.bg-bg-primary {
+.bg-primary {
   background-color: var(--va-background-primary);
 }
 
-.bg-bg-secondary {
+.bg-secondary {
   background-color: var(--va-background-secondary);
 }
 
-.bg-primary {
-  background-color: var(--va-primary);
+.primary {
+  color: var(--va-primary);
 }
 
-.bg-secondary {
-  background-color: var(--va-secondary);
+.secondary {
+  color: var(--va-secondary);
 }
 
 .layout-shell {
@@ -60,40 +60,121 @@ a {
   gap: 0.5rem;
 }
 
-.mt-2 {
-  margin-top: 0.5rem;
+/*MARGIN*/
+.m0 {
+  margin: 0 !important;
 }
 
 .m1 {
   margin: 0.25rem;
 }
+
 .m2 {
   margin: 0.5rem;
 }
+
 .m3 {
   margin: 0.75rem;
 }
+
 .m4 {
   margin: 1rem;
 }
+
 .m5 {
   margin: 1.25rem;
+}
+
+.mt0 {
+  margin-top: 0 !important;
+}
+
+.mt1 {
+  margin-top: 0.25rem;
+}
+
+.mt2 {
+  margin-top: 0.5rem;
+}
+
+.mt3 {
+  margin-top: 0.75rem;
+}
+
+.mt4 {
+  margin-top: 1rem;
+}
+
+.mb0 {
+  margin-bottom: 0 !important;
 }
 
 .mb1 {
   margin-bottom: 0.25rem;
 }
+
 .mb2 {
   margin-bottom: 0.5rem;
 }
+
 .mb3 {
   margin-bottom: 0.75rem;
 }
+
 .mb4 {
   margin-bottom: 1rem;
 }
+
 .mb5 {
   margin-bottom: 1.25rem;
+}
+
+.ml0 {
+  margin-left: 0 !important;
+}
+
+.ml1 {
+  margin-left: 0.25rem;
+}
+
+.ml2 {
+  margin-left: 0.5rem;
+}
+
+.ml3 {
+  margin-left: 0.75rem;
+}
+
+.ml4 {
+  margin-left: 1rem;
+}
+
+.ml5 {
+  margin-left: 1.25rem;
+}
+
+.mr0 {
+  margin-right: 0 !important;
+}
+
+.mr1 {
+  margin-right: 0.25rem;
+}
+
+.mr2 {
+  margin-right: 0.5rem;
+}
+
+.mr3 {
+  margin-right: 0.75rem;
+}
+
+.mr4 {
+  margin-right: 1rem;
+}
+
+.mr5 {
+  margin-right: 1.25rem;
 }
 
 .debug {
@@ -117,12 +198,25 @@ a {
 }
 
 /* Typography Utilities */
-.text--bold {
+.bold {
   font-weight: 700 !important;
 }
 
-.text--uppercase {
+.uppercase {
   text-transform: uppercase !important;
+}
+
+.lowercase {
+  text-transform: lowercase !important;
+}
+
+.capitalize {
+  text-transform: capitalize !important;
+}
+
+.highlighted {
+  background-color: var(--va-text-highlighted) !important;
+  color: var(--va-primary) !important;
 }
 
 .text--left {
@@ -132,6 +226,46 @@ a {
 .text--secondary {
   color: var(--va-text-secondary) !important;
   font-size: 0.9rem;
+}
+
+.fs-1 {
+  font-size: 1rem !important;
+}
+
+.fs-2 {
+  font-size: 1.25rem !important;
+}
+
+.fs-3 {
+  font-size: 1.5rem !important;
+}
+
+.fs-4 {
+  font-size: 1.75rem !important;
+}
+
+.fs-5 {
+  font-size: 2rem !important;
+}
+
+.fs-6 {
+  font-size: 2.5rem !important;
+}
+
+.fs-7 {
+  font-size: 3rem !important;
+}
+
+.danger {
+  color: var(--va-danger) !important;
+}
+
+.warning {
+  color: var(--va-warning) !important;
+}
+
+.success {
+  color: var(--va-success) !important;
 }
 
 /* Global Component Rules */
@@ -170,4 +304,83 @@ a {
 
 .w100p {
   width: 100% !important;
+}
+
+/* Pointer*/
+.cp {
+  cursor: pointer !important;
+}
+
+/** Layout Specific Styles */
+
+/**Root Element*/
+.layout {
+  --layout-footer-height: 3.5rem;
+  --layout-header-height: 7rem;
+  min-height: 100vh;
+  min-width: 100vw;
+  background: var(--va-background-primary);
+  position: fixed;
+}
+
+.layout__navbar {
+  height: var(--layout-header-height);
+  z-index: 900;
+  border-bottom: 1px solid var(--va-background-border);
+  box-shadow: 0 4px 18px rgba(11, 31, 76, 0.08);
+}
+
+.layout__sidebar {
+  background: var(--va-background-secondary);
+  border-right: 1px solid var(--va-background-border);
+  padding-top: var(--layout-header-height);
+}
+
+.layout__sidebar__link {
+  color: var(--va-text-primary);
+  text-decoration: none;
+  border-left: 4px solid transparent;
+  border-radius: 6px;
+}
+
+.layout__sidebar__link:hover {
+  border-left-color: var(--va-primary);
+  background: color-mix(in srgb, var(--va-primary) 12%, transparent);
+}
+
+.layout__sidebar__link--disabled {
+  pointer-events: none;
+  opacity: 0.45;
+}
+
+.layout__link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.25rem;
+  border-bottom: 3px solid transparent;
+  font-weight: 600;
+}
+
+.layout__link.router-link-active,
+.layout__link.router-link-exact-active {
+  border-bottom-color: var(--va-primary);
+}
+
+.layout__main {
+  box-sizing: border-box;
+  min-height: calc(100vh - var(--layout-footer-height));
+  padding: calc(var(--layout-header-height)) clamp(1rem, 2vw, 2rem) clamp(1rem, 2vw, 2rem);
+}
+
+.layout__router {
+  margin-top: 1rem;
+  min-width: 100%;
+}
+
+.layout__footer {
+  height: var(--layout-footer-height);
+  border-top: 1px solid var(--va-background-border);
+  background: var(--va-primary);
+  color: var(--va-text-inverted);
+  padding: 1rem clamp(1rem, 2vw, 2rem);
 }

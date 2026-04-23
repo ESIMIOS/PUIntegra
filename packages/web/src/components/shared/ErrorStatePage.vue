@@ -64,8 +64,7 @@ const primaryAction = computed(() => {
   }
 
   if (
-    (authStore.activeRole === ROLE.INSTITUTION_ADMIN ||
-      authStore.activeRole === ROLE.INSTITUTION_OPERATOR) &&
+    (authStore.activeRole === ROLE.INSTITUTION_ADMIN || authStore.activeRole === ROLE.INSTITUTION_OPERATOR) &&
     institutionStore.activeRfc
   ) {
     return {
@@ -81,10 +80,7 @@ const primaryAction = computed(() => {
 });
 
 const countdownProgress = computed(() =>
-  Math.max(
-    0,
-    Math.round((secondsRemaining.value / LOGIN_REDIRECT_SECONDS) * 100),
-  ),
+  Math.max(0, Math.round((secondsRemaining.value / LOGIN_REDIRECT_SECONDS) * 100)),
 );
 const iconSize = "11rem";
 
@@ -131,99 +127,23 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <section class="error-state" aria-live="polite">
-    <div class="error-state__graphic" :aria-label="graphicLabel">
-      <VaIcon :name="icon" :size="iconSize" />
-    </div>
-
-    <p class="error-state__status">{{ status }}</p>
-    <h1>{{ title }}</h1>
-    <p class="error-state__message">{{ message }}</p>
-
-    <div v-if="isLoginCountdownActive" class="error-state__countdown">
-      <p>
-        Te llevaremos al inicio de sesión en {{ secondsRemaining }} segundos.
-      </p>
-      <VaProgressBar
-        class="error-state__progress"
-        :model-value="countdownProgress"
-        color="danger"
-        rounded
-        size="small"
-      />
-    </div>
-
-    <div class="error-state__actions">
-      <VaButton v-if="primaryAction" color="primary" :to="primaryAction.to">
-        {{ primaryAction.label }}
-      </VaButton>
-      <VaButton preset="secondary" :to="routePaths.siteHome">
-        Ir a la página de inicio
-      </VaButton>
+  <section class="flex row w-full h-full align-center justify-center" aria-live="polite">
+    <div class="flex flex-col sm12 align-center justify-center">
+      <VaIcon :name="icon" :size="iconSize" color="danger" />
+      <p class="danger bold">{{ status }}</p>
+      <h1 class="danger fs-5">{{ title }}</h1>
+      <p class="fs-2 p-4">{{ message }}</p>
+      <div v-if="isLoginCountdownActive">
+        <p>Te llevaremos al inicio de sesión en {{ secondsRemaining }} segundos.</p>
+        <VaProgressBar class="p-4" :model-value="countdownProgress" color="danger" rounded size="large" />
+      </div>
+      <div class="flex gap-6">
+        <VaButton v-if="primaryAction" color="primary" :to="primaryAction.to">
+          {{ primaryAction.label }}
+        </VaButton>
+        <VaSpacer class="spacer" />
+        <VaButton preset="secondary" :to="routePaths.siteHome">Ir a la página de inicio</VaButton>
+      </div>
     </div>
   </section>
 </template>
-
-<style scoped>
-.error-state {
-  display: grid;
-  justify-items: center;
-  width: min(72rem, 100%);
-  gap: 1.5rem;
-  color: var(--va-text-primary);
-}
-
-.error-state__graphic {
-  line-height: 1;
-  color: var(--va-danger);
-}
-
-.error-state__status {
-  margin: 0;
-  color: var(--va-danger);
-  font-size: 1.15rem;
-  font-weight: 700;
-  letter-spacing: 0;
-}
-
-.error-state h1 {
-  width: min(90vw, 58rem);
-  margin: 0;
-  color: var(--va-danger);
-  font-size: clamp(2.2rem, 3.6vw, 3.8rem);
-  letter-spacing: 0;
-  line-height: 1.1;
-  text-wrap: pretty;
-}
-
-.error-state__message {
-  width: min(90vw, 56rem);
-  margin: 0;
-  color: var(--va-text-secondary);
-  font-size: clamp(1.05rem, 1.6vw, 1.35rem);
-  line-height: 1.6;
-  text-wrap: pretty;
-}
-
-.error-state__countdown {
-  display: grid;
-  width: min(34rem, 100%);
-  gap: 0.75rem;
-}
-
-.error-state__countdown p {
-  margin: 0;
-  color: var(--va-text-primary);
-}
-
-.error-state__progress {
-  width: 100%;
-}
-
-.error-state__actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 1rem;
-}
-</style>

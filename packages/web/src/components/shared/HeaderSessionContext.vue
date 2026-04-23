@@ -11,13 +11,13 @@
  * - 0.0.1	(2026-04-12)	Contexto visual de sesión para headers autenticados.	@antigravity
  */
 
-import { computed, ref } from 'vue';
-import { useRouter } from 'vue-router';
-import { RoleSchema } from '@shared';
-import { z } from 'zod';
-import { routePaths } from '@/shared/constants/routePaths';
-import { useAuthSession } from '@/composables/useAuthSession';
-import SessionContextModal from '@/components/shared/SessionContextModal.vue';
+import { computed, ref } from "vue";
+import { useRouter } from "vue-router";
+import { RoleSchema } from "@shared";
+import { z } from "zod";
+import { routePaths } from "@/shared/constants/routePaths";
+import { useAuthSession } from "@/composables/useAuthSession";
+import SessionContextModal from "@/components/shared/SessionContextModal.vue";
 
 const router = useRouter();
 const { authStore, applyContext } = useAuthSession();
@@ -27,11 +27,11 @@ const showLogoutModal = ref(false);
 const showContextModal = ref(false);
 const switchingContext = ref(false);
 
-const displayName = computed(() => authStore.name ?? 'Sin nombre');
-const displayEmail = computed(() => authStore.email ?? 'Sin correo');
+const displayName = computed(() => authStore.name ?? "Sin nombre");
+const displayEmail = computed(() => authStore.email ?? "Sin correo");
 const displayRole = computed(() => authStore.activeRole);
-const displayRfc = computed(() => authStore.activeContext?.rfc ?? '');
-const displayIcon = computed(() => authStore.emojiIcon || 'person');
+const displayRfc = computed(() => authStore.activeContext?.rfc ?? "");
+const displayIcon = computed(() => authStore.emojiIcon || "person");
 
 async function goToAccountSettings() {
   showAccountMenu.value = false;
@@ -63,13 +63,9 @@ async function applySelectedContext(context: { role: z.infer<typeof RoleSchema>;
 
 <template>
   <aside class="header-session-context" aria-label="Contexto de sesión">
-    <VaMenu v-model="showAccountMenu">
+    <VaDropdown>
       <template #anchor>
-        <button
-          class="header-session-context__identity-trigger"
-          type="button"
-          aria-label="Abrir menú de cuenta"
-        >
+        <button class="header-session-context__identity-trigger" type="button" aria-label="Abrir menú de cuenta">
           <VaAvatar class="header-session-context__avatar" color="primary" size="small">
             <span v-if="authStore.emojiIcon">{{ authStore.emojiIcon }}</span>
             <VaIcon v-else :name="displayIcon" />
@@ -80,18 +76,44 @@ async function applySelectedContext(context: { role: z.infer<typeof RoleSchema>;
           </div>
         </button>
       </template>
-      <VaList>
-        <VaListItem @click="goToAccountSettings">Cuenta: ajustes</VaListItem>
-        <VaListItem @click="goToAccountLogs">Cuenta: logs</VaListItem>
-        <VaListItem @click="showLogoutModal = true">Cerrar sesión</VaListItem>
-      </VaList>
-    </VaMenu>
+      <VaDropdownContent class="mt-3">
+        <VaList>
+          <VaListLabel>Cuenta</VaListLabel>
+          <VaListItem class="cp" @click="goToAccountSettings">
+            <VaListItemSection icon class="mr0 ml0">
+              <VaIcon name="manage_accounts" />
+            </VaListItemSection>
+            <VaListItemSection>
+              <VaListItemLabel>Configuración</VaListItemLabel>
+            </VaListItemSection>
+          </VaListItem>
+          <VaListItem class="cp" @click="goToAccountLogs">
+            <VaListItemSection icon class="mr0 ml0">
+              <VaIcon name="receipt_long" />
+            </VaListItemSection>
+            <VaListItemSection>
+              <VaListItemLabel>Logs</VaListItemLabel>
+            </VaListItemSection>
+          </VaListItem>
+
+          <VaListSeparator class="" />
+          <VaListItem class="cp" @click="showLogoutModal = true">
+            <VaListItemSection icon class="mr0 ml0">
+              <VaIcon name="logout" />
+            </VaListItemSection>
+            <VaListItemSection>
+              <VaListItemLabel>Cerrar sesión</VaListItemLabel>
+            </VaListItemSection>
+          </VaListItem>
+        </VaList>
+      </VaDropdownContent>
+    </VaDropdown>
 
     <button
       class="header-session-context__context-trigger"
       type="button"
       aria-label="Cambiar contexto de rol y RFC"
-      @click="authStore.availableContexts.length>1 && !switchingContext ? showContextModal = true : null"
+      @click="authStore.availableContexts.length > 1 && !switchingContext ? (showContextModal = true) : null"
     >
       <span class="header-session-context__context-label">Rol</span>
       <strong class="header-session-context__context-value">{{ displayRole }}</strong>
@@ -100,21 +122,12 @@ async function applySelectedContext(context: { role: z.infer<typeof RoleSchema>;
     </button>
   </aside>
 
-  <VaModal
-    v-model="showLogoutModal"
-    title="Confirmar cierre de sesión"
-    hide-default-actions
-    max-width="28rem"
-  >
+  <VaModal v-model="showLogoutModal" title="Confirmar cierre de sesión" hide-default-actions max-width="28rem">
     <p>¿Deseas cerrar la sesión actual?</p>
     <template #footer>
       <div class="header-session-context__modal-actions">
-        <VaButton preset="secondary" @click="showLogoutModal = false">
-          Cancelar
-        </VaButton>
-        <VaButton color="danger" @click="confirmLogout">
-          Cerrar sesión
-        </VaButton>
+        <VaButton preset="secondary" @click="showLogoutModal = false">Cancelar</VaButton>
+        <VaButton color="danger" @click="confirmLogout">Cerrar sesión</VaButton>
       </div>
     </template>
   </VaModal>

@@ -12,13 +12,13 @@ import AppLogo from "@/components/shared/AppLogo.vue";
 </script>
 
 <template>
-  <VaLayout class="h-full w-full fixed">
+  <VaLayout class="layout">
     <template #content>
-      <div class="p-4 h-full w-full">
+      <div class="h-full w-full p-4">
         <main class="flex row h-full align-center justify-center">
           <div class="flex flex-col sm12 md8 lg6 align-center justify-center">
             <AppLogo size="prominent" />
-            <VaDivider />
+            <VaDivider class="p-4" />
             <RouterView />
           </div>
         </main>

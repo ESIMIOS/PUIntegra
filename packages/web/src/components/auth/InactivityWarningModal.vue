@@ -37,8 +37,8 @@ const stayLoggedIn = () => {
       ¿Deseas continuar trabajando?
     </p>
     <template #footer>
-      <VaButton size="small" color="warning" @click="stayLoggedIn">
-        Mantener sesión iniciada
+      <VaButton size="small" color="danger" @click="stayLoggedIn">
+        Mantener sesión abierta
       </VaButton>
     </template>
   </VaModal>
