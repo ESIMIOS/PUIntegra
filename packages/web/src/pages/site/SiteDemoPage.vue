@@ -10,6 +10,7 @@
  */
 import {
   computed,
+  DEFAULT_RFC,
   darkThemeColors,
   domainLabels,
   domainShell,
@@ -93,7 +94,7 @@ const layoutRows = domainValues.map((domain) => ({
         <VaButton preset="secondary" color="secondary">Acción secundaria</VaButton>
         <VaChip color="success">Integración lista</VaChip>
         <VaAlert color="info" outline>Estado informativo de operación.</VaAlert>
-        <VaInput label="RFC" placeholder="XAXX010101000" />
+        <VaInput label="RFC" :placeholder="DEFAULT_RFC" />
         <div class="design-demo__progress">
           <span>Progreso de sincronización</span>
           <VaProgressBar :model-value="72" color="success" rounded />

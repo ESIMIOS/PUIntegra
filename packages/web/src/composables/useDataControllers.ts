@@ -50,6 +50,19 @@ export function useInstitutionSettingsController() {
 }
 
 /**
+ * @description Expone alta institucional de backoffice mediante API HTTP.
+ */
+export function useInstitutionOnboardingController() {
+  const store = useDataStore();
+  return {
+    isSaving: computed(() => store.isSaving),
+    errorMessage: computed(() => store.userErrorMessage),
+    create: (input: Parameters<typeof store.createInstitutionOnboarding>[0]) => store.createInstitutionOnboarding(input),
+    retry: () => store.clearError()
+  };
+}
+
+/**
  * @description Expone operaciones de permisos institucionales y de sistema.
  */
 export function usePermissionsController() {

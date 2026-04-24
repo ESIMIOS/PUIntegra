@@ -3,6 +3,9 @@ import { where } from 'firebase/firestore';
 import {
   COMMERCIAL_PLAN,
   COMMERCIAL_PLAN_STATUS,
+  DEFAULT_RFC,
+  PERMISSION_STATUS,
+  ROLE,
   SYSTEM_RFC
 } from '@shared';
 import { APP_DATA_ERROR_KIND } from '@/shared/errors/appErrors';
@@ -50,15 +53,15 @@ describe('firebase data gateway', () => {
 
   it('filters reserved system RFC from institution reads', async () => {
     collectionDocs = [
-      { data: () => institution('XAXX010101000') },
+      { data: () => institution(DEFAULT_RFC) },
       { data: () => institution(SYSTEM_RFC) }
     ];
 
-    await expect(listInstitutions()).resolves.toEqual([institution('XAXX010101000')]);
+    await expect(listInstitutions()).resolves.toEqual([institution(DEFAULT_RFC)]);
   });
 
   it('rejects invalid Firestore payloads before returning data', async () => {
-    collectionDocs = [{ data: () => ({ RFC: 'XAXX010101000' }) }];
+    collectionDocs = [{ data: () => ({ RFC: DEFAULT_RFC }) }];
 
     await expect(listInstitutions()).rejects.toMatchObject({
       kind: APP_DATA_ERROR_KIND.VALIDATION
@@ -69,10 +72,10 @@ describe('firebase data gateway', () => {
     collectionDocs = [{
       data: () => ({
         permissionId: 'perm-institution-admin-001',
-        RFC: 'XAXX010101000',
+        RFC: DEFAULT_RFC,
         email: 'admin@example.test',
-        role: 'INSTITUTION_ADMIN',
-        status: 'GRANTED',
+        role: ROLE.INSTITUTION_ADMIN,
+        status: PERMISSION_STATUS.GRANTED,
         updates: [],
         createdAt: 1710000000000,
         updatedAt: 1710000000000

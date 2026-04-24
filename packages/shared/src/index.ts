@@ -1,6 +1,8 @@
 export {
   ROLE,
   SYSTEM_RFC,
+  DEFAULT_RFC,
+  DEFAULT_FUB,
   roleValues,
   authenticatedRoleValues,
   institutionRoleValues,
@@ -165,6 +167,7 @@ export type {
 } from './schemas/api-response.schema';
 
 export {
+  LOG_SEVERITY,
   logSeverityValues,
   LogSeveritySchema,
   MessageCodeSchema,

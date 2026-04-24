@@ -12,7 +12,7 @@
 import { flushPromises } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { ROLE } from '@shared';
+import { DEFAULT_RFC, ROLE, SYSTEM_RFC } from '@shared';
 import HeaderSessionContext from '@/components/shared/HeaderSessionContext.vue';
 import { useAuthStore } from '@/stores/authStore';
 import { useInstitutionStore } from '@/stores/institutionStore';
@@ -65,12 +65,12 @@ function mountComponent() {
           emits: ['confirm', 'update:modelValue'],
           template: `
             <div v-if="modelValue">
-              <button
-                type="button"
-                @click="$emit('confirm', { role: 'SYSTEM_ADMINISTRATOR', rfc: 'IEC120914FV8' })"
-              >
-                Aplicar contexto
-              </button>
+                <button
+                  type="button"
+                @click="$emit('confirm', { role: '${ROLE.SYSTEM_ADMINISTRATOR}', rfc: '${SYSTEM_RFC}' })"
+                >
+                  Aplicar contexto
+                </button>
             </div>
           `
         }
@@ -91,11 +91,11 @@ describe('HeaderSessionContext', () => {
       email: 'admin@example.test',
       emojiIcon: 'FI',
       activeRole: ROLE.SYSTEM_ADMINISTRATOR,
-      activeRfc: 'IEC120914FV8',
-      allowedInstitutionRfcs: ['XAXX010101000'],
+      activeRfc: SYSTEM_RFC,
+      allowedInstitutionRfcs: [DEFAULT_RFC],
       availableContexts: [
-        { role: ROLE.INSTITUTION_ADMIN, rfc: 'XAXX010101000' },
-        { role: ROLE.SYSTEM_ADMINISTRATOR, rfc: 'IEC120914FV8' }
+        { role: ROLE.INSTITUTION_ADMIN, rfc: DEFAULT_RFC },
+        { role: ROLE.SYSTEM_ADMINISTRATOR, rfc: SYSTEM_RFC }
       ]
     });
     const authStore = useAuthStore();
@@ -106,22 +106,22 @@ describe('HeaderSessionContext', () => {
       email: 'admin@example.test',
       emojiIcon: 'FI',
       activeRole: ROLE.INSTITUTION_ADMIN,
-      activeRfc: 'XAXX010101000',
-      allowedInstitutionRfcs: ['XAXX010101000'],
+      activeRfc: DEFAULT_RFC,
+      allowedInstitutionRfcs: [DEFAULT_RFC],
       availableContexts: [
-        { role: ROLE.INSTITUTION_ADMIN, rfc: 'XAXX010101000' },
-        { role: ROLE.SYSTEM_ADMINISTRATOR, rfc: 'IEC120914FV8' }
+        { role: ROLE.INSTITUTION_ADMIN, rfc: DEFAULT_RFC },
+        { role: ROLE.SYSTEM_ADMINISTRATOR, rfc: SYSTEM_RFC }
       ]
     });
-    institutionStore.setActiveRfc('XAXX010101000');
+    institutionStore.setActiveRfc(DEFAULT_RFC);
   });
 
   it('renders current user identity and context', () => {
     const wrapper = mountComponent();
     expect(wrapper.text()).toContain('Usuario Firebase');
     expect(wrapper.text()).toContain('admin@example.test');
-    expect(wrapper.text()).toContain('INSTITUTION_ADMIN');
-    expect(wrapper.text()).toContain('XAXX010101000');
+    expect(wrapper.text()).toContain(ROLE.INSTITUTION_ADMIN);
+    expect(wrapper.text()).toContain(DEFAULT_RFC);
   });
 
   it('opens account links actions', async () => {

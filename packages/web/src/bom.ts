@@ -95,6 +95,8 @@ export { createRouteMeta, mergeRouteMeta } from '@/router/metaSchema';
 
 export {
   AuthenticatedRoleSchema,
+  DEFAULT_FUB,
+  DEFAULT_RFC,
   ROLE,
   RoleSchema,
   authenticatedRoleValues,
@@ -116,8 +118,6 @@ export {
 } from '@/shared/constants/domains';
 
 export {
-  DEFAULT_FUB,
-  DEFAULT_RFC,
   allDocumentedPaths,
   routePaths
 } from '@/shared/constants/routePaths';

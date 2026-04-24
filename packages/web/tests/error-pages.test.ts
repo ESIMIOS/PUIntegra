@@ -12,8 +12,8 @@
 import { createPinia, getActivePinia, setActivePinia } from 'pinia';
 import { nextTick } from 'vue';
 import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
-import { ROLE } from '@shared';
-import { DEFAULT_RFC, routePaths } from '@/shared/constants/routePaths';
+import { DEFAULT_RFC, ROLE } from '@shared';
+import { routePaths } from '@/shared/constants/routePaths';
 import { useAuthStore } from '@/stores/authStore';
 import { useInstitutionStore } from '@/stores/institutionStore';
 import Error403Page from '@/pages/error/Error403Page.vue';

@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { APP_AUTH_ERROR_KIND, APP_DATA_ERROR_KIND, AppDataError } from '@/shared/errors/appErrors';
+import { DEFAULT_RFC, PERMISSION_STATUS, ROLE, SYSTEM_RFC } from '@shared';
 
 const mocks = vi.hoisted(() => {
   const auth = { currentUser: null as null | { getIdToken: () => Promise<string> } };
@@ -108,10 +109,10 @@ describe('firebase auth gateway', () => {
     });
     mocks.listPermissionsByEmail.mockResolvedValue([
       {
-        RFC: 'XAXX010101000',
+        RFC: DEFAULT_RFC,
         email: 'admin@example.test',
-        role: 'INSTITUTION_ADMIN',
-        status: 'GRANTED',
+        role: ROLE.INSTITUTION_ADMIN,
+        status: PERMISSION_STATUS.GRANTED,
         updates: []
       }
     ]);
@@ -149,8 +150,8 @@ describe('firebase auth gateway', () => {
       name: 'Usuario Firebase',
       email: 'admin@example.test',
       emojiIcon: null,
-      contexts: [{ role: 'INSTITUTION_ADMIN', rfc: 'XAXX010101000' }]
-    }, { role: 'INSTITUTION_ADMIN', rfc: 'XAXX010101000' });
+      contexts: [{ role: ROLE.INSTITUTION_ADMIN, rfc: DEFAULT_RFC }]
+    }, { role: ROLE.INSTITUTION_ADMIN, rfc: DEFAULT_RFC });
 
     expect(mocks.getUserById).toHaveBeenCalledTimes(1);
     expect(globalThis.fetch).not.toHaveBeenCalledWith('/api/auth/events/login', expect.anything());
@@ -173,8 +174,8 @@ describe('firebase auth gateway', () => {
       name: 'Usuario Firebase',
       email: 'admin@example.test',
       emojiIcon: null,
-      contexts: [{ role: 'SYSTEM_ADMINISTRATOR', rfc: 'IEC120914FV8' }]
-    }, { role: 'SYSTEM_ADMINISTRATOR', rfc: 'IEC120914FV8' });
+      contexts: [{ role: ROLE.SYSTEM_ADMINISTRATOR, rfc: SYSTEM_RFC }]
+    }, { role: ROLE.SYSTEM_ADMINISTRATOR, rfc: SYSTEM_RFC });
     vi.mocked(globalThis.fetch).mockClear();
 
     await logout();
@@ -211,7 +212,7 @@ describe('firebase auth gateway', () => {
     } as unknown as { getIdToken: () => Promise<string> };
     globalThis.localStorage.setItem(
       'puintegra:web:active-session-context:v1',
-      JSON.stringify({ role: 'INSTITUTION_ADMIN', rfc: 'XAXX010101000' })
+      JSON.stringify({ role: ROLE.INSTITUTION_ADMIN, rfc: DEFAULT_RFC })
     );
     mocks.getUserById.mockResolvedValue({
       userId: 'dev-user-001',
@@ -223,10 +224,10 @@ describe('firebase auth gateway', () => {
     });
     mocks.listPermissionsByEmail.mockResolvedValue([
       {
-        RFC: 'XAXX010101000',
+        RFC: DEFAULT_RFC,
         email: 'admin@example.test',
-        role: 'INSTITUTION_ADMIN',
-        status: 'GRANTED',
+        role: ROLE.INSTITUTION_ADMIN,
+        status: PERMISSION_STATUS.GRANTED,
         updates: []
       }
     ]);

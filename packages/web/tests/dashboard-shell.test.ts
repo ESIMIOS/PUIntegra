@@ -12,20 +12,21 @@
 import DashboardShell from '@/components/shared/DashboardShell.vue';
 import type { NavigationLink } from '@/shared/constants/navigationCatalog';
 import { mountWithVuestic } from './utils/mount';
+import { DEFAULT_RFC } from '@shared';
 
 const menuItems: NavigationLink[] = [
   {
     id: 'app-dashboard',
     label: 'Dashboard',
     icon: 'dashboard',
-    to: '/app/XAXX010101000/dashboard',
+    to: `/app/${DEFAULT_RFC}/dashboard`,
     disabled: false
   },
   {
     id: 'app-logs',
     label: 'Logs',
     icon: 'receipt_long',
-    to: '/app/XAXX010101000/logs',
+    to: `/app/${DEFAULT_RFC}/logs`,
     disabled: false
   }
 ];

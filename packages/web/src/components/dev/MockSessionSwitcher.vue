@@ -10,9 +10,8 @@
  * - 0.0.1	(2026-04-10)	Versión inicial del archivo.	@tirsomartinezreyes
  */
 import { computed, ref } from "vue";
-import { ROLE, roleValues } from "@shared";
+import { ROLE, DEFAULT_FUB, DEFAULT_RFC, roleValues } from "@shared";
 import { domainOptions } from "@/shared/constants/domains";
-import { DEFAULT_RFC, DEFAULT_FUB } from "@/shared/constants/routePaths";
 import { buildNavigationLinks } from "@/shared/constants/navigationCatalog";
 import { useSessionInactivity } from "@/composables/useSessionInactivity";
 import { useRoute } from "vue-router";
