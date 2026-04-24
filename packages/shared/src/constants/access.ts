@@ -9,6 +9,8 @@
  */
 
 export const SYSTEM_RFC = 'IEC120914FV8';
+export const DEFAULT_RFC = 'XAXX010101000';
+export const DEFAULT_FUB = 'FUB-0001';
 
 export const ROLE = {
   ANONYMOUS: 'ANONYMOUS',

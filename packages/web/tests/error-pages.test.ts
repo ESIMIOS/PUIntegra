@@ -1,24 +1,25 @@
 /**
  * @package web
  * @name error-pages.test.ts
- * @version 0.0.1
+ * @version 0.0.2
  * @description Verifica contenido, acciones contextuales y redirección automática del dominio de errores.
  * @author @codex
  * @changelog
+ * - 0.0.2	(2026-04-23)	Migra montaje de pruebas a mountWithVuestic y mantiene helpers en alcance de módulo.	@codex
  * - 0.0.1	(2026-04-15)	Cobertura inicial de páginas de error.	@codex
  */
 
-import { mount } from '@vue/test-utils';
 import { createPinia, getActivePinia, setActivePinia } from 'pinia';
 import { nextTick } from 'vue';
 import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
-import { ROLE } from '@shared';
-import { DEFAULT_RFC, routePaths } from '@/shared/constants/routePaths';
+import { DEFAULT_RFC, ROLE } from '@shared';
+import { routePaths } from '@/shared/constants/routePaths';
 import { useAuthStore } from '@/stores/authStore';
 import { useInstitutionStore } from '@/stores/institutionStore';
 import Error403Page from '@/pages/error/Error403Page.vue';
 import Error404Page from '@/pages/error/Error404Page.vue';
 import Error500Page from '@/pages/error/Error500Page.vue';
+import { mountWithVuestic } from './utils/mount';
 
 const push = vi.fn();
 
@@ -49,7 +50,7 @@ const globalStubs = {
 };
 
 function mountErrorPage(component: typeof Error403Page) {
-  return mount(component, {
+  return mountWithVuestic(component, {
     global: {
       plugins: [getActivePinia() ?? createPinia()],
       stubs: globalStubs

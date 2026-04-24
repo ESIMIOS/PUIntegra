@@ -30,6 +30,7 @@ Define the local Cloud Functions + Hono foundation for PUIntegra API development
 - `GET /health` returns `{ "ok": true, "data": { "service": "puintegra-api" } }`.
 - `POST /api/auth/events/login` verifies a Firebase bearer token and writes a `USER_ACCOUNT_LOGIN` account-level log.
 - `POST /api/auth/events/logout` verifies a Firebase bearer token and writes a `USER_ACCOUNT_LOGOUT` account-level log.
+- `POST /api/admin/institutions` verifies a Firebase bearer token, authorizes only `SYSTEM_ADMINISTRATOR`, validates onboarding payload, rejects reserved RFCs (`SYSTEM_RFC`, `DEFAULT_RFC`), and writes institution + bootstrap permission + audit logs.
 
 ## Current trigger
 

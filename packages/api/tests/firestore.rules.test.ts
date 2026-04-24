@@ -11,21 +11,28 @@ import {
   type RulesTestEnvironment,
 } from "@firebase/rules-unit-testing";
 import { doc, getDoc, setDoc } from "firebase/firestore";
+import {
+  DEFAULT_RFC,
+  PERMISSION_STATUS,
+  ROLE,
+  SYSTEM_RFC
+} from "@puintegra/shared";
 
 const RULES_PATH = resolve(dirname(fileURLToPath(import.meta.url)), "../../../firebase/firestore/firestore.rules");
 const FIRESTORE_RULES = readFileSync(RULES_PATH, "utf8");
 const NOW = 1710000000000;
-const SYSTEM_RFC = "IEC120914FV8";
-const TENANT_OWNER_RFC = "XAXX010101000";
+const TENANT_OWNER_RFC = DEFAULT_RFC;
 const TENANT_OTHER_RFC = "ABCD010203EF4";
 
 let testEnv: RulesTestEnvironment;
+type PermissionStatus = (typeof PERMISSION_STATUS)[keyof typeof PERMISSION_STATUS];
+type Role = (typeof ROLE)[keyof typeof ROLE];
 
 function resolveEmulatorHost() {
   const [host = "127.0.0.1", portValue = "8081"] = (process.env.FIRESTORE_EMULATOR_HOST ?? "127.0.0.1:8081").split(":");
   const port = Number.parseInt(portValue, 10);
   if (!Number.isInteger(port)) {
-    throw new Error(`Invalid FIRESTORE_EMULATOR_HOST: ${process.env.FIRESTORE_EMULATOR_HOST}`);
+    throw new TypeError(`Invalid FIRESTORE_EMULATOR_HOST: ${process.env.FIRESTORE_EMULATOR_HOST}`);
   }
   return { host, port };
 }
@@ -49,8 +56,8 @@ function permissionFixture(
   permissionId: string,
   email: string,
   RFC: string,
-  status: "GRANTED" | "DENIED" | "REVOKED" = "GRANTED",
-  role: "SYSTEM_ADMINISTRATOR" | "INSTITUTION_ADMIN" | "INSTITUTION_OPERATOR" = "INSTITUTION_ADMIN",
+  status: PermissionStatus = PERMISSION_STATUS.GRANTED,
+  role: Role = ROLE.INSTITUTION_ADMIN,
 ) {
   return {
     permissionId,
@@ -85,23 +92,53 @@ describe("firestore security rules", () => {
       await setDoc(doc(db, "users", "uid-other"), userFixture("uid-other", "other@example.test"));
       await setDoc(
         doc(db, "permissions", makePermissionDocumentId("owner@example.test", TENANT_OWNER_RFC)),
-        permissionFixture("perm-owner-granted", "owner@example.test", TENANT_OWNER_RFC, "GRANTED", "INSTITUTION_ADMIN"),
+        permissionFixture(
+          "perm-owner-granted",
+          "owner@example.test",
+          TENANT_OWNER_RFC,
+          PERMISSION_STATUS.GRANTED,
+          ROLE.INSTITUTION_ADMIN
+        ),
       );
       await setDoc(
         doc(db, "permissions", makePermissionDocumentId("owner@example.test", TENANT_OTHER_RFC)),
-        permissionFixture("perm-owner-denied", "owner@example.test", TENANT_OTHER_RFC, "DENIED", "INSTITUTION_ADMIN"),
+        permissionFixture(
+          "perm-owner-denied",
+          "owner@example.test",
+          TENANT_OTHER_RFC,
+          PERMISSION_STATUS.DENIED,
+          ROLE.INSTITUTION_ADMIN
+        ),
       );
       await setDoc(
         doc(db, "permissions", makePermissionDocumentId("owner@example.test", SYSTEM_RFC)),
-        permissionFixture("perm-owner-system", "owner@example.test", SYSTEM_RFC, "GRANTED", "SYSTEM_ADMINISTRATOR"),
+        permissionFixture(
+          "perm-owner-system",
+          "owner@example.test",
+          SYSTEM_RFC,
+          PERMISSION_STATUS.GRANTED,
+          ROLE.SYSTEM_ADMINISTRATOR
+        ),
       );
       await setDoc(
         doc(db, "permissions", makePermissionDocumentId("other@example.test", TENANT_OTHER_RFC)),
-        permissionFixture("perm-other-granted", "other@example.test", TENANT_OTHER_RFC, "GRANTED", "INSTITUTION_ADMIN"),
+        permissionFixture(
+          "perm-other-granted",
+          "other@example.test",
+          TENANT_OTHER_RFC,
+          PERMISSION_STATUS.GRANTED,
+          ROLE.INSTITUTION_ADMIN
+        ),
       );
       await setDoc(
         doc(db, "permissions", makePermissionDocumentId("other@example.test", TENANT_OWNER_RFC)),
-        permissionFixture("perm-other-denied", "other@example.test", TENANT_OWNER_RFC, "DENIED", "INSTITUTION_ADMIN"),
+        permissionFixture(
+          "perm-other-denied",
+          "other@example.test",
+          TENANT_OWNER_RFC,
+          PERMISSION_STATUS.DENIED,
+          ROLE.INSTITUTION_ADMIN
+        ),
       );
       await setDoc(
         doc(db, "permissions", makePermissionDocumentId("collaborator@example.test", TENANT_OWNER_RFC)),
@@ -109,8 +146,8 @@ describe("firestore security rules", () => {
           "perm-collaborator-granted",
           "collaborator@example.test",
           TENANT_OWNER_RFC,
-          "GRANTED",
-          "INSTITUTION_OPERATOR",
+          PERMISSION_STATUS.GRANTED,
+          ROLE.INSTITUTION_OPERATOR,
         ),
       );
       await setDoc(doc(db, "institutions", TENANT_OWNER_RFC), { RFC: TENANT_OWNER_RFC });

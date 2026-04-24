@@ -1,52 +1,57 @@
 /**
  * @package web
  * @name site-layout.test.ts
- * @version 0.0.1
+ * @version 0.0.2
  * @description Verifica la estructura de encabezado del layout público.
  * @author @antigravity
  * @changelog
+ * - 0.0.2	(2026-04-23)	Migra montaje de pruebas a mountWithVuestic.	@codex
  * - 0.0.1  (2026-04-12)  Cobertura inicial del header de SiteLayout.  @antigravity
  */
 
-import { mount } from '@vue/test-utils';
 import SiteLayout from '@/layouts/SiteLayout.vue';
+import { mountWithVuestic } from './utils/mount';
+
+function mountSiteLayout() {
+  return mountWithVuestic(SiteLayout, {
+    global: {
+      stubs: {
+        RouterLink: {
+          props: ['to'],
+          template: '<a v-bind="$attrs" :href="to" class="router-link-active"><slot /></a>'
+        },
+        RouterView: {
+          template: '<main data-testid="router-view" />'
+        },
+        AppLogo: {
+          template: '<img data-testid="app-logo" alt="PUIntegra">'
+        },
+        ThemeToggle: {
+          template: '<button data-testid="theme-toggle" />'
+        },
+        VaLayout: {
+          template: '<section data-testid="va-layout"><slot name="top" /><slot /><slot name="bottom" /></section>'
+        },
+        VaNavbar: {
+          template: `
+            <header data-testid="site-navbar" :data-fixed="$attrs.fixed !== undefined ? 'true' : undefined">
+              <div data-testid="navbar-left"><slot name="left" /></div>
+              <div data-testid="navbar-center"><slot name="center" /></div>
+              <div data-testid="navbar-right"><slot name="right" /></div>
+            </header>
+          `
+        },
+        VaButton: {
+          template: '<a><slot /></a>'
+        }
+      }
+    }
+  });
+}
 
 describe('SiteLayout', () => {
   it('renders graphic identity, center navigation, and right actions in VaNavbar slots', () => {
-    const wrapper = mount(SiteLayout, {
-      global: {
-        stubs: {
-          RouterLink: {
-            props: ['to'],
-            template: '<a v-bind="$attrs" :href="to" class="router-link-active"><slot /></a>'
-          },
-          RouterView: {
-            template: '<main data-testid="router-view" />'
-          },
-          AppLogo: {
-            template: '<img data-testid="app-logo" alt="PUIntegra">'
-          },
-          ThemeToggle: {
-            template: '<button data-testid="theme-toggle" />'
-          },
-          VaLayout: {
-            template: '<section data-testid="va-layout"><slot name="top" /><slot /><slot name="bottom" /></section>'
-          },
-          VaNavbar: {
-            template: `
-              <header data-testid="site-navbar" :data-fixed="$attrs.fixed !== undefined ? 'true' : undefined">
-                <div data-testid="navbar-left"><slot name="left" /></div>
-                <div data-testid="navbar-center"><slot name="center" /></div>
-                <div data-testid="navbar-right"><slot name="right" /></div>
-              </header>
-            `
-          },
-          VaButton: {
-            template: '<a><slot /></a>'
-          }
-        }
-      }
-    });
+    const wrapper = mountSiteLayout();
 
     expect(wrapper.get('[data-testid="navbar-left"]').find('[data-testid="app-logo"]').exists()).toBe(true);
     expect(wrapper.get('[data-testid="navbar-center"]').text()).toContain('Inicio');

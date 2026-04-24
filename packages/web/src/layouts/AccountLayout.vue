@@ -45,7 +45,7 @@ const backLinks = computed(() => buildNavigationBackLinks(DOMAIN.ACCOUNT, naviga
 <template>
   <DashboardShell
     :menu-items="accountLinks"
-    :domain-title="domainShell[DOMAIN.ADMIN].title"
+    :domain-title="domainShell[DOMAIN.ACCOUNT].title"
     :return-items="backLinks"
   />
 </template>

@@ -1,75 +1,22 @@
 /**
  * @package api
  * @name apiFunction.ts
- * @version 0.0.2
- * @description Expone la función HTTP principal y persiste bitácoras Auth desde Hono.
+ * @version 0.0.3
+ * @description Expone la función HTTP principal del API sobre Firebase Functions.
  * @author @codex
  * @changelog
+ * - 0.0.3	(2026-04-23)	Reduce apiFunction a wiring y delega dependencias/servicios a módulos dedicados.	@codex
  * - 0.0.2	(2026-04-19)	Elimina rol/RFC de eventos login/logout.	@codex
  * - 0.0.1	(2026-04-19)	Mueve la función HTTP API a carpeta functions.	@codex
  */
 
 import { randomUUID } from 'node:crypto';
-import { initializeApp, getApps } from 'firebase-admin/app';
-import { getAuth } from 'firebase-admin/auth';
-import { getFirestore } from 'firebase-admin/firestore';
 import { onRequest } from 'firebase-functions/v2/https';
-import {
-  buildAuthEventLog,
-  type AuthEventName,
-} from '../services/authAuditService.js';
 import { createApiApp } from '../http/createApiApp.js';
-
-type AuthEventWriteInput = {
-  event: AuthEventName;
-  originTraceId: string;
-  userId: string;
-  email?: string | null;
-};
-
-/**
- * @description Inicializa Firebase Admin SDK una sola vez.
- */
-function initializeAdmin() {
-  return getApps()[0] ?? initializeApp();
-}
-
-/**
- * @description Devuelve Firestore usando Admin SDK inicializado.
- */
-function getAdminFirestore() {
-  initializeAdmin();
-  return getFirestore();
-}
-
-/**
- * @description Verifica el token Firebase enviado por el cliente web.
- */
-async function verifyBearerToken(token: string) {
-  initializeAdmin();
-  const decoded = await getAuth().verifyIdToken(token);
-  return {
-    userId: decoded.uid,
-    email: typeof decoded.email === 'string' ? decoded.email : null
-  };
-}
-
-/**
- * @description Persiste una bitácora de login/logout autenticada.
- */
-async function recordAuthEvent(input: AuthEventWriteInput) {
-  const logRef = getAdminFirestore().collection('logs').doc();
-  const log = buildAuthEventLog({
-    ...input,
-    id: logRef.id
-  }, Date.now());
-  await logRef.set(log);
-  return log;
-}
+import { createApiDependencies } from './apiDependencies.js';
 
 const app = createApiApp({
-  verifyBearerToken,
-  recordAuthEvent,
+  ...createApiDependencies(),
   createOriginTraceId: randomUUID
 });
 

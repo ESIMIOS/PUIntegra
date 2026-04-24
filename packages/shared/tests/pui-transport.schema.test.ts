@@ -10,6 +10,8 @@
 
 import { describe, expect, it } from 'vitest';
 import {
+  DEFAULT_FUB,
+  DEFAULT_RFC,
   PUI_FASE_BUSQUEDA,
   PUI_LUGAR_NACIMIENTO,
   PUI_SEXO_ASIGNADO,
@@ -32,9 +34,8 @@ import {
 } from '../src';
 
 const NOW = Date.now();
-const VALID_CASE_ID = 'FUB-0001-550e8400-e29b-41d4-a716-446655440000';
+const VALID_CASE_ID = `${DEFAULT_FUB}-550e8400-e29b-41d4-a716-446655440000`;
 const VALID_CURP = 'AAAA000000HDFXXX00';
-const DEFAULT_RFC = 'XAXX010101000';
 
 const validActivationPayload = {
   id: VALID_CASE_ID,
@@ -184,7 +185,7 @@ describe('PUI domain adapters', () => {
     expect(derived).toMatchObject({
       requestId: VALID_CASE_ID,
       RFC: DEFAULT_RFC,
-      FUB: 'FUB-0001',
+      FUB: DEFAULT_FUB,
       CURP: VALID_CURP,
       missingDate: Date.UTC(2026, 3, 15),
       searchRequestStatus: SEARCH_REQUEST_STATUS.ACTIVE,
@@ -201,7 +202,7 @@ describe('PUI domain adapters', () => {
     expect(derived).toMatchObject({
       findingId: 'finding-001',
       RFC: DEFAULT_RFC,
-      FUB: 'FUB-0001',
+      FUB: DEFAULT_FUB,
       CURP: VALID_CURP,
       searchRequestPhase: SEARCH_REQUEST_PHASE.SEARCH_REQUEST_HISTORICAL,
       data: validMatchPayload
@@ -209,7 +210,7 @@ describe('PUI domain adapters', () => {
   });
 
   it('throws when PUI ids do not follow FUB-UUID4 format', () => {
-    expect(extractFubFromPuiCaseId(VALID_CASE_ID)).toBe('FUB-0001');
+    expect(extractFubFromPuiCaseId(VALID_CASE_ID)).toBe(DEFAULT_FUB);
     expect(() => extractFubFromPuiCaseId('not-a-pui-id')).toThrow();
     expect(() => puiActivationPayloadToRequestCreateData({
       ...validActivationPayload,

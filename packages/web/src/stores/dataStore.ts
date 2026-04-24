@@ -40,6 +40,7 @@ import {
   updatePermission,
   updateUser
 } from '@/gateways/firebaseDataGateway';
+import { createInstitutionOnboarding } from '@/gateways/institutionOnboardingGateway';
 import { AppDataError, APP_DATA_ERROR_KIND, isAppDataError } from '@/shared/errors/appErrors';
 import { webUiDataErrorByKind } from '@/shared/constants/systemMessages';
 
@@ -48,6 +49,10 @@ import { webUiDataErrorByKind } from '@/shared/constants/systemMessages';
  */
 function resolveUserErrorMessage(error: unknown) {
   if (isAppDataError(error)) {
+    const explicitMessage = error.details?.displayMessage;
+    if (typeof explicitMessage === 'string' && explicitMessage.trim().length > 0) {
+      return explicitMessage;
+    }
     return webUiDataErrorByKind[error.kind].message;
   }
   return webUiDataErrorByKind[APP_DATA_ERROR_KIND.UNKNOWN].message;
@@ -124,6 +129,20 @@ export const useDataStore = defineStore('data', {
     },
     listLogs(filters: { RFC?: string; userId?: string } = {}) {
       return this.withLoading(() => listLogs(filters), 'Failed to list logs.');
+    },
+    createInstitutionOnboarding(input: {
+      RFC: string;
+      name: string;
+      plan: Institution['plan'];
+      planStatus: Institution['planStatus'];
+      planStartAt: number;
+      planFinishAt: number;
+      adminEmail: string;
+    }) {
+      return this.withSaving(
+        () => createInstitutionOnboarding(input),
+        'Failed to create institution onboarding.'
+      );
     },
     async updateAccountSettings(input: {
       userId: string;

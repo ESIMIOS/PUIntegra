@@ -1,22 +1,24 @@
 /**
  * @package web
  * @name header-session-context.test.ts
- * @version 0.0.1
- * @description Cubre render de identidad, menú de cuenta, confirmación de logout y selector de contexto.
+ * @version 0.0.2
+ * @description Cubre render de identidad, menú de cuenta, confirmación de logout y selector de contexto usando montaje con Vuestic.
  * @author @tirsomartinezreyes
  * @changelog
+ * - 0.0.2	(2026-04-23)	Refactoriza pruebas para usar mountWithVuestic y reducir stubs a los estrictamente necesarios.	@codex
  * - 0.0.1	(2026-04-15)	Versión inicial del archivo.	@tirsomartinezreyes
  */
 
-import { flushPromises, mount } from '@vue/test-utils';
+import { flushPromises } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { ROLE } from '@shared';
+import { DEFAULT_RFC, ROLE, SYSTEM_RFC } from '@shared';
 import HeaderSessionContext from '@/components/shared/HeaderSessionContext.vue';
 import { useAuthStore } from '@/stores/authStore';
 import { useInstitutionStore } from '@/stores/institutionStore';
 import { routePaths } from '@/shared/constants/routePaths';
 import { switchContext } from '@/gateways/firebaseAuthGateway';
+import { mountWithVuestic } from './utils/mount';
 
 const push = vi.fn();
 vi.mock('vue-router', () => ({
@@ -33,6 +35,50 @@ vi.mock('@/gateways/firebaseAuthGateway', async () => {
 
 const mockedSwitchContext = vi.mocked(switchContext);
 
+function mountComponent() {
+  return mountWithVuestic(HeaderSessionContext, {
+    global: {
+      stubs: {
+        VaDropdown: { template: '<div><slot name="anchor" /><slot /></div>' },
+        VaDropdownContent: { template: '<div><slot /></div>' },
+        VaList: { template: '<ul><slot /></ul>' },
+        VaListLabel: { template: '<li><slot /></li>' },
+        VaListItem: {
+          emits: ['click'],
+          template: '<li><button type="button" @click="$emit(\'click\')"><slot /></button></li>'
+        },
+        VaListItemSection: { template: '<span><slot /></span>' },
+        VaListItemLabel: { template: '<span><slot /></span>' },
+        VaListSeparator: { template: '<hr />' },
+        VaModal: {
+          props: ['modelValue', 'title'],
+          emits: ['update:modelValue'],
+          template: `
+            <div v-if="modelValue">
+              <slot />
+              <slot name="footer" />
+            </div>
+          `
+        },
+        SessionContextModal: {
+          props: ['modelValue'],
+          emits: ['confirm', 'update:modelValue'],
+          template: `
+            <div v-if="modelValue">
+                <button
+                  type="button"
+                @click="$emit('confirm', { role: '${ROLE.SYSTEM_ADMINISTRATOR}', rfc: '${SYSTEM_RFC}' })"
+                >
+                  Aplicar contexto
+                </button>
+            </div>
+          `
+        }
+      }
+    }
+  });
+}
+
 describe('HeaderSessionContext', () => {
   beforeEach(() => {
     const pinia = createPinia();
@@ -45,11 +91,11 @@ describe('HeaderSessionContext', () => {
       email: 'admin@example.test',
       emojiIcon: 'FI',
       activeRole: ROLE.SYSTEM_ADMINISTRATOR,
-      activeRfc: 'IEC120914FV8',
-      allowedInstitutionRfcs: ['XAXX010101000'],
+      activeRfc: SYSTEM_RFC,
+      allowedInstitutionRfcs: [DEFAULT_RFC],
       availableContexts: [
-        { role: ROLE.INSTITUTION_ADMIN, rfc: 'XAXX010101000' },
-        { role: ROLE.SYSTEM_ADMINISTRATOR, rfc: 'IEC120914FV8' }
+        { role: ROLE.INSTITUTION_ADMIN, rfc: DEFAULT_RFC },
+        { role: ROLE.SYSTEM_ADMINISTRATOR, rfc: SYSTEM_RFC }
       ]
     });
     const authStore = useAuthStore();
@@ -60,68 +106,22 @@ describe('HeaderSessionContext', () => {
       email: 'admin@example.test',
       emojiIcon: 'FI',
       activeRole: ROLE.INSTITUTION_ADMIN,
-      activeRfc: 'XAXX010101000',
-      allowedInstitutionRfcs: ['XAXX010101000'],
+      activeRfc: DEFAULT_RFC,
+      allowedInstitutionRfcs: [DEFAULT_RFC],
       availableContexts: [
-        { role: ROLE.INSTITUTION_ADMIN, rfc: 'XAXX010101000' },
-        { role: ROLE.SYSTEM_ADMINISTRATOR, rfc: 'IEC120914FV8' }
+        { role: ROLE.INSTITUTION_ADMIN, rfc: DEFAULT_RFC },
+        { role: ROLE.SYSTEM_ADMINISTRATOR, rfc: SYSTEM_RFC }
       ]
     });
-    institutionStore.setActiveRfc('XAXX010101000');
+    institutionStore.setActiveRfc(DEFAULT_RFC);
   });
-
-  function mountComponent() {
-    return mount(HeaderSessionContext, {
-      global: {
-        stubs: {
-          VaDropdown: { template: '<div><slot name="anchor" /><slot /></div>' },
-          VaDropdownContent: { template: '<div><slot /></div>' },
-          VaList: { template: '<ul><slot /></ul>' },
-          VaListLabel: { template: '<li><slot /></li>' },
-          VaListItem: {
-            emits: ['click'],
-            template: '<li><button type="button" @click="$emit(\'click\')"><slot /></button></li>'
-          },
-          VaListItemSection: { template: '<span><slot /></span>' },
-          VaListItemLabel: { template: '<span><slot /></span>' },
-          VaListSeparator: { template: '<hr />' },
-          VaModal: {
-            props: ['modelValue', 'title'],
-            emits: ['update:modelValue'],
-            template: `
-              <div v-if="modelValue">
-                <slot />
-                <slot name="footer" />
-              </div>
-            `
-          },
-          // SessionContextModal (child component) uses VaSelect for context selection.
-          VaSelect: {
-            props: ['modelValue', 'options'],
-            emits: ['update:modelValue'],
-            template: `
-              <select :value="modelValue" @change="$emit('update:modelValue', $event.target.value)">
-                <option v-for="option in options" :key="option.value" :value="option.value">{{ option.text }}</option>
-              </select>
-            `
-          },
-          VaButton: {
-            emits: ['click'],
-            template: '<button type="button" @click="$emit(\'click\')"><slot /></button>'
-          },
-          VaAvatar: { template: '<span><slot /></span>' },
-          VaIcon: { props: ['name'], template: '<span>{{ name }}</span>' }
-        }
-      }
-    });
-  }
 
   it('renders current user identity and context', () => {
     const wrapper = mountComponent();
     expect(wrapper.text()).toContain('Usuario Firebase');
     expect(wrapper.text()).toContain('admin@example.test');
-    expect(wrapper.text()).toContain('INSTITUTION_ADMIN');
-    expect(wrapper.text()).toContain('XAXX010101000');
+    expect(wrapper.text()).toContain(ROLE.INSTITUTION_ADMIN);
+    expect(wrapper.text()).toContain(DEFAULT_RFC);
   });
 
   it('opens account links actions', async () => {
@@ -160,8 +160,6 @@ describe('HeaderSessionContext', () => {
     }
     await contextTrigger.trigger('click');
 
-    const select = wrapper.get('select');
-    await select.setValue(`${ROLE.SYSTEM_ADMINISTRATOR}::IEC120914FV8`);
     const applyButton = wrapper.findAll('button').find((button) => button.text().includes('Aplicar contexto'));
     if (!applyButton) {
       throw new Error('Apply context button not found.');
