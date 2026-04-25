@@ -4,9 +4,10 @@ import {
   COMMERCIAL_PLAN_STATUS,
   PERMISSION_STATUS,
   ROLE,
-  SYSTEM_RFC
+  SYSTEM_MESSAGE_ERROR_KIND,
+  SYSTEM_RFC,
+  type SystemError
 } from '@shared';
-import { AppDataError, APP_DATA_ERROR_KIND } from '@/shared/errors/appErrors';
 import { createInstitutionOnboarding } from '@/gateways/institutionOnboardingGateway';
 
 const mocks = vi.hoisted(() => ({
@@ -84,8 +85,8 @@ describe('institution onboarding gateway', () => {
       planFinishAt: 1798675200000,
       adminEmail: 'owner@example.test'
     })).rejects.toMatchObject({
-      kind: APP_DATA_ERROR_KIND.VALIDATION
-    } satisfies Partial<AppDataError>);
+      errorKind: SYSTEM_MESSAGE_ERROR_KIND.DATA_VALIDATION
+    } satisfies Partial<SystemError>);
   });
 
   it('maps 404 endpoint responses to server error kind', async () => {
@@ -103,7 +104,37 @@ describe('institution onboarding gateway', () => {
       planFinishAt: 1798675200000,
       adminEmail: 'owner@example.test'
     })).rejects.toMatchObject({
-      kind: APP_DATA_ERROR_KIND.SERVER_ERROR
-    } satisfies Partial<AppDataError>);
+      errorKind: SYSTEM_MESSAGE_ERROR_KIND.DATA_SERVER_ERROR
+    } satisfies Partial<SystemError>);
+  });
+
+  it('preserves API displayMessage when API code is not locally registered', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      ok: false,
+      error: {
+        code: 'API-ADMIN-007',
+        message: 'Institution already exists.',
+        uiMessageKey: 'api.admin.institutions.duplicate_rfc',
+        displayMessage: 'Ya existe una institución registrada con RFC AAA010101AAA.',
+        errorKind: SYSTEM_MESSAGE_ERROR_KIND.DATA_CONFLICT
+      }
+    }), {
+      status: 409,
+      headers: { 'content-type': 'application/json' }
+    })));
+
+    await expect(createInstitutionOnboarding({
+      RFC: 'AAA010101AAA',
+      name: 'Institucion Prueba',
+      plan: COMMERCIAL_PLAN.PORTAL,
+      planStatus: COMMERCIAL_PLAN_STATUS.ACTIVE,
+      planStartAt: 1767225600000,
+      planFinishAt: 1798675200000,
+      adminEmail: 'owner@example.test'
+    })).rejects.toMatchObject({
+      code: 'API-ADMIN-007',
+      displayMessage: 'Ya existe una institución registrada con RFC AAA010101AAA.',
+      errorKind: SYSTEM_MESSAGE_ERROR_KIND.DATA_CONFLICT
+    } satisfies Partial<SystemError>);
   });
 });

@@ -18,9 +18,8 @@ import { useAuthStore } from '@/stores/authStore';
 import { useInstitutionStore } from '@/stores/institutionStore';
 import AuthLoginPage from '@/pages/auth/AuthLoginPage.vue';
 import AuthLogoutPage from '@/pages/auth/AuthLogoutPage.vue';
-import { DEFAULT_RFC, ROLE, SYSTEM_RFC } from '@shared';
 import { routePaths } from '@/shared/constants/routePaths';
-import { APP_AUTH_ERROR_KIND, APP_DATA_ERROR_KIND, AppAuthError, AppDataError } from '@/shared/errors/appErrors';
+import { DEFAULT_RFC, ROLE, SYSTEM_RFC, SystemError, sharedSystemMessages } from '@shared';
 import { establishSession, hydrateSession, logout, validateCredentials } from '@/gateways/firebaseAuthGateway';
 import { mountWithVuestic } from './utils/mount';
 
@@ -28,17 +27,19 @@ const push = vi.fn();
 const replace = vi.fn();
 vi.mock('vue-router', () => ({
   useRoute: () => ({ fullPath: '/auth/login', query: {} }),
-  useRouter: () => ({ push, replace })
+  useRouter: () => ({ push, replace }),
 }));
 
 vi.mock('@/gateways/firebaseAuthGateway', async () => {
-  const actual = await vi.importActual<typeof import('@/gateways/firebaseAuthGateway')>('@/gateways/firebaseAuthGateway');
+  const actual = await vi.importActual<typeof import('@/gateways/firebaseAuthGateway')>(
+    '@/gateways/firebaseAuthGateway',
+  );
   return {
     ...actual,
     establishSession: vi.fn(),
     hydrateSession: vi.fn(),
     logout: vi.fn(),
-    validateCredentials: vi.fn()
+    validateCredentials: vi.fn(),
   };
 });
 
@@ -60,7 +61,7 @@ function mountWithContext(component: any) {
               <slot />
               <slot name="footer" />
             </div>
-          `
+          `,
         },
         VaSelect: {
           props: ['modelValue', 'options'],
@@ -69,10 +70,10 @@ function mountWithContext(component: any) {
             <select :value="modelValue" @change="$emit('update:modelValue', $event.target.value)">
               <option v-for="option in options" :key="option.value" :value="option.value">{{ option.text }}</option>
             </select>
-          `
-        }
-      }
-    }
+          `,
+        },
+      },
+    },
   });
 }
 
@@ -95,8 +96,8 @@ describe('Auth Pages', () => {
       emojiIcon: 'FI',
       contexts: [
         { role: ROLE.INSTITUTION_ADMIN, rfc: DEFAULT_RFC },
-        { role: ROLE.SYSTEM_ADMINISTRATOR, rfc: SYSTEM_RFC }
-      ]
+        { role: ROLE.SYSTEM_ADMINISTRATOR, rfc: SYSTEM_RFC },
+      ],
     });
     mockedEstablishSession.mockResolvedValue({
       userId: 'dev-user-001',
@@ -108,8 +109,8 @@ describe('Auth Pages', () => {
       allowedInstitutionRfcs: [DEFAULT_RFC],
       availableContexts: [
         { role: ROLE.INSTITUTION_ADMIN, rfc: DEFAULT_RFC },
-        { role: ROLE.SYSTEM_ADMINISTRATOR, rfc: SYSTEM_RFC }
-      ]
+        { role: ROLE.SYSTEM_ADMINISTRATOR, rfc: SYSTEM_RFC },
+      ],
     });
     vi.useFakeTimers();
   });
@@ -139,7 +140,7 @@ describe('Auth Pages', () => {
   it('redirects existing sessions from login after background hydration', async () => {
     globalThis.localStorage.setItem(
       'puintegra:web:active-session-context:v1',
-      JSON.stringify({ role: ROLE.INSTITUTION_ADMIN, rfc: DEFAULT_RFC })
+      JSON.stringify({ role: ROLE.INSTITUTION_ADMIN, rfc: DEFAULT_RFC }),
     );
     mockedHydrateSession.mockResolvedValueOnce({
       userId: 'dev-user-001',
@@ -149,7 +150,7 @@ describe('Auth Pages', () => {
       activeRole: ROLE.INSTITUTION_ADMIN,
       activeRfc: DEFAULT_RFC,
       allowedInstitutionRfcs: [DEFAULT_RFC],
-      availableContexts: [{ role: ROLE.INSTITUTION_ADMIN, rfc: DEFAULT_RFC }]
+      availableContexts: [{ role: ROLE.INSTITUTION_ADMIN, rfc: DEFAULT_RFC }],
     });
 
     mountWithContext(AuthLoginPage);
@@ -183,7 +184,7 @@ describe('Auth Pages', () => {
       name: 'Usuario Firebase',
       email: 'admin@example.test',
       emojiIcon: 'FI',
-      contexts: [{ role: ROLE.INSTITUTION_ADMIN, rfc: DEFAULT_RFC }]
+      contexts: [{ role: ROLE.INSTITUTION_ADMIN, rfc: DEFAULT_RFC }],
     });
     mockedEstablishSession.mockResolvedValueOnce({
       userId: 'dev-user-001',
@@ -193,7 +194,7 @@ describe('Auth Pages', () => {
       activeRole: ROLE.INSTITUTION_ADMIN,
       activeRfc: DEFAULT_RFC,
       allowedInstitutionRfcs: [DEFAULT_RFC],
-      availableContexts: [{ role: ROLE.INSTITUTION_ADMIN, rfc: DEFAULT_RFC }]
+      availableContexts: [{ role: ROLE.INSTITUTION_ADMIN, rfc: DEFAULT_RFC }],
     });
     const wrapper = mountWithContext(AuthLoginPage);
 
@@ -207,7 +208,9 @@ describe('Auth Pages', () => {
   });
 
   it('shows data error when profile resolution fails after accepted credentials', async () => {
-    mockedValidateCredentials.mockRejectedValue(new AppDataError(APP_DATA_ERROR_KIND.NOT_FOUND, 'User not found.'));
+    mockedValidateCredentials.mockRejectedValue(
+      new SystemError(sharedSystemMessages.data.operation.notFound.code),
+    );
     const wrapper = mountWithContext(AuthLoginPage);
 
     await wrapper.find('[data-testid="auth-login-email"] input').setValue('admin@example.test');
@@ -221,14 +224,9 @@ describe('Auth Pages', () => {
 
   it('shows auth error when user has no available context', async () => {
     mockedValidateCredentials.mockRejectedValue(
-      new AppAuthError(
-        APP_AUTH_ERROR_KIND.NO_PERMISSIONS,
-        'No available context.',
-        {
-          code: 'AUTH-LOGIN-004',
-          uiMessage: 'El usuario no tiene permisos activos para iniciar sesión.'
-        }
-      )
+      new SystemError(sharedSystemMessages.auth.login.noPermissions.code, {
+        displayMessage: 'El usuario no tiene permisos activos para iniciar sesión.',
+      }),
     );
     const wrapper = mountWithContext(AuthLoginPage);
 
@@ -274,7 +272,7 @@ describe('Auth Pages', () => {
       uid: 'dev-user-001',
       email: 'admin@example.test',
       name: 'Usuario Firebase',
-      emojiIcon: 'FI'
+      emojiIcon: 'FI',
     });
 
     const wrapper = mountWithContext(AuthLogoutPage);

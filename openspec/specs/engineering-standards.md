@@ -70,6 +70,35 @@ Define project-wide engineering documentation and code conventions that apply ac
 - Product-only defaults may stay in each product package.
 - `packages/shared/src/schemas` remains approval-gated before any modification.
 
+## Error and message standardization
+
+- `SystemMessageTree` is the single source of truth for technical/error messages across the project.
+- `SystemError` is the only error class used across `shared`, `api`, and `web`.
+- Do not introduce package-specific or domain-specific error wrapper classes or factories when `SystemError` can express the contract.
+- `SystemMessage` is the canonical source for:
+  - `code`
+  - `key`
+  - `packageName`
+  - `severity`
+  - `message`
+  - optional `displayMessage`
+  - optional `httpStatus`
+  - optional `errorKind`
+- Error construction should support code-first usage:
+  - `new SystemError('API-ADMIN-001', overrides)`
+- Passing a `SystemMessage` object directly is also allowed when the message node is already available at the call site.
+- Cross-package error classification must use the shared `SYSTEM_MESSAGE_ERROR_KIND` enum.
+- Do not duplicate auth/data/domain error-kind taxonomies in package-local constants.
+- Shared HTTP status constants must come from `packages/shared` and must not be re-declared in package-local files.
+- API error envelopes must preserve the standardized error contract when available:
+  - `code`
+  - `message`
+  - optional `uiMessageKey`
+  - optional `displayMessage`
+  - optional `errorKind`
+  - optional `details`
+- UI layers should prefer `displayMessage` when present, and otherwise map behavior through standardized `errorKind` or canonical message metadata instead of ad hoc string matching.
+
 ## Constant and schema derivation policy
 
 - Domain string literals (roles, statuses, permissions, etc.) must be declared once in a single shared constant source.

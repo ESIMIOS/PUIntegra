@@ -12,17 +12,31 @@ export {
 } from './constants/access';
 
 export {
+  SYSTEM_PACKAGE_NAME,
+  HTTP_STATUS,
   buildUnifiedSystemMessageTree,
   buildTypedSystemMessagesTree,
   buildSystemMessagesTree,
+  registerSystemMessages,
+  resolveSystemMessage,
   sharedSystemMessageTree,
   sharedSystemMessages
 } from './constants/system-messages';
 export type {
+  SystemPackageName,
+  HttpStatus,
   BuiltMessageTree,
   MessageTree,
   SystemMessageTemplate
 } from './constants/system-messages';
+
+export {
+  SystemError,
+  isSystemError
+} from './errors/system-app-error';
+export type {
+  SystemErrorOptions
+} from './errors/system-app-error';
 
 export {
   RoleSchema,
@@ -168,15 +182,19 @@ export type {
 
 export {
   LOG_SEVERITY,
+  SYSTEM_MESSAGE_ERROR_KIND,
+  SYSTEM_MESSAGE_ERROR_KIND_VALUES,
   logSeverityValues,
   LogSeveritySchema,
   MessageCodeSchema,
   MessageKeySchema,
   PackageNameSchema,
+  SystemMessageErrorKindSchema,
   SystemMessageSchema
 } from './schemas/system-message.schema';
 export type {
   LogSeverity,
+  SystemMessageErrorKind,
   SystemMessage
 } from './schemas/system-message.schema';
 

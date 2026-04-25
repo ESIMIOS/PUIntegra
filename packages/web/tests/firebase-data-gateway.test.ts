@@ -6,14 +6,14 @@ import {
   DEFAULT_RFC,
   PERMISSION_STATUS,
   ROLE,
-  SYSTEM_RFC
+  SYSTEM_MESSAGE_ERROR_KIND,
+  SYSTEM_RFC,
 } from '@shared';
-import { APP_DATA_ERROR_KIND } from '@/shared/errors/appErrors';
 
 let collectionDocs: Array<{ data: () => unknown }> = [];
 
 vi.mock('@/plugins/firebase', () => ({
-  getFirebaseRuntime: () => ({ firestore: {} })
+  getFirebaseRuntime: () => ({ firestore: {} }),
 }));
 
 vi.mock('firebase/firestore', () => ({
@@ -26,7 +26,7 @@ vi.mock('firebase/firestore', () => ({
   query: vi.fn((value) => value),
   setDoc: vi.fn(),
   updateDoc: vi.fn(),
-  where: vi.fn()
+  where: vi.fn(),
 }));
 
 const { listInstitutions, listPermissionsByEmail } = await import('@/gateways/firebaseDataGateway');
@@ -42,7 +42,7 @@ function institution(RFC: string) {
     planFinishAt: 1710000000000,
     updates: [],
     createdAt: 1710000000000,
-    updatedAt: 1710000000000
+    updatedAt: 1710000000000,
   };
 }
 
@@ -52,10 +52,7 @@ describe('firebase data gateway', () => {
   });
 
   it('filters reserved system RFC from institution reads', async () => {
-    collectionDocs = [
-      { data: () => institution(DEFAULT_RFC) },
-      { data: () => institution(SYSTEM_RFC) }
-    ];
+    collectionDocs = [{ data: () => institution(DEFAULT_RFC) }, { data: () => institution(SYSTEM_RFC) }];
 
     await expect(listInstitutions()).resolves.toEqual([institution(DEFAULT_RFC)]);
   });
@@ -64,23 +61,25 @@ describe('firebase data gateway', () => {
     collectionDocs = [{ data: () => ({ RFC: DEFAULT_RFC }) }];
 
     await expect(listInstitutions()).rejects.toMatchObject({
-      kind: APP_DATA_ERROR_KIND.VALIDATION
+      errorKind: SYSTEM_MESSAGE_ERROR_KIND.DATA_VALIDATION,
     });
   });
 
   it('queries permissions by normalized email to support pre-account grants', async () => {
-    collectionDocs = [{
-      data: () => ({
-        permissionId: 'perm-institution-admin-001',
-        RFC: DEFAULT_RFC,
-        email: 'admin@example.test',
-        role: ROLE.INSTITUTION_ADMIN,
-        status: PERMISSION_STATUS.GRANTED,
-        updates: [],
-        createdAt: 1710000000000,
-        updatedAt: 1710000000000
-      })
-    }];
+    collectionDocs = [
+      {
+        data: () => ({
+          permissionId: 'perm-institution-admin-001',
+          RFC: DEFAULT_RFC,
+          email: 'admin@example.test',
+          role: ROLE.INSTITUTION_ADMIN,
+          status: PERMISSION_STATUS.GRANTED,
+          updates: [],
+          createdAt: 1710000000000,
+          updatedAt: 1710000000000,
+        }),
+      },
+    ];
 
     await expect(listPermissionsByEmail(' Admin@Example.Test ')).resolves.toHaveLength(1);
     expect(vi.mocked(where)).toHaveBeenCalledWith('email', '==', 'admin@example.test');

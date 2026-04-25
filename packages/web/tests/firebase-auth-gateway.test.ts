@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { APP_AUTH_ERROR_KIND, APP_DATA_ERROR_KIND, AppDataError } from '@/shared/errors/appErrors';
-import { DEFAULT_RFC, PERMISSION_STATUS, ROLE, SYSTEM_RFC } from '@shared';
+import { DEFAULT_RFC, PERMISSION_STATUS, ROLE, SYSTEM_MESSAGE_ERROR_KIND, SYSTEM_RFC, SystemError, sharedSystemMessages } from '@shared';
 
 const mocks = vi.hoisted(() => {
   const auth = { currentUser: null as null | { getIdToken: () => Promise<string> } };
@@ -54,13 +53,15 @@ describe('firebase auth gateway', () => {
 
     await expect(validateCredentials('admin@example.test', 'wrong-password')).rejects.toMatchObject({
       code: 'AUTH-LOGIN-003',
-      kind: APP_AUTH_ERROR_KIND.INVALID_CREDENTIALS
+      errorKind: SYSTEM_MESSAGE_ERROR_KIND.AUTH_INVALID_CREDENTIALS
     });
   });
 
   it('preserves profile resolution failures after Firebase accepts credentials', async () => {
-    const profileError = new AppDataError(APP_DATA_ERROR_KIND.NOT_FOUND, 'User not found.', {
-      userId: 'dev-user-001'
+    const profileError = new SystemError(sharedSystemMessages.data.operation.notFound.code, {
+      details: {
+        userId: 'dev-user-001'
+      }
     });
     mocks.signInWithEmailAndPassword.mockResolvedValue({
       user: { uid: 'dev-user-001' }
@@ -86,7 +87,7 @@ describe('firebase auth gateway', () => {
     mocks.listPermissionsByEmail.mockResolvedValue([]);
 
     await expect(validateCredentials('admin@example.test', 'local-password')).rejects.toMatchObject({
-      kind: APP_AUTH_ERROR_KIND.NO_PERMISSIONS,
+      errorKind: SYSTEM_MESSAGE_ERROR_KIND.AUTH_NO_PERMISSIONS,
       code: 'AUTH-LOGIN-004'
     });
     expect(mocks.signOut).toHaveBeenCalledWith(mocks.auth);

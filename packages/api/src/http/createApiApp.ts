@@ -15,18 +15,16 @@
 
 import { Hono } from 'hono';
 import { logger } from 'firebase-functions/v2';
+import { isSystemError } from '@puintegra/shared';
 import { AuthEventNameSchema } from '../services/authAuditService.js';
-import { InstitutionOnboardingServiceError } from '../services/institutionOnboardingService.js';
+import { apiSystemMessages } from '../constants/systemMessages.js';
 import { apiError, apiOk } from './apiResponse.js';
 import {
-  ApiRouteError,
   type CreateApiAppDependencies,
   createAuthEventHandler,
   createInstitutionOnboardingHandler,
   readOriginTraceId
 } from './routeHandlers.js';
-
-type ApiRouteStatus = 400 | 401 | 403 | 409;
 
 /**
  * @description Construye la app Hono principal.
@@ -39,14 +37,15 @@ export function createApiApp(dependencies: CreateApiAppDependencies) {
 
   app.onError((error, context) => {
     const originTraceId = readOriginTraceId(context, dependencies.createOriginTraceId);
-    if (error instanceof ApiRouteError || error instanceof InstitutionOnboardingServiceError) {
+    if (isSystemError(error) && typeof error.httpStatus === 'number') {
       return context.json(apiError({
         code: error.code,
         message: error.message,
         uiMessageKey: error.uiMessageKey,
         displayMessage: error.displayMessage,
+        errorKind: error.errorKind,
         details: error.details
-      }, { originTraceId }), error.status as ApiRouteStatus);
+      }, { originTraceId }), error.httpStatus as 400 | 401 | 403 | 409 | 500);
     }
 
     logger.error('api_request_failed', {
@@ -58,10 +57,12 @@ export function createApiApp(dependencies: CreateApiAppDependencies) {
     });
 
     return context.json(apiError({
-      code: 'API-SYS-001',
-      message: 'Unexpected API failure.',
-      uiMessageKey: 'api.system.unexpected_failure'
-    }, { originTraceId }), 500);
+      code: apiSystemMessages.sys.unexpectedFailure.code,
+      message: apiSystemMessages.sys.unexpectedFailure.message,
+      uiMessageKey: apiSystemMessages.sys.unexpectedFailure.key,
+      displayMessage: apiSystemMessages.sys.unexpectedFailure.displayMessage,
+      errorKind: apiSystemMessages.sys.unexpectedFailure.errorKind
+    }, { originTraceId }), (apiSystemMessages.sys.unexpectedFailure.httpStatus ?? 500) as 400 | 401 | 403 | 409 | 500);
   });
 
   app.get('/health', (context) => context.json(apiOk({ service: 'puintegra-api' })));

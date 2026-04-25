@@ -8,8 +8,13 @@
  * - 0.0.1	(2026-04-10)	Versión inicial del archivo.	@tirsomartinezreyes
  */
 
-import { LOG_SEVERITY, buildUnifiedSystemMessageTree, sharedSystemMessageTree, type MessageTree } from '@shared';
-import { APP_DATA_ERROR_KIND } from '@/shared/errors/appErrors';
+import {
+  LOG_SEVERITY,
+  SYSTEM_MESSAGE_ERROR_KIND,
+  buildUnifiedSystemMessageTree,
+  sharedSystemMessageTree,
+  type MessageTree
+} from '@shared';
 
 const webSystemMessageTree = {
   guard: {
@@ -108,36 +113,43 @@ const webSystemMessageTree = {
         code: 'WEB-UI-001',
         severity: LOG_SEVERITY.WARNING,
         message: 'Revisa los campos marcados antes de continuar.',
+        errorKind: SYSTEM_MESSAGE_ERROR_KIND.DATA_VALIDATION
       },
       notFound: {
         code: 'WEB-UI-002',
         severity: LOG_SEVERITY.WARNING,
         message: 'No encontramos el registro solicitado.',
+        errorKind: SYSTEM_MESSAGE_ERROR_KIND.DATA_NOT_FOUND
       },
       conflict: {
         code: 'WEB-UI-003',
         severity: LOG_SEVERITY.WARNING,
         message: 'Ya existe un registro con esos datos.',
+        errorKind: SYSTEM_MESSAGE_ERROR_KIND.DATA_CONFLICT
       },
       forbidden: {
         code: 'WEB-UI-004',
         severity: LOG_SEVERITY.WARNING,
         message: 'Tu sesión actual no permite realizar esta acción.',
+        errorKind: SYSTEM_MESSAGE_ERROR_KIND.DATA_FORBIDDEN
       },
       storage: {
         code: 'WEB-UI-005',
         severity: LOG_SEVERITY.ERROR,
         message: 'No pudimos guardar los cambios locales. Intenta de nuevo.',
+        errorKind: SYSTEM_MESSAGE_ERROR_KIND.DATA_STORAGE
       },
       unknown: {
         code: 'WEB-UI-006',
         severity: LOG_SEVERITY.ERROR,
         message: 'Ocurrió un error inesperado. Intenta de nuevo.',
+        errorKind: SYSTEM_MESSAGE_ERROR_KIND.DATA_UNKNOWN
       },
       serverError: {
         code: 'WEB-UI-011',
         severity: LOG_SEVERITY.ERROR,
         message: 'Error de comunicación con el servicio. Intenta de nuevo.',
+        errorKind: SYSTEM_MESSAGE_ERROR_KIND.DATA_SERVER_ERROR
       },
     },
   },
@@ -167,11 +179,11 @@ export const systemMessageTree = {
 } as const;
 
 export const webUiDataErrorByKind = {
-  [APP_DATA_ERROR_KIND.VALIDATION]: webSystemMessageTree.ui.data.validation,
-  [APP_DATA_ERROR_KIND.NOT_FOUND]: webSystemMessageTree.ui.data.notFound,
-  [APP_DATA_ERROR_KIND.CONFLICT]: webSystemMessageTree.ui.data.conflict,
-  [APP_DATA_ERROR_KIND.FORBIDDEN]: webSystemMessageTree.ui.data.forbidden,
-  [APP_DATA_ERROR_KIND.STORAGE]: webSystemMessageTree.ui.data.storage,
-  [APP_DATA_ERROR_KIND.SERVER_ERROR]: webSystemMessageTree.ui.data.serverError,
-  [APP_DATA_ERROR_KIND.UNKNOWN]: webSystemMessageTree.ui.data.unknown,
+  [SYSTEM_MESSAGE_ERROR_KIND.DATA_VALIDATION]: webSystemMessageTree.ui.data.validation,
+  [SYSTEM_MESSAGE_ERROR_KIND.DATA_NOT_FOUND]: webSystemMessageTree.ui.data.notFound,
+  [SYSTEM_MESSAGE_ERROR_KIND.DATA_CONFLICT]: webSystemMessageTree.ui.data.conflict,
+  [SYSTEM_MESSAGE_ERROR_KIND.DATA_FORBIDDEN]: webSystemMessageTree.ui.data.forbidden,
+  [SYSTEM_MESSAGE_ERROR_KIND.DATA_STORAGE]: webSystemMessageTree.ui.data.storage,
+  [SYSTEM_MESSAGE_ERROR_KIND.DATA_SERVER_ERROR]: webSystemMessageTree.ui.data.serverError,
+  [SYSTEM_MESSAGE_ERROR_KIND.DATA_UNKNOWN]: webSystemMessageTree.ui.data.unknown,
 } as const;

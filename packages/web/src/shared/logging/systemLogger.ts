@@ -44,7 +44,7 @@ function buildPayload(message: SystemMessage, meta: Record<string, unknown>) {
 		code: message.code,
 		key: message.key,
 		severity: message.severity,
-		package: message.package,
+		packageName: message.packageName,
 		message: message.message,
 		meta
 	}
@@ -93,7 +93,7 @@ export function logSystemMessageWarning(message: SystemMessage, error: unknown, 
 		code: message.code,
 		key: message.key,
 		severity: message.severity,
-		package: message.package,
+		packageName: message.packageName,
 		message: `${message.code}:${message.message}/${String(error)}`,
 		meta: {
 			...meta,
@@ -111,7 +111,7 @@ export function logSystemMessageError(message: SystemMessage, error: unknown, me
 		code: message.code,
 		key: message.key,
 		severity: message.severity,
-		package: message.package,
+		packageName: message.packageName,
 		message: `${message.code}:${message.message}/${String(error)}`,
 		meta: {
 			...meta,

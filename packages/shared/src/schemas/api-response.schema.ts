@@ -9,7 +9,7 @@
  */
 
 import { z } from 'zod';
-import { MessageCodeSchema, MessageKeySchema } from './system-message.schema';
+import { MessageCodeSchema, MessageKeySchema, SystemMessageErrorKindSchema } from './system-message.schema';
 
 export const ApiResponseMetaSchema = z.object({
   requestId: z.string().min(1).optional(),
@@ -22,6 +22,7 @@ export const ApiErrorSchema = z.object({
   uiMessageKey: MessageKeySchema.optional(),
   uiMessageParams: z.record(z.unknown()).optional(),
   displayMessage: z.string().min(1).optional(),
+  errorKind: SystemMessageErrorKindSchema.optional(),
   details: z.record(z.unknown()).optional()
 });
 

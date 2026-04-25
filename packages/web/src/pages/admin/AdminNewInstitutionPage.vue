@@ -13,28 +13,28 @@ import {
   COMMERCIAL_PLAN,
   COMMERCIAL_PLAN_STATUS,
   DEFAULT_RFC,
+  SYSTEM_MESSAGE_ERROR_KIND,
   SYSTEM_RFC,
   type CommercialPlan,
   type CommercialPlanStatus,
-} from "@shared";
-import { computed, ref } from "vue";
-import { useRouter } from "vue-router";
-import { useInstitutionOnboardingController } from "@/composables/useDataControllers";
-import { routePaths } from "@/shared/constants/routePaths";
-import { APP_DATA_ERROR_KIND } from "@/shared/errors/appErrors";
-import { webUiDataErrorByKind } from "@/shared/constants/systemMessages";
+} from '@shared';
+import { computed, ref } from 'vue';
+import { useRouter } from 'vue-router';
+import { useInstitutionOnboardingController } from '@/composables/useDataControllers';
+import { routePaths } from '@/shared/constants/routePaths';
+import { webUiDataErrorByKind } from '@/shared/constants/systemMessages';
 
 const router = useRouter();
 const controller = useInstitutionOnboardingController();
 const formRef = ref<{ validate: () => boolean | Promise<boolean> } | null>(null);
 
-const RFC = ref("");
-const name = ref("");
+const RFC = ref('');
+const name = ref('');
 const plan = ref<CommercialPlan>(COMMERCIAL_PLAN.PORTAL);
 const planStatus = ref<CommercialPlanStatus>(COMMERCIAL_PLAN_STATUS.ACTIVE);
-const planStartAt = ref("");
-const planFinishAt = ref("");
-const adminEmail = ref("");
+const planStartAt = ref('');
+const planFinishAt = ref('');
+const adminEmail = ref('');
 const createdInstitutionRfc = ref<string | null>(null);
 const successMessage = ref<string | null>(null);
 const localError = ref<string | null>(null);
@@ -118,7 +118,7 @@ async function handleSubmit() {
   controller.retry();
   const isValid = Boolean(await formRef.value?.validate());
   if (!isValid) {
-    localError.value = webUiDataErrorByKind[APP_DATA_ERROR_KIND.VALIDATION].message;
+    localError.value = webUiDataErrorByKind[SYSTEM_MESSAGE_ERROR_KIND.DATA_VALIDATION].message;
     return;
   }
 
@@ -133,20 +133,20 @@ async function handleSubmit() {
       adminEmail: trimmedAdminEmail.value,
     });
     createdInstitutionRfc.value = created.institution.RFC;
-    successMessage.value = "Institucion creada correctamente.";
+    successMessage.value = 'Institucion creada correctamente.';
   } catch {
     // DataStore captures normalized user-facing error text; page only keeps local validation errors.
   }
 }
 
 function resetOnboardingForm() {
-  RFC.value = "";
-  name.value = "";
+  RFC.value = '';
+  name.value = '';
   plan.value = COMMERCIAL_PLAN.PORTAL;
   planStatus.value = COMMERCIAL_PLAN_STATUS.ACTIVE;
-  planStartAt.value = "";
-  planFinishAt.value = "";
-  adminEmail.value = "";
+  planStartAt.value = '';
+  planFinishAt.value = '';
+  adminEmail.value = '';
   createdInstitutionRfc.value = null;
   successMessage.value = null;
   localError.value = null;

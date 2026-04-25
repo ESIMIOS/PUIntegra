@@ -28,7 +28,9 @@ describe('auth event API routes', () => {
       error: {
         code: 'API-AUTH-001',
         message: 'Missing bearer token.',
-        uiMessageKey: 'api.auth.missing_bearer_token'
+        uiMessageKey: 'api.auth.missing_bearer_token',
+        displayMessage: 'Tu sesión no está autenticada. Inicia sesión y vuelve a intentarlo.',
+        errorKind: 'AUTH_REQUIRED'
       },
       meta: {
         originTraceId: 'generated-trace-id'
@@ -128,7 +130,8 @@ describe('auth event API routes', () => {
       error: {
         code: 'API-SYS-001',
         message: 'Unexpected API failure.',
-        uiMessageKey: 'api.system.unexpected_failure'
+        uiMessageKey: 'api.sys.unexpected_failure',
+        errorKind: 'SYSTEM_UNEXPECTED'
       },
       meta: {
         originTraceId: 'generated-trace-id'
@@ -234,7 +237,8 @@ describe('admin institution onboarding API route', () => {
         code: 'API-ADMIN-004',
         message: 'SYSTEM_RFC cannot be used as a tenant institution RFC.',
         uiMessageKey: 'api.admin.institutions.invalid_system_rfc',
-        displayMessage: 'SYSTEM_RFC es un RFC reservado y no puede usarse para una institución.'
+        displayMessage: 'SYSTEM_RFC es un RFC reservado y no puede usarse para una institución.',
+        errorKind: 'DATA_VALIDATION'
       },
       meta: {
         originTraceId: 'trace-reserved-system'
@@ -270,7 +274,8 @@ describe('admin institution onboarding API route', () => {
         code: 'API-ADMIN-005',
         message: 'DEFAULT_RFC cannot be reused for tenant institution onboarding.',
         uiMessageKey: 'api.admin.institutions.invalid_default_rfc',
-        displayMessage: 'DEFAULT_RFC es un RFC reservado y no puede usarse para una institución.'
+        displayMessage: 'DEFAULT_RFC es un RFC reservado y no puede usarse para una institución.',
+        errorKind: 'DATA_VALIDATION'
       },
       meta: {
         originTraceId: 'trace-reserved-default'

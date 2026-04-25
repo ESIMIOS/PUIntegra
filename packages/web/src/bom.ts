@@ -53,14 +53,10 @@ export { useAuthStore } from '@/stores/authStore';
 export { useDataStore } from '@/stores/dataStore';
 export { useInstitutionStore } from '@/stores/institutionStore';
 export {
-  useAccountSettingsController,
-  useContactsController,
   useDashboardController,
   useFindingsController,
   useInstitutionSelectionController,
-  useInstitutionSettingsController,
   useLogsController,
-  usePermissionsController,
   useRequestsController
 } from '@/composables/useDataControllers';
 export { useRouteNavigation } from '@/composables/useRouteNavigation';
@@ -68,7 +64,7 @@ export { useAuthSession } from '@/composables/useAuthSession';
 export { useSessionInactivity } from '@/composables/useSessionInactivity';
 export { useThemePreference } from '@/composables/useThemePreference';
 export { getFirebaseRuntime } from '@/plugins/firebase';
-export { AppAuthError, AppDataError, isAppAuthError, isAppDataError } from '@/shared/errors/appErrors';
+export { SystemError, isSystemError } from '@shared';
 export { nowUtcMilliseconds, yearsAgoUtcMilliseconds } from '@/shared/utils/dateUtils';
 export { deepClone } from '@/shared/utils/objectUtils';
 

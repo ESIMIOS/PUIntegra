@@ -38,8 +38,10 @@ Define the local Firestore Emulator-backed data architecture used by `packages/w
 
 ## Error handling strategy
 
-- App data errors are neutral and live in `src/shared/errors/appErrors.ts`.
-- User-safe error messages are mapped in `src/shared/constants/systemMessages.ts`.
+- `SystemError` in `packages/shared/src/errors/system-app-error.ts` is the single error class used across the project.
+- Shared and web system message catalogs are the source of truth for error codes, keys, and user-safe messages:
+  - `packages/shared/src/constants/system-messages.ts`
+  - `packages/web/src/shared/constants/systemMessages.ts`
 - Firestore payload validation failures must surface as validation errors and include only safe diagnostic metadata.
 
 ## Testing expectations

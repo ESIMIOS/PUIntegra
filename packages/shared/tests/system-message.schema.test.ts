@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   LOG_SEVERITY,
+  SYSTEM_MESSAGE_ERROR_KIND,
   LogSeveritySchema,
   MessageCodeSchema,
   MessageKeySchema,
@@ -13,8 +14,9 @@ describe('system message schema', () => {
       code: 'WEB-GUARD-001',
       key: 'web.guard.role_mismatch',
       severity: LOG_SEVERITY.WARNING,
-      package: 'web',
+      packageName: 'web',
       message: 'Role does not have access to the requested route.',
+      errorKind: SYSTEM_MESSAGE_ERROR_KIND.DATA_FORBIDDEN,
       meta: {
         route: '/admin/institutions'
       }
