@@ -8,26 +8,37 @@ export {
   institutionRoleValues,
   systemRoleValues,
   SECONDS_TO_CLOSE_SESSION_FOR_INACTIVITY,
-  SECONDS_TO_SHOW_INACTIVITY_ALERT
+  SECONDS_TO_SHOW_INACTIVITY_ALERT,
 } from './constants/access';
 
 export {
+  SYSTEM_PACKAGE_NAME,
+  HTTP_STATUS,
+  HTTP_METHOD,
   buildUnifiedSystemMessageTree,
   buildTypedSystemMessagesTree,
   buildSystemMessagesTree,
+  registerSystemMessages,
+  resolveSystemMessage,
   sharedSystemMessageTree,
-  sharedSystemMessages
-} from './constants/system-messages';
-export type {
-  BuiltMessageTree,
-  MessageTree,
-  SystemMessageTemplate
+  sharedSystemMessages,
+  formatUiMessageString,
 } from './constants/system-messages';
 
-export {
-  RoleSchema,
-  AuthenticatedRoleSchema
-} from './schemas/access.schema';
+export type {
+  SystemPackageName,
+  HttpStatus,
+  HttpMethod,
+  BuiltMessageTree,
+  MessageTree,
+  SystemMessageTemplate,
+} from './constants/system-messages';
+
+export { SystemError, isSystemError, getSystemError, formatUiErrorString } from './errors/system-app-error';
+
+export type { SystemErrorOptions } from './errors/system-app-error';
+
+export { RoleSchema, AuthenticatedRoleSchema } from './schemas/access.schema';
 
 export {
   TimestampMillisecondsUtcSchema,
@@ -40,23 +51,12 @@ export {
   LogOriginValues,
   LogOriginSchema,
   LogCategoryValues,
-  LogCategorySchema
+  LogCategorySchema,
 } from './schemas/domain-common.schema';
-export type {
-  UpdateOrigin,
-  UpdateActor,
-  LogOrigin,
-  LogCategory
-} from './schemas/domain-common.schema';
+export type { UpdateOrigin, UpdateActor, LogOrigin, LogCategory } from './schemas/domain-common.schema';
 
-export {
-  UserUpdateSchema,
-  UserSchema
-} from './schemas/user.schema';
-export type {
-  UserUpdate,
-  User
-} from './schemas/user.schema';
+export { UserUpdateSchema, UserSchema } from './schemas/user.schema';
+export type { UserUpdate, User } from './schemas/user.schema';
 
 export {
   COMMERCIAL_PLAN,
@@ -66,13 +66,13 @@ export {
   CommercialPlanStatusValues,
   CommercialPlanStatusSchema,
   InstitutionUpdateSchema,
-  InstitutionSchema
+  InstitutionSchema,
 } from './schemas/institution.schema';
 export type {
   CommercialPlan,
   CommercialPlanStatus,
   InstitutionUpdate,
-  Institution
+  Institution,
 } from './schemas/institution.schema';
 
 export {
@@ -80,26 +80,18 @@ export {
   PermissionStatusValues,
   PermissionStatusSchema,
   PermissionUpdateSchema,
-  PermissionSchema
+  PermissionSchema,
 } from './schemas/permission.schema';
-export type {
-  PermissionStatus,
-  PermissionUpdate,
-  Permission
-} from './schemas/permission.schema';
+export type { PermissionStatus, PermissionUpdate, Permission } from './schemas/permission.schema';
 
 export {
   INSTITUTION_CONTACT_TYPE,
   InstitutionContactTypeValues,
   InstitutionContactTypeSchema,
   ContactUpdateSchema,
-  ContactSchema
+  ContactSchema,
 } from './schemas/contact.schema';
-export type {
-  InstitutionContactType,
-  ContactUpdate,
-  Contact
-} from './schemas/contact.schema';
+export type { InstitutionContactType, ContactUpdate, Contact } from './schemas/contact.schema';
 
 export {
   SEARCH_REQUEST_STATUS,
@@ -112,14 +104,14 @@ export {
   SearchRequestPhaseStatusValues,
   SearchRequestPhaseStatusSchema,
   RequestUpdateSchema,
-  RequestSchema
+  RequestSchema,
 } from './schemas/request.schema';
 export type {
   SearchRequestStatus,
   SearchRequestPhase,
   SearchRequestPhaseStatus,
   RequestUpdate,
-  Request
+  Request,
 } from './schemas/request.schema';
 
 export {
@@ -129,41 +121,26 @@ export {
   FindingResponseSchema,
   FindingDataSchema,
   FindingUpdateSchema,
-  FindingSchema
+  FindingSchema,
 } from './schemas/finding.schema';
-export type {
-  FindingPuiSyncStatus,
-  FindingResponse,
-  FindingUpdate,
-  Finding
-} from './schemas/finding.schema';
+export type { FindingPuiSyncStatus, FindingResponse, FindingUpdate, Finding } from './schemas/finding.schema';
 
-export {
-  LogExecutionSchema,
-  LogImpactSchema,
-  LogSearchRequestSchema,
-  LogSchema
-} from './schemas/log.schema';
-export type {
-  LogExecution,
-  LogImpact,
-  LogSearchRequest,
-  Log
-} from './schemas/log.schema';
+export { LogExecutionSchema, LogImpactSchema, LogSearchRequestSchema, LogSchema } from './schemas/log.schema';
+export type { LogExecution, LogImpact, LogSearchRequest, Log } from './schemas/log.schema';
 
 export {
   ApiErrorResponseSchema,
   ApiErrorSchema,
   ApiResponseMetaSchema,
   ApiResponseSchema,
-  ApiSuccessResponseSchema
+  ApiSuccessResponseSchema,
 } from './schemas/api-response.schema';
 export type {
   ApiError,
   ApiErrorResponse,
   ApiResponse,
   ApiResponseMeta,
-  ApiSuccessResponse
+  ApiSuccessResponse,
 } from './schemas/api-response.schema';
 
 export {
@@ -173,12 +150,9 @@ export {
   MessageCodeSchema,
   MessageKeySchema,
   PackageNameSchema,
-  SystemMessageSchema
+  SystemMessageSchema,
 } from './schemas/system-message.schema';
-export type {
-  LogSeverity,
-  SystemMessage
-} from './schemas/system-message.schema';
+export type { LogSeverity, SystemMessage } from './schemas/system-message.schema';
 
 export {
   PUI_RFC_REGEX,
@@ -225,7 +199,7 @@ export {
   PUIInstitucionNotificaBusquedaFinalizadaEnPUIPayloadSchema,
   PUIReporteActivoSchema,
   PUIInstitucionConsultaReportesActivosEnPUIResponseSchema,
-  PUIPUIDesactivaReporteEnInstitucionPayloadSchema
+  PUIPUIDesactivaReporteEnInstitucionPayloadSchema,
 } from './schemas/pui-transport.schema';
 export type {
   PuiLugarNacimiento,
@@ -244,13 +218,13 @@ export type {
   PUIInstitucionNotificaBusquedaFinalizadaEnPUIPayload,
   PUIReporteActivo,
   PUIInstitucionConsultaReportesActivosEnPUIResponse,
-  PUIPUIDesactivaReporteEnInstitucionPayload
+  PUIPUIDesactivaReporteEnInstitucionPayload,
 } from './schemas/pui-transport.schema';
 
 export {
   puiDateToUtcMilliseconds,
   optionalPuiDateToUtcMilliseconds,
-  utcMillisecondsToPuiDate
+  utcMillisecondsToPuiDate,
 } from './utils/puiDateUtils';
 
 export {
@@ -258,5 +232,5 @@ export {
   toPuiFaseBusqueda,
   fromPuiFaseBusqueda,
   puiActivationPayloadToRequestCreateData,
-  puiMatchPayloadToFindingCreateData
+  puiMatchPayloadToFindingCreateData,
 } from './mappers/puiDomainAdapters';

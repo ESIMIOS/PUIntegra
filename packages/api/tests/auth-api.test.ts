@@ -6,7 +6,8 @@ import {
   DEFAULT_RFC,
   ROLE,
   SYSTEM_RFC,
-  roleValues
+  roleValues,
+  HTTP_STATUS,
 } from '@puintegra/shared';
 
 describe('auth event API routes', () => {
@@ -15,24 +16,25 @@ describe('auth event API routes', () => {
       verifyBearerToken: vi.fn(),
       recordAuthEvent: vi.fn(),
       createInstitutionOnboarding: vi.fn(),
-      createOriginTraceId: vi.fn().mockReturnValue('generated-trace-id')
+      createOriginTraceId: vi.fn().mockReturnValue('generated-trace-id'),
     });
 
     const response = await app.request('/api/auth/events/login', {
-      method: 'POST'
+      method: 'POST',
     });
 
-    expect(response.status).toBe(401);
+    expect(response.status).toBe(HTTP_STATUS.UNAUTHORIZED);
     expect(await response.json()).toEqual({
       ok: false,
       error: {
         code: 'API-AUTH-001',
         message: 'Missing bearer token.',
-        uiMessageKey: 'api.auth.missing_bearer_token'
+        uiMessageKey: 'api.auth.missing_bearer_token',
+        displayMessage: 'Tu sesión no está autenticada. Inicia sesión y vuelve a intentarlo.',
       },
       meta: {
-        originTraceId: 'generated-trace-id'
-      }
+        originTraceId: 'generated-trace-id',
+      },
     });
   });
 
@@ -42,36 +44,36 @@ describe('auth event API routes', () => {
       verifyBearerToken: vi.fn().mockResolvedValue({
         userId: 'dev-user-001',
         email: 'admin@example.test',
-        role: ROLE.SYSTEM_ADMINISTRATOR
+        role: ROLE.SYSTEM_ADMINISTRATOR,
       }),
       recordAuthEvent,
       createInstitutionOnboarding: vi.fn(),
-      createOriginTraceId: vi.fn().mockReturnValue('generated-trace-id')
+      createOriginTraceId: vi.fn().mockReturnValue('generated-trace-id'),
     });
 
     const response = await app.request('/api/auth/events/login', {
       method: 'POST',
       headers: {
         authorization: 'Bearer id-token',
-        'function-execution-id': 'execution-id-login'
-      }
+        'function-execution-id': 'execution-id-login',
+      },
     });
 
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(HTTP_STATUS.OK);
     expect(await response.json()).toEqual({
       ok: true,
       data: {
-        recorded: true
+        recorded: true,
       },
       meta: {
-        originTraceId: 'execution-id-login'
-      }
+        originTraceId: 'execution-id-login',
+      },
     });
     expect(recordAuthEvent).toHaveBeenCalledWith({
       event: 'login',
       originTraceId: 'execution-id-login',
       userId: 'dev-user-001',
-      email: 'admin@example.test'
+      email: 'admin@example.test',
     });
   });
 
@@ -81,26 +83,28 @@ describe('auth event API routes', () => {
       verifyBearerToken: vi.fn().mockResolvedValue({
         userId: 'dev-user-001',
         email: 'admin@example.test',
-        role: ROLE.SYSTEM_ADMINISTRATOR
+        role: ROLE.SYSTEM_ADMINISTRATOR,
       }),
       recordAuthEvent,
       createInstitutionOnboarding: vi.fn(),
-      createOriginTraceId: vi.fn().mockReturnValue('generated-trace-id')
+      createOriginTraceId: vi.fn().mockReturnValue('generated-trace-id'),
     });
 
     const response = await app.request('/api/auth/events/logout', {
       method: 'POST',
       headers: {
-        authorization: 'Bearer id-token'
-      }
+        authorization: 'Bearer id-token',
+      },
     });
 
-    expect(response.status).toBe(200);
-    expect(recordAuthEvent).toHaveBeenCalledWith(expect.objectContaining({
-      event: 'logout',
-      originTraceId: 'generated-trace-id',
-      userId: 'dev-user-001'
-    }));
+    expect(response.status).toBe(HTTP_STATUS.OK);
+    expect(recordAuthEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event: 'logout',
+        originTraceId: 'generated-trace-id',
+        userId: 'dev-user-001',
+      }),
+    );
   });
 
   it('returns safe JSON when auth event recording fails', async () => {
@@ -108,31 +112,31 @@ describe('auth event API routes', () => {
       verifyBearerToken: vi.fn().mockResolvedValue({
         userId: 'dev-user-001',
         email: 'admin@example.test',
-        role: ROLE.SYSTEM_ADMINISTRATOR
+        role: ROLE.SYSTEM_ADMINISTRATOR,
       }),
       recordAuthEvent: vi.fn().mockRejectedValue(new Error('firestore unavailable')),
       createInstitutionOnboarding: vi.fn(),
-      createOriginTraceId: vi.fn().mockReturnValue('generated-trace-id')
+      createOriginTraceId: vi.fn().mockReturnValue('generated-trace-id'),
     });
 
     const response = await app.request('/api/auth/events/login', {
       method: 'POST',
       headers: {
-        authorization: 'Bearer id-token'
-      }
+        authorization: 'Bearer id-token',
+      },
     });
 
-    expect(response.status).toBe(500);
+    expect(response.status).toBe(HTTP_STATUS.INTERNAL_SERVER_ERROR);
     expect(await response.json()).toEqual({
       ok: false,
       error: {
         code: 'API-SYS-001',
         message: 'Unexpected API failure.',
-        uiMessageKey: 'api.system.unexpected_failure'
+        uiMessageKey: 'api.sys.unexpected_failure',
       },
       meta: {
-        originTraceId: 'generated-trace-id'
-      }
+        originTraceId: 'generated-trace-id',
+      },
     });
   });
 });
@@ -145,13 +149,13 @@ describe('admin institution onboarding API route', () => {
     planStatus: COMMERCIAL_PLAN_STATUS.ACTIVE,
     planStartAt: 1710000000000,
     planFinishAt: 1710000000100,
-    adminEmail: 'owner@example.test'
+    adminEmail: 'owner@example.test',
   };
 
   it('accepts onboarding only for SYSTEM_ADMINISTRATOR', async () => {
     const createInstitutionOnboarding = vi.fn().mockResolvedValue({
       institution: { RFC: 'AAA010101AAA' },
-      permission: { permissionId: 'perm-001' }
+      permission: { permissionId: 'perm-001' },
     });
 
     for (const role of roleValues) {
@@ -159,23 +163,23 @@ describe('admin institution onboarding API route', () => {
         verifyBearerToken: vi.fn().mockResolvedValue({
           userId: 'dev-user-001',
           email: 'admin@example.test',
-          role
+          role,
         }),
         recordAuthEvent: vi.fn(),
         createInstitutionOnboarding,
-        createOriginTraceId: vi.fn().mockReturnValue('trace-role-check')
+        createOriginTraceId: vi.fn().mockReturnValue('trace-role-check'),
       });
 
       const response = await app.request('/api/admin/institutions', {
         method: 'POST',
         headers: { authorization: 'Bearer token' },
-        body: JSON.stringify(validPayload)
+        body: JSON.stringify(validPayload),
       });
 
       if (role === ROLE.SYSTEM_ADMINISTRATOR) {
-        expect(response.status).toBe(201);
+        expect(response.status).toBe(HTTP_STATUS.CREATED);
       } else {
-        expect(response.status).toBe(403);
+        expect(response.status).toBe(HTTP_STATUS.FORBIDDEN);
       }
     }
   });
@@ -183,26 +187,26 @@ describe('admin institution onboarding API route', () => {
   it('accepts onboarding route without /api prefix for functions-mounted path', async () => {
     const createInstitutionOnboarding = vi.fn().mockResolvedValue({
       institution: { RFC: 'AAA010101AAA' },
-      permission: { permissionId: 'perm-001' }
+      permission: { permissionId: 'perm-001' },
     });
     const app = createApiApp({
       verifyBearerToken: vi.fn().mockResolvedValue({
         userId: 'dev-user-001',
         email: 'admin@example.test',
-        role: ROLE.SYSTEM_ADMINISTRATOR
+        role: ROLE.SYSTEM_ADMINISTRATOR,
       }),
       recordAuthEvent: vi.fn(),
       createInstitutionOnboarding,
-      createOriginTraceId: vi.fn().mockReturnValue('trace-no-api-prefix')
+      createOriginTraceId: vi.fn().mockReturnValue('trace-no-api-prefix'),
     });
 
     const response = await app.request('/admin/institutions', {
       method: 'POST',
       headers: { authorization: 'Bearer token' },
-      body: JSON.stringify(validPayload)
+      body: JSON.stringify(validPayload),
     });
 
-    expect(response.status).toBe(201);
+    expect(response.status).toBe(HTTP_STATUS.CREATED);
     expect(createInstitutionOnboarding).toHaveBeenCalledOnce();
   });
 
@@ -211,11 +215,11 @@ describe('admin institution onboarding API route', () => {
       verifyBearerToken: vi.fn().mockResolvedValue({
         userId: 'dev-user-001',
         email: 'admin@example.test',
-        role: ROLE.SYSTEM_ADMINISTRATOR
+        role: ROLE.SYSTEM_ADMINISTRATOR,
       }),
       recordAuthEvent: vi.fn(),
       createInstitutionOnboarding: vi.fn(),
-      createOriginTraceId: vi.fn().mockReturnValue('trace-reserved-system')
+      createOriginTraceId: vi.fn().mockReturnValue('trace-reserved-system'),
     });
 
     const response = await app.request('/api/admin/institutions', {
@@ -223,22 +227,22 @@ describe('admin institution onboarding API route', () => {
       headers: { authorization: 'Bearer token' },
       body: JSON.stringify({
         ...validPayload,
-        RFC: SYSTEM_RFC
-      })
+        RFC: SYSTEM_RFC,
+      }),
     });
 
-    expect(response.status).toBe(400);
+    expect(response.status).toBe(HTTP_STATUS.BAD_REQUEST);
     expect(await response.json()).toEqual({
       ok: false,
       error: {
         code: 'API-ADMIN-004',
         message: 'SYSTEM_RFC cannot be used as a tenant institution RFC.',
         uiMessageKey: 'api.admin.institutions.invalid_system_rfc',
-        displayMessage: 'SYSTEM_RFC es un RFC reservado y no puede usarse para una institución.'
+        displayMessage: 'SYSTEM_RFC es un RFC reservado y no puede usarse para una institución.',
       },
       meta: {
-        originTraceId: 'trace-reserved-system'
-      }
+        originTraceId: 'trace-reserved-system',
+      },
     });
   });
 
@@ -247,11 +251,11 @@ describe('admin institution onboarding API route', () => {
       verifyBearerToken: vi.fn().mockResolvedValue({
         userId: 'dev-user-001',
         email: 'admin@example.test',
-        role: ROLE.SYSTEM_ADMINISTRATOR
+        role: ROLE.SYSTEM_ADMINISTRATOR,
       }),
       recordAuthEvent: vi.fn(),
       createInstitutionOnboarding: vi.fn(),
-      createOriginTraceId: vi.fn().mockReturnValue('trace-reserved-default')
+      createOriginTraceId: vi.fn().mockReturnValue('trace-reserved-default'),
     });
 
     const response = await app.request('/api/admin/institutions', {
@@ -259,22 +263,22 @@ describe('admin institution onboarding API route', () => {
       headers: { authorization: 'Bearer token' },
       body: JSON.stringify({
         ...validPayload,
-        RFC: DEFAULT_RFC
-      })
+        RFC: DEFAULT_RFC,
+      }),
     });
 
-    expect(response.status).toBe(400);
+    expect(response.status).toBe(HTTP_STATUS.BAD_REQUEST);
     expect(await response.json()).toEqual({
       ok: false,
       error: {
         code: 'API-ADMIN-005',
         message: 'DEFAULT_RFC cannot be reused for tenant institution onboarding.',
         uiMessageKey: 'api.admin.institutions.invalid_default_rfc',
-        displayMessage: 'DEFAULT_RFC es un RFC reservado y no puede usarse para una institución.'
+        displayMessage: 'DEFAULT_RFC es un RFC reservado y no puede usarse para una institución.',
       },
       meta: {
-        originTraceId: 'trace-reserved-default'
-      }
+        originTraceId: 'trace-reserved-default',
+      },
     });
   });
 });

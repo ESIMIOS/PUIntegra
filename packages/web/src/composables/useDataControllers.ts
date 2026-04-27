@@ -24,32 +24,6 @@ export function useInstitutionSelectionController() {
 }
 
 /**
- * @description Expone acciones de guardado para ajustes de cuenta.
- */
-export function useAccountSettingsController() {
-  const store = useDataStore();
-  return {
-    isSaving: computed(() => store.isSaving),
-    errorMessage: computed(() => store.userErrorMessage),
-    save: (input: Parameters<typeof store.updateAccountSettings>[0]) => store.updateAccountSettings(input),
-    retry: () => store.clearError()
-  };
-}
-
-/**
- * @description Expone acciones de guardado para ajustes institucionales.
- */
-export function useInstitutionSettingsController() {
-  const store = useDataStore();
-  return {
-    isSaving: computed(() => store.isSaving),
-    errorMessage: computed(() => store.userErrorMessage),
-    save: (input: Parameters<typeof store.updateInstitutionSettings>[0]) => store.updateInstitutionSettings(input),
-    retry: () => store.clearError()
-  };
-}
-
-/**
  * @description Expone alta institucional de backoffice mediante API HTTP.
  */
 export function useInstitutionOnboardingController() {
@@ -58,37 +32,6 @@ export function useInstitutionOnboardingController() {
     isSaving: computed(() => store.isSaving),
     errorMessage: computed(() => store.userErrorMessage),
     create: (input: Parameters<typeof store.createInstitutionOnboarding>[0]) => store.createInstitutionOnboarding(input),
-    retry: () => store.clearError()
-  };
-}
-
-/**
- * @description Expone operaciones de permisos institucionales y de sistema.
- */
-export function usePermissionsController() {
-  const store = useDataStore();
-  return {
-    isSaving: computed(() => store.isSaving),
-    errorMessage: computed(() => store.userErrorMessage),
-    listByUser: (userId: string) => store.listPermissionsByUser(userId),
-    create: (input: Parameters<typeof store.createPermission>[0]) => store.createPermission(input),
-    update: (input: Parameters<typeof store.updatePermission>[0]) => store.updatePermission(input),
-    retry: () => store.clearError()
-  };
-}
-
-/**
- * @description Expone operaciones de contactos institucionales.
- */
-export function useContactsController() {
-  const store = useDataStore();
-  return {
-    isLoading: computed(() => store.isLoading),
-    isSaving: computed(() => store.isSaving),
-    errorMessage: computed(() => store.userErrorMessage),
-    loadByRfc: (rfc: string) => store.listContactsByRfc(rfc),
-    create: (input: Parameters<typeof store.createContact>[0]) => store.createContact(input),
-    update: (input: Parameters<typeof store.updateContact>[0]) => store.updateContact(input),
     retry: () => store.clearError()
   };
 }

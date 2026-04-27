@@ -8,8 +8,13 @@
  * - 0.0.1	(2026-04-10)	Versión inicial del archivo.	@tirsomartinezreyes
  */
 
-import { LOG_SEVERITY, buildUnifiedSystemMessageTree, sharedSystemMessageTree, type MessageTree } from '@shared';
-import { APP_DATA_ERROR_KIND } from '@/shared/errors/appErrors';
+import {
+  LOG_SEVERITY,
+  buildUnifiedSystemMessageTree,
+  sharedSystemMessageTree,
+  type MessageTree,
+  type BuiltMessageTree,
+} from '@shared';
 
 const webSystemMessageTree = {
   guard: {
@@ -140,6 +145,13 @@ const webSystemMessageTree = {
         message: 'Error de comunicación con el servicio. Intenta de nuevo.',
       },
     },
+    institutions: {
+      created: {
+        code: 'WEB-UI-012',
+        severity: LOG_SEVERITY.SUCCESS,
+        message: 'Institución creada correctamente.',
+      },
+    },
   },
   auth: {
     logout: {
@@ -152,26 +164,10 @@ const webSystemMessageTree = {
   },
 } as const satisfies MessageTree;
 
-const unifiedSystemMessageTree = buildUnifiedSystemMessageTree({
+export const systemMessageTree = buildUnifiedSystemMessageTree({
   web: webSystemMessageTree,
   shared: sharedSystemMessageTree,
-});
-
-if (!unifiedSystemMessageTree.web || !unifiedSystemMessageTree.shared) {
-  throw new Error('Unified system message tree is missing required web or shared roots.');
-}
-
-export const systemMessageTree = {
-  web: unifiedSystemMessageTree.web,
-  shared: unifiedSystemMessageTree.shared,
-} as const;
-
-export const webUiDataErrorByKind = {
-  [APP_DATA_ERROR_KIND.VALIDATION]: webSystemMessageTree.ui.data.validation,
-  [APP_DATA_ERROR_KIND.NOT_FOUND]: webSystemMessageTree.ui.data.notFound,
-  [APP_DATA_ERROR_KIND.CONFLICT]: webSystemMessageTree.ui.data.conflict,
-  [APP_DATA_ERROR_KIND.FORBIDDEN]: webSystemMessageTree.ui.data.forbidden,
-  [APP_DATA_ERROR_KIND.STORAGE]: webSystemMessageTree.ui.data.storage,
-  [APP_DATA_ERROR_KIND.SERVER_ERROR]: webSystemMessageTree.ui.data.serverError,
-  [APP_DATA_ERROR_KIND.UNKNOWN]: webSystemMessageTree.ui.data.unknown,
-} as const;
+}) as BuiltMessageTree<{
+  web: typeof webSystemMessageTree;
+  shared: typeof sharedSystemMessageTree;
+}>;

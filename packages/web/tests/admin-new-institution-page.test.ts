@@ -6,9 +6,10 @@ import {
   COMMERCIAL_PLAN_STATUS,
   PERMISSION_STATUS,
   ROLE,
-  SYSTEM_RFC
+  SYSTEM_RFC,
+  SystemError,
+  sharedSystemMessages
 } from '@shared';
-import { AppDataError, APP_DATA_ERROR_KIND } from '@/shared/errors/appErrors';
 import { routePaths } from '@/shared/constants/routePaths';
 import AdminNewInstitutionPage from '@/pages/admin/AdminNewInstitutionPage.vue';
 import { mountWithVuestic } from './utils/mount';
@@ -84,9 +85,9 @@ describe('admin new institution page', () => {
     expect(getSubmitButton().attributes('disabled')).toBeUndefined();
   });
 
-  it('renders API validation errors from data store mapping', async () => {
+  it('renders API validation errors from standardized system message', async () => {
     mockedCreateInstitutionOnboarding.mockRejectedValue(
-      new AppDataError(APP_DATA_ERROR_KIND.VALIDATION, 'payload rejected')
+      new SystemError(sharedSystemMessages.data.operation.validationFailed.code)
     );
     const wrapper = mountPage();
 
@@ -98,13 +99,15 @@ describe('admin new institution page', () => {
     await wrapper.find('form').trigger('submit.prevent');
     await flushPromises();
 
-    expect(wrapper.get('[data-testid="admin-new-institution-error"]').text()).toContain('Revisa los campos marcados');
+    expect(wrapper.get('[data-testid="admin-new-institution-error"]').text()).toContain(
+      sharedSystemMessages.data.operation.validationFailed.message
+    );
     expect(wrapper.find('[data-testid="admin-new-institution-retry"]').exists()).toBe(true);
   });
 
   it('renders explicit backend displayMessage when provided', async () => {
     mockedCreateInstitutionOnboarding.mockRejectedValue(
-      new AppDataError(APP_DATA_ERROR_KIND.CONFLICT, 'duplicate rfc', {
+      new SystemError(sharedSystemMessages.data.operation.conflictDetected, {
         displayMessage: 'Ya existe una institución registrada con RFC AAA010101AAA.'
       })
     );

@@ -11,12 +11,12 @@
 import { getApps, initializeApp } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
-import { PERMISSION_STATUS, ROLE, RoleSchema, SYSTEM_RFC } from '@puintegra/shared';
+import { PERMISSION_STATUS, ROLE, RoleSchema, SYSTEM_RFC, SystemError } from '@puintegra/shared';
+import { apiSystemMessages } from '../constants/systemMessages.js';
 import { buildAuthEventLog, type AuthEventName } from '../services/authAuditService.js';
 import {
-  InstitutionOnboardingServiceError,
   buildInstitutionOnboardingRecords,
-  parseInstitutionOnboardingInput
+  parseInstitutionOnboardingInput,
 } from '../services/institutionOnboardingService.js';
 
 type AuthEventWriteInput = {
@@ -60,9 +60,9 @@ async function resolveHighestGrantedRole(email: string) {
     .where('email', '==', email)
     .where('status', '==', PERMISSION_STATUS.GRANTED)
     .get();
-  const grantedRoles = new Set(snapshot.docs
-    .map((item) => item.data().role)
-    .filter((role): role is string => typeof role === 'string'));
+  const grantedRoles = new Set(
+    snapshot.docs.map((item) => item.data().role).filter((role): role is string => typeof role === 'string'),
+  );
 
   if (grantedRoles.has(ROLE.SYSTEM_ADMINISTRATOR)) {
     return ROLE.SYSTEM_ADMINISTRATOR;
@@ -87,7 +87,7 @@ async function verifyBearerToken(token: string) {
   return {
     userId: decoded.uid,
     email,
-    role: userRole
+    role: userRole,
   };
 }
 
@@ -96,10 +96,13 @@ async function verifyBearerToken(token: string) {
  */
 async function recordAuthEvent(input: AuthEventWriteInput) {
   const logRef = getAdminFirestore().collection('logs').doc();
-  const log = buildAuthEventLog({
-    ...input,
-    id: logRef.id
-  }, Date.now());
+  const log = buildAuthEventLog(
+    {
+      ...input,
+      id: logRef.id,
+    },
+    Date.now(),
+  );
   await logRef.set(log);
   return log;
 }
@@ -112,15 +115,7 @@ async function createInstitutionOnboarding(input: CreateInstitutionOnboardingInp
   const actorEmail = typeof input.actor.email === 'string' ? input.actor.email.toLowerCase() : null;
   const parsedRole = actorRole ? RoleSchema.safeParse(actorRole) : null;
   if (!actorEmail || !parsedRole?.success) {
-    throw new InstitutionOnboardingServiceError(
-      403,
-      'API-ADMIN-003',
-      'Role is not allowed to create institutions.',
-      'api.admin.institutions.forbidden_role',
-      {
-        displayMessage: 'Tu rol actual no tiene permisos para crear instituciones.'
-      }
-    );
+    throw new SystemError(apiSystemMessages.admin.institutions.forbiddenRole.code);
   }
 
   const firestore = getAdminFirestore();
@@ -130,26 +125,20 @@ async function createInstitutionOnboarding(input: CreateInstitutionOnboardingInp
     actor: {
       userId: input.actor.userId,
       email: actorEmail,
-      role: parsedRole.data
+      role: parsedRole.data,
     },
     now: Date.now(),
     originTraceId: input.originTraceId,
     permissionId: `${normalizedPayload.adminEmail.toLowerCase()}__${normalizedPayload.RFC.toLowerCase()}`,
     institutionLogId: firestore.collection('logs').doc().id,
-    permissionLogId: firestore.collection('logs').doc().id
+    permissionLogId: firestore.collection('logs').doc().id,
   });
 
   const existingInstitution = await firestore.collection('institutions').doc(parsed.institution.RFC).get();
   if (existingInstitution.exists) {
-    throw new InstitutionOnboardingServiceError(
-      409,
-      'API-ADMIN-007',
-      'Institution already exists.',
-      'api.admin.institutions.duplicate_rfc',
-      {
-        displayMessage: `Ya existe una institución registrada con RFC ${parsed.institution.RFC}.`
-      }
-    );
+    throw new SystemError(apiSystemMessages.admin.institutions.duplicateRfc, {
+      displayMessage: `Ya existe una institución registrada con RFC ${parsed.institution.RFC}.`,
+    });
   }
 
   const duplicateBootstrapPermission = await firestore
@@ -160,15 +149,9 @@ async function createInstitutionOnboarding(input: CreateInstitutionOnboardingInp
     .limit(1)
     .get();
   if (!duplicateBootstrapPermission.empty) {
-    throw new InstitutionOnboardingServiceError(
-      409,
-      'API-ADMIN-008',
-      'Bootstrap permission already exists.',
-      'api.admin.institutions.duplicate_bootstrap_permission',
-      {
-        displayMessage: `Ya existe un permiso administrador GRANTED para ${parsed.permission.email} en ${parsed.permission.RFC}.`
-      }
-    );
+    throw new SystemError(apiSystemMessages.admin.institutions.duplicateBootstrapPermission, {
+      displayMessage: `Ya existe un permiso administrador GRANTED para ${parsed.permission.email} en ${parsed.permission.RFC}.`,
+    });
   }
 
   const roleValidationSnapshot = await firestore
@@ -180,15 +163,9 @@ async function createInstitutionOnboarding(input: CreateInstitutionOnboardingInp
     .limit(1)
     .get();
   if (roleValidationSnapshot.empty) {
-    throw new InstitutionOnboardingServiceError(
-      403,
-      'API-ADMIN-003',
-      'Role is not allowed to create institutions.',
-      'api.admin.institutions.forbidden_role',
-      {
-        displayMessage: 'Tu rol actual no tiene permisos para crear instituciones.'
-      }
-    );
+    throw new SystemError(apiSystemMessages.admin.institutions.forbiddenRole, {
+      displayMessage: `El usuario ${actorEmail} no tiene permisos para crear instituciones.`,
+    });
   }
 
   const batch = firestore.batch();
@@ -205,6 +182,6 @@ export function createApiDependencies() {
   return {
     verifyBearerToken,
     recordAuthEvent,
-    createInstitutionOnboarding
+    createInstitutionOnboarding,
   };
 }

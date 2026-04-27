@@ -16,25 +16,26 @@ import {
   SYSTEM_RFC,
   type CommercialPlan,
   type CommercialPlanStatus,
-} from "@shared";
-import { computed, ref } from "vue";
-import { useRouter } from "vue-router";
-import { useInstitutionOnboardingController } from "@/composables/useDataControllers";
-import { routePaths } from "@/shared/constants/routePaths";
-import { APP_DATA_ERROR_KIND } from "@/shared/errors/appErrors";
-import { webUiDataErrorByKind } from "@/shared/constants/systemMessages";
+  formatUiErrorString,
+  formatUiMessageString,
+} from '@shared';
+import { computed, ref } from 'vue';
+import { useRouter } from 'vue-router';
+import { useInstitutionOnboardingController } from '@/composables/useDataControllers';
+import { routePaths } from '@/shared/constants/routePaths';
+import { systemMessageTree } from '@/shared/constants/systemMessages';
 
 const router = useRouter();
 const controller = useInstitutionOnboardingController();
 const formRef = ref<{ validate: () => boolean | Promise<boolean> } | null>(null);
 
-const RFC = ref("");
-const name = ref("");
+const RFC = ref('');
+const name = ref('');
 const plan = ref<CommercialPlan>(COMMERCIAL_PLAN.PORTAL);
 const planStatus = ref<CommercialPlanStatus>(COMMERCIAL_PLAN_STATUS.ACTIVE);
-const planStartAt = ref("");
-const planFinishAt = ref("");
-const adminEmail = ref("");
+const planStartAt = ref('');
+const planFinishAt = ref('');
+const adminEmail = ref('');
 const createdInstitutionRfc = ref<string | null>(null);
 const successMessage = ref<string | null>(null);
 const localError = ref<string | null>(null);
@@ -60,7 +61,7 @@ function isAllowedInstitutionRfc(value: string) {
 }
 
 function isValidEmail(value: string) {
-  return value.includes("@");
+  return value.includes('@');
 }
 
 function isValidPlanDateRange(startDate: string, finishDate: string) {
@@ -72,37 +73,37 @@ function isValidPlanDateRange(startDate: string, finishDate: string) {
   return !(Number.isNaN(startAt) || Number.isNaN(finishAt) || startAt > finishAt);
 }
 
-const isFormReadyToSubmit = computed(() =>
-  isRequiredTextValid(normalizedRfc.value)
-  && isRequiredTextValid(trimmedName.value)
-  && isRequiredTextValid(planStartAt.value)
-  && isRequiredTextValid(planFinishAt.value)
-  && isRequiredTextValid(trimmedAdminEmail.value)
-  && isAllowedInstitutionRfc(normalizedRfc.value)
-  && isValidEmail(trimmedAdminEmail.value)
-  && isValidPlanDateRange(planStartAt.value, planFinishAt.value)
+const isFormReadyToSubmit = computed(
+  () =>
+    isRequiredTextValid(normalizedRfc.value) &&
+    isRequiredTextValid(trimmedName.value) &&
+    isRequiredTextValid(planStartAt.value) &&
+    isRequiredTextValid(planFinishAt.value) &&
+    isRequiredTextValid(trimmedAdminEmail.value) &&
+    isAllowedInstitutionRfc(normalizedRfc.value) &&
+    isValidEmail(trimmedAdminEmail.value) &&
+    isValidPlanDateRange(planStartAt.value, planFinishAt.value),
 );
 const isSubmitDisabled = computed(() => controller.isSaving.value || !isFormReadyToSubmit.value);
 const hasCreatedInstitution = computed(() => createdInstitutionRfc.value !== null);
 
-const requiredTextRule = (label: string) => (value: string) =>
-  isRequiredTextValid(value) || `${label} es requerido.`;
+const requiredTextRule = (label: string) => (value: string) => isRequiredTextValid(value) || `${label} es requerido.`;
 const rfcReservedRule = (value: string) => {
   const normalizedRfc = value.trim().toUpperCase();
-  return isAllowedInstitutionRfc(normalizedRfc) || "RFC reservado. Usa un RFC institucional real.";
+  return isAllowedInstitutionRfc(normalizedRfc) || 'RFC reservado. Usa un RFC institucional real.';
 };
-const emailRule = (value: string) => isValidEmail(value) || "Correo del administrador invalido.";
+const emailRule = (value: string) => isValidEmail(value) || 'Correo del administrador invalido.';
 const startDateRangeRule = (value: string) => {
   if (!value || !planFinishAt.value) {
     return true;
   }
-  return isValidPlanDateRange(value, planFinishAt.value) || "Rango de fechas invalido.";
+  return isValidPlanDateRange(value, planFinishAt.value) || 'Rango de fechas invalido.';
 };
 const finishDateRangeRule = (value: string) => {
   if (!planStartAt.value || !value) {
     return true;
   }
-  return isValidPlanDateRange(planStartAt.value, value) || "Rango de fechas invalido.";
+  return isValidPlanDateRange(planStartAt.value, value) || 'Rango de fechas invalido.';
 };
 
 /**
@@ -118,7 +119,7 @@ async function handleSubmit() {
   controller.retry();
   const isValid = Boolean(await formRef.value?.validate());
   if (!isValid) {
-    localError.value = webUiDataErrorByKind[APP_DATA_ERROR_KIND.VALIDATION].message;
+    localError.value = formatUiErrorString(systemMessageTree.web.ui.data.validation);
     return;
   }
 
@@ -133,20 +134,20 @@ async function handleSubmit() {
       adminEmail: trimmedAdminEmail.value,
     });
     createdInstitutionRfc.value = created.institution.RFC;
-    successMessage.value = "Institucion creada correctamente.";
+    successMessage.value = formatUiMessageString(systemMessageTree.web.ui.institutions.created);
   } catch {
     // DataStore captures normalized user-facing error text; page only keeps local validation errors.
   }
 }
 
 function resetOnboardingForm() {
-  RFC.value = "";
-  name.value = "";
+  RFC.value = '';
+  name.value = '';
   plan.value = COMMERCIAL_PLAN.PORTAL;
   planStatus.value = COMMERCIAL_PLAN_STATUS.ACTIVE;
-  planStartAt.value = "";
-  planFinishAt.value = "";
-  adminEmail.value = "";
+  planStartAt.value = '';
+  planFinishAt.value = '';
+  adminEmail.value = '';
   createdInstitutionRfc.value = null;
   successMessage.value = null;
   localError.value = null;
@@ -207,12 +208,7 @@ async function goToCreatedInstitution() {
           :rules="[requiredTextRule('Nombre')]"
           data-testid="admin-new-institution-name"
         />
-        <VaSelect
-          v-model="plan"
-          :options="planOptions"
-          label="Plan"
-          data-testid="admin-new-institution-plan"
-        />
+        <VaSelect v-model="plan" :options="planOptions" label="Plan" data-testid="admin-new-institution-plan" />
         <VaSelect
           v-model="planStatus"
           :options="planStatusOptions"

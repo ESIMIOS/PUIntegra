@@ -23,11 +23,13 @@ import {
   ROLE,
   RoleSchema,
   SYSTEM_RFC,
+  SystemError,
   type Institution,
   type Log,
-  type Permission
+  type Permission,
 } from '@puintegra/shared';
 import { z } from 'zod';
+import { apiSystemMessages } from '../constants/systemMessages.js';
 
 export const CreateInstitutionOnboardingInputSchema = z.object({
   RFC: z.string().min(1),
@@ -36,44 +38,17 @@ export const CreateInstitutionOnboardingInputSchema = z.object({
   planStatus: CommercialPlanStatusSchema,
   planStartAt: z.number().int().nonnegative(),
   planFinishAt: z.number().int().nonnegative(),
-  adminEmail: z.string().email()
+  adminEmail: z.string().email(),
 });
 
 const CreateInstitutionOnboardingActorSchema = z.object({
   userId: z.string().min(1),
   email: z.string().email(),
-  role: RoleSchema
+  role: RoleSchema,
 });
 
 export type CreateInstitutionOnboardingInput = z.infer<typeof CreateInstitutionOnboardingInputSchema>;
 export type CreateInstitutionOnboardingActor = z.infer<typeof CreateInstitutionOnboardingActorSchema>;
-
-export class InstitutionOnboardingServiceError extends Error {
-  readonly status: number;
-  readonly code: string;
-  readonly uiMessageKey: string;
-  readonly displayMessage?: string;
-  readonly details?: Record<string, unknown>;
-
-  constructor(
-    status: number,
-    code: string,
-    message: string,
-    uiMessageKey: string,
-    options: {
-      displayMessage?: string;
-      details?: Record<string, unknown>;
-    } = {}
-  ) {
-    super(message);
-    this.name = 'InstitutionOnboardingServiceError';
-    this.status = status;
-    this.code = code;
-    this.uiMessageKey = uiMessageKey;
-    this.displayMessage = options.displayMessage;
-    this.details = options.details;
-  }
-}
 
 type InstitutionOnboardingBuildInput = {
   rawInput: unknown;
@@ -131,51 +106,19 @@ function normalizeEmail(value: string) {
  */
 function assertActorAndReservedRfc(input: CreateInstitutionOnboardingInput, actor: CreateInstitutionOnboardingActor) {
   if (actor.role !== ROLE.SYSTEM_ADMINISTRATOR) {
-    throw new InstitutionOnboardingServiceError(
-      403,
-      'API-ADMIN-003',
-      'Role is not allowed to create institutions.',
-      'api.admin.institutions.forbidden_role',
-      {
-        displayMessage: 'Tu rol actual no tiene permisos para crear instituciones.'
-      }
-    );
+    throw new SystemError(apiSystemMessages.admin.institutions.forbiddenRole);
   }
 
   if (normalizeRfc(input.RFC) === normalizeRfc(SYSTEM_RFC)) {
-    throw new InstitutionOnboardingServiceError(
-      400,
-      'API-ADMIN-004',
-      'SYSTEM_RFC cannot be used as a tenant institution RFC.',
-      'api.admin.institutions.invalid_system_rfc',
-      {
-        displayMessage: 'SYSTEM_RFC es un RFC reservado y no puede usarse para una institución.'
-      }
-    );
+    throw new SystemError(apiSystemMessages.admin.institutions.invalidSystemRfc);
   }
 
   if (normalizeRfc(input.RFC) === normalizeRfc(DEFAULT_RFC)) {
-    throw new InstitutionOnboardingServiceError(
-      400,
-      'API-ADMIN-005',
-      'DEFAULT_RFC cannot be reused for tenant institution onboarding.',
-      'api.admin.institutions.invalid_default_rfc',
-      {
-        displayMessage: 'DEFAULT_RFC es un RFC reservado y no puede usarse para una institución.'
-      }
-    );
+    throw new SystemError(apiSystemMessages.admin.institutions.invalidDefaultRfc);
   }
 
   if (input.planStartAt > input.planFinishAt) {
-    throw new InstitutionOnboardingServiceError(
-      400,
-      'API-ADMIN-006',
-      'planStartAt must be less than or equal to planFinishAt.',
-      'api.admin.institutions.invalid_plan_dates',
-      {
-        displayMessage: 'La fecha de inicio del plan debe ser menor o igual a la fecha de fin.'
-      }
-    );
+    throw new SystemError(apiSystemMessages.admin.institutions.invalidPlanDates);
   }
 }
 
@@ -185,34 +128,29 @@ function assertActorAndReservedRfc(input: CreateInstitutionOnboardingInput, acto
 export function parseInstitutionOnboardingInput(rawInput: unknown) {
   const parsed = CreateInstitutionOnboardingInputSchema.safeParse(rawInput);
   if (!parsed.success) {
-    throw new InstitutionOnboardingServiceError(
-      400,
-      'API-ADMIN-001',
-      'Invalid institution onboarding payload.',
-      'api.admin.institutions.invalid_payload',
-      {
-        displayMessage: 'La solicitud de alta institucional contiene campos inválidos.',
-        details: { issues: parsed.error.issues }
-      }
-    );
+    throw new SystemError(apiSystemMessages.admin.institutions.invalidPayload, {
+      details: { issues: parsed.error.issues },
+    });
   }
 
   return {
     ...parsed.data,
     RFC: normalizeRfc(parsed.data.RFC),
     name: parsed.data.name.trim(),
-    adminEmail: normalizeEmail(parsed.data.adminEmail)
+    adminEmail: normalizeEmail(parsed.data.adminEmail),
   };
 }
 
 /**
  * @description Construye documentos de institución, permiso y bitácoras de onboarding.
  */
-export function buildInstitutionOnboardingRecords(input: InstitutionOnboardingBuildInput): InstitutionOnboardingBuildResult {
+export function buildInstitutionOnboardingRecords(
+  input: InstitutionOnboardingBuildInput,
+): InstitutionOnboardingBuildResult {
   const normalizedInput = parseInstitutionOnboardingInput(input.rawInput);
   const actor = CreateInstitutionOnboardingActorSchema.parse({
     ...input.actor,
-    email: normalizeEmail(input.actor.email)
+    email: normalizeEmail(input.actor.email),
   });
 
   assertActorAndReservedRfc(normalizedInput, actor);
@@ -227,7 +165,7 @@ export function buildInstitutionOnboardingRecords(input: InstitutionOnboardingBu
     planFinishAt: normalizedInput.planFinishAt,
     updates: [],
     createdAt: input.now,
-    updatedAt: input.now
+    updatedAt: input.now,
   });
 
   const permission = PermissionSchema.parse({
@@ -239,7 +177,7 @@ export function buildInstitutionOnboardingRecords(input: InstitutionOnboardingBu
     status: PERMISSION_STATUS.GRANTED,
     updates: [],
     createdAt: input.now,
-    updatedAt: input.now
+    updatedAt: input.now,
   });
 
   const institutionLog = LogSchema.parse({
@@ -252,15 +190,15 @@ export function buildInstitutionOnboardingRecords(input: InstitutionOnboardingBu
     execution: {
       executedByUserId: actor.userId,
       executedByRole: actor.role,
-      executedByUserEmail: actor.email
+      executedByUserEmail: actor.email,
     },
     impact: {
       impactedUserRole: ROLE.INSTITUTION_ADMIN,
       impactedUserEmail: normalizedInput.adminEmail,
-      impactedPermissionStatus: PERMISSION_STATUS.GRANTED
+      impactedPermissionStatus: PERMISSION_STATUS.GRANTED,
     },
     searchRequest: {},
-    createdAt: input.now
+    createdAt: input.now,
   });
 
   const permissionLog = LogSchema.parse({
@@ -273,15 +211,15 @@ export function buildInstitutionOnboardingRecords(input: InstitutionOnboardingBu
     execution: {
       executedByUserId: actor.userId,
       executedByRole: actor.role,
-      executedByUserEmail: actor.email
+      executedByUserEmail: actor.email,
     },
     impact: {
       impactedUserRole: ROLE.INSTITUTION_ADMIN,
       impactedUserEmail: normalizedInput.adminEmail,
-      impactedPermissionStatus: PERMISSION_STATUS.GRANTED
+      impactedPermissionStatus: PERMISSION_STATUS.GRANTED,
     },
     searchRequest: {},
-    createdAt: input.now
+    createdAt: input.now,
   });
 
   return {
@@ -297,7 +235,7 @@ export function buildInstitutionOnboardingRecords(input: InstitutionOnboardingBu
         planStartAt: institution.planStartAt,
         planFinishAt: institution.planFinishAt,
         createdAt: institution.createdAt,
-        updatedAt: institution.updatedAt
+        updatedAt: institution.updatedAt,
       },
       permission: {
         permissionId: permission.permissionId,
@@ -306,8 +244,8 @@ export function buildInstitutionOnboardingRecords(input: InstitutionOnboardingBu
         role: ROLE.INSTITUTION_ADMIN,
         status: PERMISSION_STATUS.GRANTED,
         createdAt: permission.createdAt,
-        updatedAt: permission.updatedAt
-      }
-    }
+        updatedAt: permission.updatedAt,
+      },
+    },
   };
 }

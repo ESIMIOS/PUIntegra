@@ -4,11 +4,11 @@ import {
   COMMERCIAL_PLAN_STATUS,
   DEFAULT_RFC,
   ROLE,
+  SystemError,
   SYSTEM_RFC,
   roleValues
 } from '@puintegra/shared';
 import {
-  InstitutionOnboardingServiceError,
   buildInstitutionOnboardingRecords
 } from '../src/services/institutionOnboardingService.js';
 
@@ -45,7 +45,7 @@ describe('institution onboarding service', () => {
       if (role === ROLE.SYSTEM_ADMINISTRATOR) {
         expect(operation).not.toThrow();
       } else {
-        expect(operation).toThrowError(InstitutionOnboardingServiceError);
+        expect(operation).toThrowError(SystemError);
       }
     }
   });
@@ -64,7 +64,7 @@ describe('institution onboarding service', () => {
           role: ROLE.SYSTEM_ADMINISTRATOR
         }
       })
-    ).toThrowError(InstitutionOnboardingServiceError);
+    ).toThrowError(SystemError);
   });
 
   it('rejects DEFAULT_RFC', () => {
@@ -81,7 +81,7 @@ describe('institution onboarding service', () => {
           role: ROLE.SYSTEM_ADMINISTRATOR
         }
       })
-    ).toThrowError(InstitutionOnboardingServiceError);
+    ).toThrowError(SystemError);
   });
 
   it('builds onboarding institution with deferred sharedSecret', () => {

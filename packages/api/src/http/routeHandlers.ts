@@ -9,12 +9,11 @@
  */
 
 import type { Context } from 'hono';
-import { DEFAULT_RFC, ROLE, SYSTEM_RFC } from '@puintegra/shared';
+import { DEFAULT_RFC, ROLE, SYSTEM_RFC, SystemError, HTTP_STATUS } from '@puintegra/shared';
 import { type AuthEventName } from '../services/authAuditService.js';
-import {
-  parseInstitutionOnboardingInput
-} from '../services/institutionOnboardingService.js';
-import { apiError, apiOk } from './apiResponse.js';
+import { apiSystemMessages } from '../constants/systemMessages.js';
+import { parseInstitutionOnboardingInput } from '../services/institutionOnboardingService.js';
+import { apiOk } from './apiResponse.js';
 
 export type VerifiedBearerToken = {
   userId: string;
@@ -38,33 +37,6 @@ export type CreateApiAppDependencies = {
   createOriginTraceId: () => string;
 };
 
-export class ApiRouteError extends Error {
-  readonly status: number;
-  readonly code: string;
-  readonly uiMessageKey: string;
-  readonly displayMessage?: string;
-  readonly details?: Record<string, unknown>;
-
-  constructor(
-    status: number,
-    code: string,
-    message: string,
-    uiMessageKey: string,
-    options: {
-      displayMessage?: string;
-      details?: Record<string, unknown>;
-    } = {}
-  ) {
-    super(message);
-    this.name = 'ApiRouteError';
-    this.status = status;
-    this.code = code;
-    this.uiMessageKey = uiMessageKey;
-    this.displayMessage = options.displayMessage;
-    this.details = options.details;
-  }
-}
-
 /**
  * @description Extrae token Bearer del encabezado Authorization.
  */
@@ -77,10 +49,12 @@ function readBearerToken(authorization: string | undefined) {
  * @description Usa identificadores de ejecución/traza disponibles para correlación con logs de Cloud Functions.
  */
 export function readOriginTraceId(context: Context, createOriginTraceId: () => string) {
-  return context.req.header('function-execution-id')
-    ?? context.req.header('x-cloud-trace-context')
-    ?? context.req.header('x-request-id')
-    ?? createOriginTraceId();
+  return (
+    context.req.header('function-execution-id') ??
+    context.req.header('x-cloud-trace-context') ??
+    context.req.header('x-request-id') ??
+    createOriginTraceId()
+  );
 }
 
 /**
@@ -91,11 +65,7 @@ export function createAuthEventHandler(dependencies: CreateApiAppDependencies, e
     const token = readBearerToken(context.req.header('authorization'));
     const originTraceId = readOriginTraceId(context, dependencies.createOriginTraceId);
     if (!token) {
-      return context.json(apiError({
-        code: 'API-AUTH-001',
-        message: 'Missing bearer token.',
-        uiMessageKey: 'api.auth.missing_bearer_token'
-      }, { originTraceId }), 401);
+      throw new SystemError(apiSystemMessages.auth.missingBearerToken);
     }
 
     const verified = await dependencies.verifyBearerToken(token);
@@ -103,12 +73,17 @@ export function createAuthEventHandler(dependencies: CreateApiAppDependencies, e
       event,
       originTraceId,
       userId: verified.userId,
-      email: verified.email ?? null
+      email: verified.email ?? null,
     });
 
-    return context.json(apiOk({
-      recorded: true
-    }, { originTraceId }));
+    return context.json(
+      apiOk(
+        {
+          recorded: true,
+        },
+        { originTraceId },
+      ),
+    );
   };
 }
 
@@ -120,72 +95,37 @@ export function createInstitutionOnboardingHandler(dependencies: CreateApiAppDep
     const token = readBearerToken(context.req.header('authorization'));
     const originTraceId = readOriginTraceId(context, dependencies.createOriginTraceId);
     if (!token) {
-      throw new ApiRouteError(
-        401,
-        'API-AUTH-001',
-        'Missing bearer token.',
-        'api.auth.missing_bearer_token',
-        {
-          displayMessage: 'Tu sesión no está autenticada. Inicia sesión y vuelve a intentarlo.'
-        }
-      );
+      throw new SystemError(apiSystemMessages.auth.missingBearerToken);
     }
 
     const verified = await dependencies.verifyBearerToken(token);
     if (verified.role !== ROLE.SYSTEM_ADMINISTRATOR) {
-      throw new ApiRouteError(
-        403,
-        'API-ADMIN-003',
-        'Role is not allowed to create institutions.',
-        'api.admin.institutions.forbidden_role'
-      );
+      throw new SystemError(apiSystemMessages.admin.institutions.forbiddenRole);
     }
 
     let payload: unknown;
     try {
       payload = await context.req.json();
     } catch {
-      throw new ApiRouteError(
-        400,
-        'API-ADMIN-001',
-        'Invalid institution onboarding payload.',
-        'api.admin.institutions.invalid_payload',
-        {
-          displayMessage: 'No se pudo leer el payload del alta institucional.'
-        }
-      );
+      throw new SystemError(apiSystemMessages.admin.institutions.invalidPayload, {
+        displayMessage: 'No se pudo leer el payload del alta institucional.',
+      });
     }
 
     const normalizedPayload = parseInstitutionOnboardingInput(payload);
     if (normalizedPayload.RFC === SYSTEM_RFC) {
-      throw new ApiRouteError(
-        400,
-        'API-ADMIN-004',
-        'SYSTEM_RFC cannot be used as a tenant institution RFC.',
-        'api.admin.institutions.invalid_system_rfc',
-        {
-          displayMessage: 'SYSTEM_RFC es un RFC reservado y no puede usarse para una institución.'
-        }
-      );
+      throw new SystemError(apiSystemMessages.admin.institutions.invalidSystemRfc);
     }
     if (normalizedPayload.RFC === DEFAULT_RFC) {
-      throw new ApiRouteError(
-        400,
-        'API-ADMIN-005',
-        'DEFAULT_RFC cannot be reused for tenant institution onboarding.',
-        'api.admin.institutions.invalid_default_rfc',
-        {
-          displayMessage: 'DEFAULT_RFC es un RFC reservado y no puede usarse para una institución.'
-        }
-      );
+      throw new SystemError(apiSystemMessages.admin.institutions.invalidDefaultRfc);
     }
 
     const created = await dependencies.createInstitutionOnboarding({
       payload: normalizedPayload,
       actor: verified,
-      originTraceId
+      originTraceId,
     });
 
-    return context.json(apiOk(created, { originTraceId }), 201);
+    return context.json(apiOk(created, { originTraceId }), HTTP_STATUS.CREATED);
   };
 }

@@ -13,7 +13,7 @@ describe('system message schema', () => {
       code: 'WEB-GUARD-001',
       key: 'web.guard.role_mismatch',
       severity: LOG_SEVERITY.WARNING,
-      package: 'web',
+      packageName: 'web',
       message: 'Role does not have access to the requested route.',
       meta: {
         route: '/admin/institutions'

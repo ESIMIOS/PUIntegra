@@ -15,7 +15,7 @@ export const LOG_SEVERITY = {
   INFO: 'INFO',
   SUCCESS: 'SUCCESS',
   WARNING: 'WARNING',
-  ERROR: 'ERROR'
+  ERROR: 'ERROR',
 } as const;
 
 export const LOG_SEVERITY_VALUES = [
@@ -23,7 +23,7 @@ export const LOG_SEVERITY_VALUES = [
   LOG_SEVERITY.INFO,
   LOG_SEVERITY.SUCCESS,
   LOG_SEVERITY.WARNING,
-  LOG_SEVERITY.ERROR
+  LOG_SEVERITY.ERROR,
 ] as const;
 export const logSeverityValues = LOG_SEVERITY_VALUES;
 
@@ -36,25 +36,21 @@ export const INVALID_MESSAGE_CODE_FORMAT = 'Invalid message code format';
 export const INVALID_MESSAGE_KEY_FORMAT = 'Invalid message key format';
 export const INVALID_PACKAGE_NAME_FORMAT = 'Invalid package name format';
 
-export const MessageCodeSchema = z
-  .string()
-  .regex(MESSAGE_CODE_PATTERN, INVALID_MESSAGE_CODE_FORMAT);
+export const MessageCodeSchema = z.string().regex(MESSAGE_CODE_PATTERN, INVALID_MESSAGE_CODE_FORMAT);
 
-export const MessageKeySchema = z
-  .string()
-  .regex(MESSAGE_KEY_PATTERN, INVALID_MESSAGE_KEY_FORMAT);
+export const MessageKeySchema = z.string().regex(MESSAGE_KEY_PATTERN, INVALID_MESSAGE_KEY_FORMAT);
 
-export const PackageNameSchema = z
-  .string()
-  .regex(PACKAGE_NAME_PATTERN, INVALID_PACKAGE_NAME_FORMAT);
+export const PackageNameSchema = z.string().regex(PACKAGE_NAME_PATTERN, INVALID_PACKAGE_NAME_FORMAT);
 
 export const SystemMessageSchema = z.object({
   code: MessageCodeSchema,
   key: MessageKeySchema,
   severity: LogSeveritySchema,
-  package: PackageNameSchema,
+  packageName: PackageNameSchema,
   message: z.string().min(1),
-  meta: z.record(z.unknown()).optional()
+  displayMessage: z.string().min(1).optional(),
+  httpStatus: z.number().int().min(100).max(599).optional(),
+  meta: z.record(z.unknown()).optional(),
 });
 
 export type LogSeverity = z.infer<typeof LogSeveritySchema>;

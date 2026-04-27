@@ -11,7 +11,7 @@
  * - 0.0.1	(2026-04-18)	Agrega gateway de autenticación con Firebase Auth Emulator.	@codex
  */
 
-import { ROLE, RoleSchema, PERMISSION_STATUS, type Permission, type User } from '@shared';
+import { ROLE, RoleSchema, PERMISSION_STATUS, SystemError, sharedSystemMessages, type Permission, type User } from '@shared';
 import { z } from 'zod';
 import {
   onAuthStateChanged,
@@ -20,9 +20,8 @@ import {
   type User as FirebaseUser
 } from 'firebase/auth';
 import { getFirebaseRuntime } from '@/plugins/firebase';
+import { executeHttpApi, resolveApiUrl } from '@/gateways/httpApiGateway';
 import { getUserById, listPermissionsByEmail } from '@/gateways/firebaseDataGateway';
-import { AppAuthError, APP_AUTH_ERROR_KIND } from '@/shared/errors/appErrors';
-import { systemMessageTree } from '@/shared/constants/systemMessages';
 
 const ACTIVE_CONTEXT_STORAGE_KEY = 'puintegra:web:active-session-context:v1';
 const AUTH_EVENT_API_PATH = '/api/auth/events';
@@ -127,28 +126,9 @@ function toContext(permission: Permission): SessionContext {
  */
 function assertFirebaseUser(value: FirebaseUser | null): FirebaseUser {
   if (!value) {
-    throw new AppAuthError(
-      APP_AUTH_ERROR_KIND.AUTH_UNAVAILABLE,
-      systemMessageTree.shared.data.operation.unknownFailure.message,
-      {
-        code: systemMessageTree.shared.data.operation.unknownFailure.code,
-        uiMessage: systemMessageTree.shared.data.operation.unknownFailure.message
-      }
-    );
+    throw new SystemError(sharedSystemMessages.data.operation.unknownFailure);
   }
   return value;
-}
-
-/**
- * @description Resuelve URL del API HTTP usando base opcional para emuladores.
- */
-function resolveApiUrl(path: string) {
-  const baseUrl = import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, "") ?? "";
-  // Evitamos duplicidad si la URL base ya termina en /api y el path ya empieza con /api/
-  if (baseUrl.endsWith("/api") && path.startsWith("/api/")) {
-    return `${baseUrl}${path.substring(4)}`;
-  }
-  return `${baseUrl}${path}`;
 }
 
 /**
@@ -162,11 +142,13 @@ async function recordAuthEvent(event: 'login' | 'logout') {
 
   try {
     const token = await firebaseUser.getIdToken();
-    await fetch(resolveApiUrl(`${AUTH_EVENT_API_PATH}/${event}`), {
+    await executeHttpApi({
+      url: resolveApiUrl(`${AUTH_EVENT_API_PATH}/${event}`),
       method: 'POST',
       headers: {
         authorization: `Bearer ${token}`
-      }
+      },
+      transportMessage: `Auth ${event} event API request failed.`
     });
   } catch {
     // Audit event submission must not block local sign-in or sign-out UX.
@@ -184,14 +166,7 @@ async function resolveProfile(firebaseUser: FirebaseUser): Promise<LoginResult> 
     .map(toContext);
 
   if (contexts.length === 0) {
-    throw new AppAuthError(
-      APP_AUTH_ERROR_KIND.NO_PERMISSIONS,
-      systemMessageTree.shared.auth.login.noPermissions.message,
-      {
-        code: systemMessageTree.shared.auth.login.noPermissions.code,
-        uiMessage: systemMessageTree.shared.auth.login.noPermissions.message
-      }
-    );
+    throw new SystemError(sharedSystemMessages.auth.login.noPermissions);
   }
 
   const loginResult = LoginResultSchema.parse({
@@ -228,14 +203,7 @@ export async function validateCredentials(email: string, password: string): Prom
   try {
     credential = await signInWithEmailAndPassword(getFirebaseRuntime().auth, email, password);
   } catch {
-    throw new AppAuthError(
-      APP_AUTH_ERROR_KIND.INVALID_CREDENTIALS,
-      systemMessageTree.shared.auth.login.invalidCredentialsAttempt.message,
-      {
-        code: systemMessageTree.shared.auth.login.invalidCredentialsAttempt.code,
-        uiMessage: systemMessageTree.shared.auth.login.invalidCredentialsAttempt.message
-      }
-    );
+    throw new SystemError(sharedSystemMessages.auth.login.invalidCredentialsAttempt);
   }
 
   try {
@@ -254,14 +222,7 @@ export async function validateCredentials(email: string, password: string): Prom
 export async function establishSession(login: LoginResult, context: SessionContext): Promise<AppSession> {
   const selected = login.contexts.find((candidate) => candidate.role === context.role && candidate.rfc === context.rfc);
   if (!selected) {
-    throw new AppAuthError(
-      APP_AUTH_ERROR_KIND.INVALID_CONTEXT,
-      systemMessageTree.shared.auth.login.invalidContext.message,
-      {
-        code: systemMessageTree.shared.auth.login.invalidContext.code,
-        uiMessage: systemMessageTree.shared.auth.login.invalidContext.message
-      }
-    );
+    throw new SystemError(sharedSystemMessages.auth.login.invalidContext);
   }
   const user = await getUserById(login.userId);
   saveContext(selected);

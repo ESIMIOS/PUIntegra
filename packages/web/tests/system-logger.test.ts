@@ -67,7 +67,7 @@ describe('system logger', () => {
       code: 'WEB-DEBUG-001',
       key: 'web.logger.debug_event',
       severity: 'DEBUG',
-      package: 'web',
+      packageName: 'web',
       message: 'Evento de depuración.'
     };
     logSystemMessageVerbose(debugMessage, { path: '/debug' });
