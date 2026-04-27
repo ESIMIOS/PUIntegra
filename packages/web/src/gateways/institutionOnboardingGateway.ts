@@ -73,7 +73,7 @@ export async function createInstitutionOnboarding(
   const parsed = CreateInstitutionOnboardingInputSchema.safeParse(input);
   if (!parsed.success) {
     throw new SystemError(systemMessageTree.shared.data.operation.validationFailed, {
-      displayMessage: 'Invalid institution onboarding payload.',
+      displayMessage: 'Datos de onboarding inválidos. Por favor verifica la información e intenta de nuevo.',
       details: {
         issues: parsed.error.issues,
       },
@@ -88,7 +88,7 @@ export async function createInstitutionOnboarding(
   };
   if (payload.RFC === SYSTEM_RFC || payload.RFC === DEFAULT_RFC) {
     throw new SystemError(systemMessageTree.shared.data.operation.validationFailed, {
-      displayMessage: 'Reserved RFC cannot be used for onboarding.',
+      displayMessage: 'RFC reservado no puede ser utilizado para el onboarding.',
       details: {
         RFC: payload.RFC,
       },
@@ -98,7 +98,7 @@ export async function createInstitutionOnboarding(
   const firebaseUser = getFirebaseRuntime().auth.currentUser;
   if (!firebaseUser) {
     throw new SystemError(systemMessageTree.shared.data.operation.forbiddenOperation, {
-      displayMessage: 'Current session is not authenticated.',
+      displayMessage: 'La sesión actual no está autenticada.',
     });
   }
 
@@ -108,10 +108,10 @@ export async function createInstitutionOnboarding(
     method: 'POST',
     headers: {
       authorization: `Bearer ${token}`,
-      'content-type': 'application/json'
+      'content-type': 'application/json',
     },
     body: JSON.stringify(payload),
     parseData: CreateInstitutionOnboardingResponseSchema,
-    transportMessage: 'Institution onboarding API request failed.'
+    transportMessage: 'La solicitud de onboarding institucional falló',
   });
 }

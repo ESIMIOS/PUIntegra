@@ -109,8 +109,8 @@ Define project-wide engineering documentation and code conventions that apply ac
   - schemas validate unknown/runtime inputs against that vocabulary.
 - Do not place runtime validation logic in constant files.
 - For structured technical logs/messages:
-  - `code` and `key` use stable technical identifiers (English-style naming),
-  - human-readable `message` text defaults to Spanish unless a package spec defines an exception.
+  - `code`, `key` and `message` use stable technical identifiers (English-style naming),
+  - `displayMessage` human-readable text defaults to Spanish unless a package spec defines an exception.
 - As a coding preference, avoid direct raw-string comparisons in consumer code whenever a stable constant, enum-derived value, or typed lookup map exists.
 - This applies to constrained domains such as role/status/severity/domain, and to any other repeated semantic token.
 - Avoid duplicating raw string literals across arrays, schemas, and consumer modules.
@@ -138,16 +138,19 @@ Define project-wide engineering documentation and code conventions that apply ac
 
 - `openspec/changes/*`: transactional change artifacts.
 - `openspec/specs/*` and `packages/*/specs/*`: persistent live specs.
+
 ## Technical anti-patterns
+
 ### Circular dependencies (Internal imports)
+
 - **Problem**: Importing from centralized re-exporters (`bom.ts`, `index.ts`) within the same package or components that are re-exported by that file.
 - **Consequence**: Module evaluation cycles lead to `undefined` values at runtime, breaking state and constants.
 - **Rule**: NEVER import from a package's central re-exporter or index file from within the same package. Always use direct paths (for example `@/stores/authStore` or `../utils/foo`) for internal dependencies.
 
-
 ## GitHub Actions security
 
 ### Pin third-party actions to full commit SHAs
+
 - **Rule**: All third-party GitHub Actions (any action NOT in the `actions/*` or `github/*` namespaces) MUST be pinned to a full 40-character commit SHA, not a mutable tag or branch.
 - **Rationale**: Mutable tags (e.g. `@v4`, `@main`) can be silently updated or hijacked by the action author or a supply-chain attacker, executing arbitrary code in your CI runner with access to all secrets.
 - **Format**: `uses: owner/action@<40-char-sha> # vX.Y.Z` — the version comment is required for human readability.
@@ -167,6 +170,7 @@ Define project-wide engineering documentation and code conventions that apply ac
 - To find the commit SHA for a tag: `gh api repos/{owner}/{repo}/git/ref/tags/{tag}` and dereference annotated tags if `type == "tag"`.
 
 ### pnpm install script allowlist
+
 - **Rule**: The root `package.json` MUST declare `pnpm.onlyBuiltDependencies` to allowlist the exact set of packages permitted to run lifecycle scripts (`postinstall`, `preinstall`, `install`).
 - **Rationale**: Without this, any transitive dependency can run arbitrary shell code during `pnpm install` in CI, where all secrets are available.
 - **Audit command**: Run the following to detect new packages with install scripts before updating the allowlist:

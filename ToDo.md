@@ -14,4 +14,4 @@
 - General
   - Evaluate the use of Zod for Services that want to create Documents in Firestore, before to persist the document, to validate the data against the Zod schema, and return a clear error message if the validation fails.
   - Notify by email the user when a new permission is created and a link to access it. When is consecuence of the creation of a new institution, include the details of the institution 
-  -
+  - Validate if originTraceId it's taked from the request in firebase functions or not
