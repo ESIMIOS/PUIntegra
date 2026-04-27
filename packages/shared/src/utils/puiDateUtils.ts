@@ -8,13 +8,18 @@
  * - 0.0.1	(2026-04-15)	Versión inicial de utilidades de fecha PUI.	@tirsomartinezreyes
  */
 
+import { sharedSystemMessages } from '../constants/system-messages';
+import { SystemError } from '../errors/system-app-error';
 import { PUI_DATE_REGEX } from '../schemas/pui-transport.schema';
 
 const PUI_DATE_SEGMENTS = 3;
 
 function assertSafeTimestamp(timestamp: number): void {
   if (!Number.isSafeInteger(timestamp) || timestamp < 0) {
-    throw new Error('Internal timestamp must be a safe non-negative integer.');
+    throw new SystemError(sharedSystemMessages.data.operation.validationFailed, {
+      displayMessage: 'Internal timestamp must be a safe non-negative integer.',
+      details: { timestamp },
+    });
   }
 }
 
@@ -23,12 +28,18 @@ function assertSafeTimestamp(timestamp: number): void {
  */
 export function puiDateToUtcMilliseconds(value: string): number {
   if (!PUI_DATE_REGEX.test(value)) {
-    throw new Error('PUI date must use YYYY-MM-DD format.');
+    throw new SystemError(sharedSystemMessages.data.operation.validationFailed, {
+      displayMessage: 'PUI date must use YYYY-MM-DD format.',
+      details: { value },
+    });
   }
 
   const parts = value.split('-').map(Number);
   if (parts.length !== PUI_DATE_SEGMENTS) {
-    throw new Error('PUI date must contain year, month, and day.');
+    throw new SystemError(sharedSystemMessages.data.operation.validationFailed, {
+      displayMessage: 'PUI date must contain year, month, and day.',
+      details: { value, partsLength: parts.length },
+    });
   }
 
   const [year, month, day] = parts as [number, number, number];
@@ -40,7 +51,10 @@ export function puiDateToUtcMilliseconds(value: string): number {
     date.getUTCMonth() !== month - 1 ||
     date.getUTCDate() !== day
   ) {
-    throw new Error('PUI date must be a valid calendar date.');
+    throw new SystemError(sharedSystemMessages.data.operation.validationFailed, {
+      displayMessage: 'PUI date must be a valid calendar date.',
+      details: { value, year, month, day },
+    });
   }
 
   return timestamp;

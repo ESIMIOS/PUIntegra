@@ -10,9 +10,13 @@
 
 import { describe, expect, it } from 'vitest';
 import {
+  DEFAULT_FUB,
+  DEFAULT_RFC,
   PUI_FASE_BUSQUEDA,
   PUI_LUGAR_NACIMIENTO,
   PUI_SEXO_ASIGNADO,
+  SystemError,
+  sharedSystemMessages,
   type PUIInstitucionNotificaCoincidenciaEnPUIPayload,
   type PUIPUIActivaReporteEnInstitucionPayload,
   PUIPUIActivaReporteEnInstitucionPayloadSchema,
@@ -32,9 +36,8 @@ import {
 } from '../src';
 
 const NOW = Date.now();
-const VALID_CASE_ID = 'FUB-0001-550e8400-e29b-41d4-a716-446655440000';
+const VALID_CASE_ID = `${DEFAULT_FUB}-550e8400-e29b-41d4-a716-446655440000`;
 const VALID_CURP = 'AAAA000000HDFXXX00';
-const DEFAULT_RFC = 'XAXX010101000';
 
 const validActivationPayload = {
   id: VALID_CASE_ID,
@@ -161,9 +164,18 @@ describe('PUI date utilities', () => {
   });
 
   it('throws on invalid calendar dates and unsafe timestamps', () => {
-    expect(() => puiDateToUtcMilliseconds('2026-02-30')).toThrow();
-    expect(() => puiDateToUtcMilliseconds('2026/04/15')).toThrow();
-    expect(() => utcMillisecondsToPuiDate(Number.NaN)).toThrow();
+    expect(() => puiDateToUtcMilliseconds('2026-02-30')).toThrowError(SystemError);
+    expect(() => puiDateToUtcMilliseconds('2026/04/15')).toThrowError(SystemError);
+    expect(() => utcMillisecondsToPuiDate(Number.NaN)).toThrowError(SystemError);
+
+    try {
+      puiDateToUtcMilliseconds('2026-02-30');
+    } catch (error) {
+      expect(error).toMatchObject({
+        code: sharedSystemMessages.data.operation.validationFailed.code,
+        displayMessage: 'PUI date must be a valid calendar date.',
+      } satisfies Partial<SystemError>);
+    }
   });
 });
 
@@ -184,7 +196,7 @@ describe('PUI domain adapters', () => {
     expect(derived).toMatchObject({
       requestId: VALID_CASE_ID,
       RFC: DEFAULT_RFC,
-      FUB: 'FUB-0001',
+      FUB: DEFAULT_FUB,
       CURP: VALID_CURP,
       missingDate: Date.UTC(2026, 3, 15),
       searchRequestStatus: SEARCH_REQUEST_STATUS.ACTIVE,
@@ -201,7 +213,7 @@ describe('PUI domain adapters', () => {
     expect(derived).toMatchObject({
       findingId: 'finding-001',
       RFC: DEFAULT_RFC,
-      FUB: 'FUB-0001',
+      FUB: DEFAULT_FUB,
       CURP: VALID_CURP,
       searchRequestPhase: SEARCH_REQUEST_PHASE.SEARCH_REQUEST_HISTORICAL,
       data: validMatchPayload
@@ -209,15 +221,24 @@ describe('PUI domain adapters', () => {
   });
 
   it('throws when PUI ids do not follow FUB-UUID4 format', () => {
-    expect(extractFubFromPuiCaseId(VALID_CASE_ID)).toBe('FUB-0001');
-    expect(() => extractFubFromPuiCaseId('not-a-pui-id')).toThrow();
+    expect(extractFubFromPuiCaseId(VALID_CASE_ID)).toBe(DEFAULT_FUB);
+    expect(() => extractFubFromPuiCaseId('not-a-pui-id')).toThrowError(SystemError);
     expect(() => puiActivationPayloadToRequestCreateData({
       ...validActivationPayload,
       id: 'not-a-pui-id'
-    }, DEFAULT_RFC, NOW)).toThrow();
+    }, DEFAULT_RFC, NOW)).toThrowError(SystemError);
     expect(() => puiMatchPayloadToFindingCreateData({
       ...validMatchPayload,
       id: 'not-a-pui-id'
-    }, DEFAULT_RFC, 'finding-001', NOW)).toThrow();
+    }, DEFAULT_RFC, 'finding-001', NOW)).toThrowError(SystemError);
+
+    try {
+      extractFubFromPuiCaseId('not-a-pui-id');
+    } catch (error) {
+      expect(error).toMatchObject({
+        code: sharedSystemMessages.data.operation.validationFailed.code,
+        displayMessage: 'PUI case id must follow FUB-UUID4 format.',
+      } satisfies Partial<SystemError>);
+    }
   });
 });

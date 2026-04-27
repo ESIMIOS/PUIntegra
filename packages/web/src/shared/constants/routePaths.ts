@@ -8,9 +8,7 @@
  * - 0.0.1	(2026-04-10)	Versión inicial del archivo.	@tirsomartinezreyes
  */
 
-export const DEFAULT_RFC = 'XAXX010101000';
-export const DEFAULT_FUB = 'FUB-0001';
-
+import { DEFAULT_FUB, DEFAULT_RFC } from '@shared';
 export const routePaths = {
   siteHome: '/site/home',
   siteDemo: '/site/demo',
@@ -36,8 +34,7 @@ export const routePaths = {
   adminNewInstitution: '/admin/new-institution',
   adminInstitution: (rfc: string) => `/admin/institutions/${rfc}`,
   adminInstitutionRequests: (rfc: string) => `/admin/institutions/${rfc}/requests`,
-  adminInstitutionRequestDetail: (rfc: string, fub: string) =>
-    `/admin/institutions/${rfc}/requests/${fub}`,
+  adminInstitutionRequestDetail: (rfc: string, fub: string) => `/admin/institutions/${rfc}/requests/${fub}`,
   adminInstitutionPlan: (rfc: string) => `/admin/institutions/${rfc}/plan`,
   adminInstitutionContacts: (rfc: string) => `/admin/institutions/${rfc}/contacts`,
   adminLogs: '/admin/logs',
@@ -45,7 +42,7 @@ export const routePaths = {
   accountLogs: '/account/logs',
   error403: '/error/403',
   error404: '/error/404',
-  error500: '/error/500'
+  error500: '/error/500',
 } as const;
 
 export const allDocumentedPaths = [
@@ -81,5 +78,5 @@ export const allDocumentedPaths = [
   routePaths.accountLogs,
   routePaths.error404,
   routePaths.error403,
-  routePaths.error500
+  routePaths.error500,
 ] as const;

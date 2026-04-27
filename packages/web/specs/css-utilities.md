@@ -71,6 +71,7 @@ Each section SHOULD stay alphabetized or ordered from smallest to largest values
 - `r` suffix means rem.
 - Use underscore for decimal values.
 - Use explicit semantic names when they are clearer than numeric abbreviations.
+- Can use comments as separator for groups of related utilities, for example:  `/* MARGIN */`
 
 Examples:
 

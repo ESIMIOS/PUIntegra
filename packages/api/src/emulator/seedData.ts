@@ -12,8 +12,23 @@
  * - 0.0.1	(2026-04-18)	Agrega seed Firebase para desarrollo local con emuladores.	@codex
  */
 
+import {
+  COMMERCIAL_PLAN,
+  COMMERCIAL_PLAN_STATUS,
+  DEFAULT_FUB,
+  DEFAULT_RFC,
+  FINDING_PUI_SYNC_STATUS,
+  INSTITUTION_CONTACT_TYPE,
+  PERMISSION_STATUS,
+  ROLE,
+  SEARCH_REQUEST_PHASE,
+  SEARCH_REQUEST_PHASE_STATUS,
+  SEARCH_REQUEST_STATUS,
+  SYSTEM_RFC
+} from '@puintegra/shared';
+
 export const EMULATOR_PROJECT_ID = 'puintegra-dev';
-export const EMULATOR_DEFAULT_RFC = 'XAXX010101000';
+export const EMULATOR_DEFAULT_RFC = DEFAULT_RFC;
 export const EMULATOR_AUTH_USER = {
   uid: 'dev-user-001',
   email: 'admin@example.test',
@@ -24,7 +39,6 @@ export const EMULATOR_AUTH_PASSWORD = 'local-password'; //NOSONAR - Contraseña 
 
 const NOW = 1710000000000;
 const TODAY = new Date(NOW).toISOString().slice(0, 10);
-const SYSTEM_RFC = 'IEC120914FV8';
 const permissionDocumentId = (email: string, RFC: string) => `${email.toLowerCase()}__${RFC.toLowerCase()}`;
 const INSTITUTION_SHARED_SECRET_ENV = 'PUINTEGRA_EMULATOR_INSTITUTION_SHARED_SECRET';
 const institutionSharedSecret = process.env[INSTITUTION_SHARED_SECRET_ENV];
@@ -37,8 +51,8 @@ if (!institutionSharedSecret) {
 const institution = {
   RFC: EMULATOR_DEFAULT_RFC,
   name: 'Institucion Demo',
-  plan: 'PORTAL',
-  planStatus: 'ACTIVE',
+  plan: COMMERCIAL_PLAN.PORTAL,
+  planStatus: COMMERCIAL_PLAN_STATUS.ACTIVE,
   sharedSecret: institutionSharedSecret,
   planStartAt: NOW,
   planFinishAt: NOW,
@@ -52,8 +66,8 @@ const permissions = [
     permissionId: permissionDocumentId(EMULATOR_AUTH_USER.email, SYSTEM_RFC),
     RFC: SYSTEM_RFC,
     email: EMULATOR_AUTH_USER.email,
-    role: 'SYSTEM_ADMINISTRATOR',
-    status: 'GRANTED',
+    role: ROLE.SYSTEM_ADMINISTRATOR,
+    status: PERMISSION_STATUS.GRANTED,
     updates: [],
     createdAt: NOW,
     updatedAt: NOW
@@ -62,8 +76,8 @@ const permissions = [
     permissionId: permissionDocumentId(EMULATOR_AUTH_USER.email, EMULATOR_DEFAULT_RFC),
     RFC: EMULATOR_DEFAULT_RFC,
     email: EMULATOR_AUTH_USER.email,
-    role: 'INSTITUTION_ADMIN',
-    status: 'GRANTED',
+    role: ROLE.INSTITUTION_ADMIN,
+    status: PERMISSION_STATUS.GRANTED,
     updates: [],
     createdAt: NOW,
     updatedAt: NOW
@@ -72,8 +86,8 @@ const permissions = [
     permissionId: 'perm-institution-operator-001',
     RFC: EMULATOR_DEFAULT_RFC,
     email: EMULATOR_AUTH_USER.email,
-    role: 'INSTITUTION_OPERATOR',
-    status: 'GRANTED',
+    role: ROLE.INSTITUTION_OPERATOR,
+    status: PERMISSION_STATUS.GRANTED,
     updates: [],
     createdAt: NOW,
     updatedAt: NOW
@@ -83,12 +97,12 @@ const permissions = [
 const contacts = [
   {
     contactId: 'contact-tech-001',
-    type: 'TECHNICAL',
+    type: INSTITUTION_CONTACT_TYPE.TECHNICAL,
     RFC: EMULATOR_DEFAULT_RFC,
     name: 'Contacto Tecnico Demo',
     phone: '+525500000001',
     contactCURP: 'AAAA000000HDFXXX00',
-    contactRFC: 'XAXX010101000',
+    contactRFC: DEFAULT_RFC,
     efirmaCertificate: null,
     updates: [],
     createdAt: NOW,
@@ -98,17 +112,17 @@ const contacts = [
 
 const requests = [
   {
-    requestId: 'FUB-0001-550e8400-e29b-41d4-a716-446655440001',
+    requestId: `${DEFAULT_FUB}-550e8400-e29b-41d4-a716-446655440001`,
     RFC: EMULATOR_DEFAULT_RFC,
-    FUB: 'FUB-0001',
+    FUB: DEFAULT_FUB,
     CURP: 'AAAA000000HDFXXX00',
     missingDate: NOW,
-    searchRequestStatus: 'ACTIVE',
-    searchRequestBasicDataPhaseStatus: 'IN_PROGRESS',
-    searchRequestHistoricalPhaseStatus: 'PENDING',
-    searchRequestContinuousPhaseStatus: 'PENDING',
+    searchRequestStatus: SEARCH_REQUEST_STATUS.ACTIVE,
+    searchRequestBasicDataPhaseStatus: SEARCH_REQUEST_PHASE_STATUS.IN_PROGRESS,
+    searchRequestHistoricalPhaseStatus: SEARCH_REQUEST_PHASE_STATUS.PENDING,
+    searchRequestContinuousPhaseStatus: SEARCH_REQUEST_PHASE_STATUS.PENDING,
     data: {
-      id: 'FUB-0001-550e8400-e29b-41d4-a716-446655440001',
+      id: `${DEFAULT_FUB}-550e8400-e29b-41d4-a716-446655440001`,
       curp: 'AAAA000000HDFXXX00',
       nombre: 'Maria',
       primer_apellido: 'Lopez',
@@ -127,13 +141,13 @@ const findings = [
   {
     findingId: 'finding-001',
     RFC: EMULATOR_DEFAULT_RFC,
-    FUB: 'FUB-0001',
+    FUB: DEFAULT_FUB,
     CURP: 'AAAA000000HDFXXX00',
-    searchRequestPhase: 'SEARCH_REQUEST_BASIC_DATA',
-    PUISyncStatus: 'PENDING',
+    searchRequestPhase: SEARCH_REQUEST_PHASE.SEARCH_REQUEST_BASIC_DATA,
+    PUISyncStatus: FINDING_PUI_SYNC_STATUS.PENDING,
     PUISyncScheduleDate: NOW,
     data: {
-      id: 'FUB-0001-550e8400-e29b-41d4-a716-446655440101',
+      id: `${DEFAULT_FUB}-550e8400-e29b-41d4-a716-446655440101`,
       institucion_id: EMULATOR_DEFAULT_RFC,
       curp: 'AAAA000000HDFXXX00',
       fase_busqueda: '1',

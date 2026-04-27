@@ -32,11 +32,16 @@ Define the local Firestore Emulator-backed data architecture used by `packages/w
 - Gateway layer: Firestore access and shared Zod validation before data leaves the gateway.
 - Store layer: reactive loading, saving, and user-facing error orchestration.
 - Controller layer: UI-oriented load/mutate wrappers without artificial backend delay.
+- Provider-managed domain writes that require server-side authorization, pre-existence validation, or audit logging (for example institution onboarding) must go through authenticated HTTP API endpoints in `packages/api` rather than direct client Firestore writes.
+- Authorized domain reads can remain Firebase SDK-backed where Firestore rules allow them.
+- Existing direct client mutation helpers remain transitional for previously implemented MVP flows and are out of scope for the institution-onboarding change unless explicitly migrated in a dedicated change.
 
 ## Error handling strategy
 
-- App data errors are neutral and live in `src/shared/errors/appErrors.ts`.
-- User-safe error messages are mapped in `src/shared/constants/systemMessages.ts`.
+- `SystemError` in `packages/shared/src/errors/system-app-error.ts` is the single error class used across the project.
+- Shared and web system message catalogs are the source of truth for error codes, keys, and user-safe messages:
+  - `packages/shared/src/constants/system-messages.ts`
+  - `packages/web/src/shared/constants/systemMessages.ts`
 - Firestore payload validation failures must surface as validation errors and include only safe diagnostic metadata.
 
 ## Testing expectations

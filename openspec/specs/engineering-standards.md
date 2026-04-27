@@ -70,6 +70,32 @@ Define project-wide engineering documentation and code conventions that apply ac
 - Product-only defaults may stay in each product package.
 - `packages/shared/src/schemas` remains approval-gated before any modification.
 
+## Error and message standardization
+
+- `SystemMessageTree` is the single source of truth for technical/error messages across the project.
+- `SystemError` is the only error class used across `shared`, `api`, and `web`.
+- Do not introduce package-specific or domain-specific error wrapper classes or factories when `SystemError` can express the contract.
+- `SystemMessage` is the canonical source for:
+  - `code`
+  - `key`
+  - `packageName`
+  - `severity`
+  - `message`
+  - optional `displayMessage`
+  - optional `httpStatus`
+- Error construction should support code-first usage:
+  - `new SystemError('API-ADMIN-001', overrides)`
+- Passing a `SystemMessage` object directly is also allowed when the message node is already available at the call site.
+- Do not duplicate auth/data/domain error-kind taxonomies in package-local constants.
+- Shared HTTP status constants must come from `packages/shared` and must not be re-declared in package-local files.
+- API error envelopes must preserve the standardized error contract when available:
+  - `code`
+  - `message`
+  - optional `uiMessageKey`
+  - optional `displayMessage`
+  - optional `details`
+- UI layers should prefer `displayMessage` when present instead of ad hoc string matching.
+
 ## Constant and schema derivation policy
 
 - Domain string literals (roles, statuses, permissions, etc.) must be declared once in a single shared constant source.
@@ -83,8 +109,8 @@ Define project-wide engineering documentation and code conventions that apply ac
   - schemas validate unknown/runtime inputs against that vocabulary.
 - Do not place runtime validation logic in constant files.
 - For structured technical logs/messages:
-  - `code` and `key` use stable technical identifiers (English-style naming),
-  - human-readable `message` text defaults to Spanish unless a package spec defines an exception.
+  - `code`, `key` and `message` use stable technical identifiers (English-style naming),
+  - `displayMessage` human-readable text defaults to Spanish unless a package spec defines an exception.
 - As a coding preference, avoid direct raw-string comparisons in consumer code whenever a stable constant, enum-derived value, or typed lookup map exists.
 - This applies to constrained domains such as role/status/severity/domain, and to any other repeated semantic token.
 - Avoid duplicating raw string literals across arrays, schemas, and consumer modules.
@@ -103,9 +129,8 @@ Define project-wide engineering documentation and code conventions that apply ac
 
 ## Web message boundary policy
 
-- `webSystemMessages` is strictly technical/observability catalog.
-- User-facing copy must be defined in `webUIMessages` (or equivalent UI message catalog), never embedded in system telemetry messages.
-- Store/controller layers may map technical errors to UI messages, but must keep both catalogs separated.
+- `webSystemMessages` is strictly technical/observability/user-facing catalog.
+- Store/controller layers may map technical errors to UI messages.
 - Message code format is `PACKAGE-CONTEXT-NNN` (single numeric sequence, zero-padded to 3 digits), for example `WEB-GUARD-001`.
 - Do not encode HTTP semantics in message codes; severity and metadata represent operational context.
 
@@ -113,16 +138,19 @@ Define project-wide engineering documentation and code conventions that apply ac
 
 - `openspec/changes/*`: transactional change artifacts.
 - `openspec/specs/*` and `packages/*/specs/*`: persistent live specs.
+
 ## Technical anti-patterns
+
 ### Circular dependencies (Internal imports)
+
 - **Problem**: Importing from centralized re-exporters (`bom.ts`, `index.ts`) within the same package or components that are re-exported by that file.
 - **Consequence**: Module evaluation cycles lead to `undefined` values at runtime, breaking state and constants.
 - **Rule**: NEVER import from a package's central re-exporter or index file from within the same package. Always use direct paths (for example `@/stores/authStore` or `../utils/foo`) for internal dependencies.
 
-
 ## GitHub Actions security
 
 ### Pin third-party actions to full commit SHAs
+
 - **Rule**: All third-party GitHub Actions (any action NOT in the `actions/*` or `github/*` namespaces) MUST be pinned to a full 40-character commit SHA, not a mutable tag or branch.
 - **Rationale**: Mutable tags (e.g. `@v4`, `@main`) can be silently updated or hijacked by the action author or a supply-chain attacker, executing arbitrary code in your CI runner with access to all secrets.
 - **Format**: `uses: owner/action@<40-char-sha> # vX.Y.Z` — the version comment is required for human readability.
@@ -142,6 +170,7 @@ Define project-wide engineering documentation and code conventions that apply ac
 - To find the commit SHA for a tag: `gh api repos/{owner}/{repo}/git/ref/tags/{tag}` and dereference annotated tags if `type == "tag"`.
 
 ### pnpm install script allowlist
+
 - **Rule**: The root `package.json` MUST declare `pnpm.onlyBuiltDependencies` to allowlist the exact set of packages permitted to run lifecycle scripts (`postinstall`, `preinstall`, `install`).
 - **Rationale**: Without this, any transitive dependency can run arbitrary shell code during `pnpm install` in CI, where all secrets are available.
 - **Audit command**: Run the following to detect new packages with install scripts before updating the allowlist:

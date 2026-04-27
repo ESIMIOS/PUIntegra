@@ -13,64 +13,73 @@
  * - 0.0.1	(2026-04-10)	Versión inicial del archivo.	@tirsomartinezreyes
  */
 
-import { computed, onMounted, ref } from "vue";
-import { useRoute, useRouter } from "vue-router";
-import { RoleSchema } from "@shared";
-import { z } from "zod";
-import { systemMessageTree, webUiDataErrorByKind } from "@/shared/constants/systemMessages";
-import { useAuthSession } from "@/composables/useAuthSession";
-import { resolvePreferredAuthenticatedPath } from "@/router/authLanding";
-import { APP_DATA_ERROR_KIND, isAppAuthError, isAppDataError } from "@/shared/errors/appErrors";
-import { hasSavedContext } from "@/gateways/firebaseAuthGateway";
-import SessionContextModal from "@/components/shared/SessionContextModal.vue";
+import { computed, onMounted, ref } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { RoleSchema, formatUiErrorString } from '@shared';
+import { z } from 'zod';
+import { systemMessageTree } from '@/shared/constants/systemMessages';
+import { useAuthSession } from '@/composables/useAuthSession';
+import { resolvePreferredAuthenticatedPath } from '@/router/authLanding';
+import { hasSavedContext } from '@/gateways/firebaseAuthGateway';
+import SessionContextModal from '@/components/shared/SessionContextModal.vue';
 
 const router = useRouter();
 const route = useRoute();
 const { authStore, activeRfc, ensureHydratedSession, establishLoginContext } = useAuthSession();
 
-const email = ref("admin@example.test");
-const password = ref("local-password");
+const email = ref('admin@example.test');
+const password = ref('local-password');
 const submitting = ref(false);
 const errorMessage = ref<string | null>(null);
-const errorDisplayMode = ref<"alert" | "field">("alert");
+const errorDisplayMode = ref<'alert' | 'field'>('alert');
 const showContextModal = ref(false);
 const manualLoginStarted = ref(false);
 const redirectAttemptId = ref(0);
 
 const hasPendingLogin = computed(() => !!authStore.pendingLogin);
 
-function formatUiError(input: { code: string; message: string }) {
-  return `${input.code}: ${input.message}`;
-}
-
 function setFieldError(message: string) {
-  errorDisplayMode.value = "field";
+  errorDisplayMode.value = 'field';
   errorMessage.value = message;
 }
 
 function setAlertError(message: string) {
-  errorDisplayMode.value = "alert";
+  errorDisplayMode.value = 'alert';
   errorMessage.value = message;
 }
 
-async function handleValidateCredentials() {
+function resetValidateCredentialsState() {
   manualLoginStarted.value = true;
   redirectAttemptId.value += 1;
   errorMessage.value = null;
-  errorDisplayMode.value = "alert";
+  errorDisplayMode.value = 'alert';
   submitting.value = true;
   authStore.setPendingLogin(null);
   showContextModal.value = false;
+}
+
+function hasValidCredentialsInput(emailCandidate: string) {
+  const validationError = formatUiErrorString(systemMessageTree.web.ui.data.validation);
+  if (!emailCandidate || !emailCandidate.includes('@')) {
+    setFieldError(validationError);
+    submitting.value = false;
+    return false;
+  }
+
+  if (!password.value.trim()) {
+    setFieldError(validationError);
+    submitting.value = false;
+    return false;
+  }
+
+  return true;
+}
+
+async function handleValidateCredentials() {
+  resetValidateCredentialsState();
 
   const emailCandidate = email.value.trim().toLowerCase();
-  if (!emailCandidate || !emailCandidate.includes("@")) {
-    setFieldError(formatUiError(systemMessageTree.web.ui.data.validation));
-    submitting.value = false;
-    return;
-  }
-  if (!password.value.trim()) {
-    setFieldError(formatUiError(systemMessageTree.web.ui.data.validation));
-    submitting.value = false;
+  if (!hasValidCredentialsInput(emailCandidate)) {
     return;
   }
 
@@ -83,23 +92,10 @@ async function handleValidateCredentials() {
     showContextModal.value = true;
   } catch (error) {
     showContextModal.value = false;
-    const parsed = authStore.pendingLogin;
-    if (parsed) {
+    if (authStore.pendingLogin) {
       authStore.setPendingLogin(null);
     }
-
-    if (isAppAuthError(error)) {
-      const userMessage = error.uiMessage ?? error.message;
-      setAlertError(`${error.code}: ${userMessage}`);
-      return;
-    }
-
-    if (isAppDataError(error)) {
-      setAlertError(formatUiError(webUiDataErrorByKind[error.kind]));
-      return;
-    }
-
-    setAlertError(formatUiError(webUiDataErrorByKind[APP_DATA_ERROR_KIND.UNKNOWN]));
+    setAlertError(formatUiErrorString(error));
   } finally {
     submitting.value = false;
   }
@@ -117,20 +113,15 @@ async function establishAndRedirect(context: { role: z.infer<typeof RoleSchema>;
     showContextModal.value = false;
     await router.push(redirectPath || defaultPath);
   } catch (error) {
-    const rawMessage = (error as { message?: string }).message;
-    setAlertError(
-      rawMessage
-        ? `${systemMessageTree.shared.data.operation.unknownFailure.code}: ${rawMessage}`
-        : formatUiError(systemMessageTree.shared.data.operation.unknownFailure),
-    );
+    setAlertError(formatUiErrorString(error));
   }
 }
 
 async function handleContinue(context: { role: z.infer<typeof RoleSchema>; rfc: string }) {
   errorMessage.value = null;
-  errorDisplayMode.value = "alert";
+  errorDisplayMode.value = 'alert';
   if (!hasPendingLogin.value) {
-    setAlertError(formatUiError(systemMessageTree.web.ui.data.validation));
+    setAlertError(formatUiErrorString(systemMessageTree.web.ui.data.validation));
     return;
   }
 

@@ -15,6 +15,8 @@ import {
 	type PUIInstitucionNotificaCoincidenciaEnPUIPayload,
 	type PUIPUIActivaReporteEnInstitucionPayload
 } from '../schemas/pui-transport.schema'
+import { sharedSystemMessages } from '../constants/system-messages'
+import { SystemError } from '../errors/system-app-error'
 import { SEARCH_REQUEST_PHASE, SEARCH_REQUEST_PHASE_STATUS, SEARCH_REQUEST_STATUS, type Request, type SearchRequestPhase } from '../schemas/request.schema'
 import { FINDING_PUI_SYNC_STATUS, type Finding } from '../schemas/finding.schema'
 import { optionalPuiDateToUtcMilliseconds } from '../utils/puiDateUtils'
@@ -24,7 +26,10 @@ import { optionalPuiDateToUtcMilliseconds } from '../utils/puiDateUtils'
  */
 export function extractFubFromPuiCaseId(caseId: string): string {
 	if (!PUI_CASE_ID_REGEX.test(caseId)) {
-		throw new Error('PUI case id must follow FUB-UUID4 format.')
+		throw new SystemError(sharedSystemMessages.data.operation.validationFailed, {
+			displayMessage: 'PUI case id must follow FUB-UUID4 format.',
+			details: { caseId }
+		})
 	}
 
 	return caseId.slice(0, -37)
@@ -42,7 +47,10 @@ export function toPuiFaseBusqueda(phase: SearchRequestPhase): PuiFaseBusqueda {
 		case SEARCH_REQUEST_PHASE.SEARCH_REQUEST_CONTINUOUS:
 			return PUI_FASE_BUSQUEDA.FASE_3
 		default:
-			throw new Error('Unsupported internal search request phase.')
+			throw new SystemError(sharedSystemMessages.data.operation.validationFailed, {
+				displayMessage: 'Unsupported internal search request phase.',
+				details: { phase }
+			})
 	}
 }
 
@@ -58,7 +66,10 @@ export function fromPuiFaseBusqueda(phase: PuiFaseBusqueda): SearchRequestPhase 
 		case PUI_FASE_BUSQUEDA.FASE_3:
 			return SEARCH_REQUEST_PHASE.SEARCH_REQUEST_CONTINUOUS
 		default:
-			throw new Error('Unsupported PUI search phase.')
+			throw new SystemError(sharedSystemMessages.data.operation.validationFailed, {
+				displayMessage: 'Unsupported PUI search phase.',
+				details: { phase }
+			})
 	}
 }
 

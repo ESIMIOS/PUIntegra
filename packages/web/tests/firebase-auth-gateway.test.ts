@@ -1,5 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { APP_AUTH_ERROR_KIND, APP_DATA_ERROR_KIND, AppDataError } from '@/shared/errors/appErrors';
+import {
+  DEFAULT_RFC,
+  PERMISSION_STATUS,
+  ROLE,
+  SYSTEM_RFC,
+  SystemError,
+  sharedSystemMessages,
+} from '@shared';
 
 const mocks = vi.hoisted(() => {
   const auth = { currentUser: null as null | { getIdToken: () => Promise<string> } };
@@ -9,32 +16,27 @@ const mocks = vi.hoisted(() => {
     listPermissionsByEmail: vi.fn(),
     onAuthStateChanged: vi.fn(),
     signInWithEmailAndPassword: vi.fn(),
-    signOut: vi.fn()
+    signOut: vi.fn(),
   };
 });
 
 vi.mock('@/plugins/firebase', () => ({
-  getFirebaseRuntime: () => ({ auth: mocks.auth })
+  getFirebaseRuntime: () => ({ auth: mocks.auth }),
 }));
 
 vi.mock('@/gateways/firebaseDataGateway', () => ({
   getUserById: mocks.getUserById,
-  listPermissionsByEmail: mocks.listPermissionsByEmail
+  listPermissionsByEmail: mocks.listPermissionsByEmail,
 }));
 
 vi.mock('firebase/auth', () => ({
   onAuthStateChanged: mocks.onAuthStateChanged,
   signInWithEmailAndPassword: mocks.signInWithEmailAndPassword,
-  signOut: mocks.signOut
+  signOut: mocks.signOut,
 }));
 
-const {
-  establishSession,
-  getCurrentFirebaseUser,
-  hydrateSession,
-  logout,
-  validateCredentials
-} = await import('@/gateways/firebaseAuthGateway');
+const { establishSession, getCurrentFirebaseUser, hydrateSession, logout, validateCredentials } =
+  await import('@/gateways/firebaseAuthGateway');
 
 describe('firebase auth gateway', () => {
   beforeEach(() => {
@@ -53,16 +55,17 @@ describe('firebase auth gateway', () => {
 
     await expect(validateCredentials('admin@example.test', 'wrong-password')).rejects.toMatchObject({
       code: 'AUTH-LOGIN-003',
-      kind: APP_AUTH_ERROR_KIND.INVALID_CREDENTIALS
     });
   });
 
   it('preserves profile resolution failures after Firebase accepts credentials', async () => {
-    const profileError = new AppDataError(APP_DATA_ERROR_KIND.NOT_FOUND, 'User not found.', {
-      userId: 'dev-user-001'
+    const profileError = new SystemError(sharedSystemMessages.data.operation.notFound.code, {
+      details: {
+        userId: 'dev-user-001',
+      },
     });
     mocks.signInWithEmailAndPassword.mockResolvedValue({
-      user: { uid: 'dev-user-001' }
+      user: { uid: 'dev-user-001' },
     });
     mocks.getUserById.mockRejectedValue(profileError);
 
@@ -72,7 +75,7 @@ describe('firebase auth gateway', () => {
 
   it('signs out Firebase session when user has no granted contexts', async () => {
     mocks.signInWithEmailAndPassword.mockResolvedValue({
-      user: { uid: 'dev-user-001' }
+      user: { uid: 'dev-user-001' },
     });
     mocks.getUserById.mockResolvedValue({
       userId: 'dev-user-001',
@@ -80,23 +83,22 @@ describe('firebase auth gateway', () => {
       email: 'admin@example.test',
       updates: [],
       createdAt: 1710000000000,
-      updatedAt: 1710000000000
+      updatedAt: 1710000000000,
     });
     mocks.listPermissionsByEmail.mockResolvedValue([]);
 
     await expect(validateCredentials('admin@example.test', 'local-password')).rejects.toMatchObject({
-      kind: APP_AUTH_ERROR_KIND.NO_PERMISSIONS,
-      code: 'AUTH-LOGIN-004'
+      code: 'AUTH-LOGIN-004',
     });
     expect(mocks.signOut).toHaveBeenCalledWith(mocks.auth);
   });
 
   it('records login events immediately after successful credential validation', async () => {
     mocks.signInWithEmailAndPassword.mockResolvedValue({
-      user: { uid: 'dev-user-001' }
+      user: { uid: 'dev-user-001' },
     });
     mocks.auth.currentUser = {
-      getIdToken: vi.fn().mockResolvedValue('id-token')
+      getIdToken: vi.fn().mockResolvedValue('id-token'),
     };
     mocks.getUserById.mockResolvedValue({
       userId: 'dev-user-001',
@@ -104,16 +106,16 @@ describe('firebase auth gateway', () => {
       email: 'admin@example.test',
       updates: [],
       createdAt: 1710000000000,
-      updatedAt: 1710000000000
+      updatedAt: 1710000000000,
     });
     mocks.listPermissionsByEmail.mockResolvedValue([
       {
-        RFC: 'XAXX010101000',
+        RFC: DEFAULT_RFC,
         email: 'admin@example.test',
-        role: 'INSTITUTION_ADMIN',
-        status: 'GRANTED',
-        updates: []
-      }
+        role: ROLE.INSTITUTION_ADMIN,
+        status: PERMISSION_STATUS.GRANTED,
+        updates: [],
+      },
     ]);
 
     await validateCredentials('admin@example.test', 'local-password');
@@ -121,18 +123,21 @@ describe('firebase auth gateway', () => {
 
     await Promise.resolve();
     await Promise.resolve();
-    expect(globalThis.fetch).toHaveBeenCalledWith('/api/auth/events/login', expect.objectContaining({
-      method: 'POST',
-      headers: expect.objectContaining({
-        authorization: 'Bearer id-token'
-      })
-    }));
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      '/api/auth/events/login',
+      expect.objectContaining({
+        method: 'POST',
+        headers: expect.objectContaining({
+          authorization: 'Bearer id-token',
+        }),
+      }),
+    );
     expect(vi.mocked(globalThis.fetch).mock.calls[0]?.[1]).not.toHaveProperty('body');
   });
 
   it('does not emit login events when only selecting an already-authenticated context', async () => {
     mocks.auth.currentUser = {
-      getIdToken: vi.fn().mockResolvedValue('id-token')
+      getIdToken: vi.fn().mockResolvedValue('id-token'),
     };
     mocks.getUserById.mockResolvedValue({
       userId: 'dev-user-001',
@@ -140,17 +145,20 @@ describe('firebase auth gateway', () => {
       email: 'admin@example.test',
       updates: [],
       createdAt: 1710000000000,
-      updatedAt: 1710000000000
+      updatedAt: 1710000000000,
     });
     vi.mocked(globalThis.fetch).mockClear();
 
-    await establishSession({
-      userId: 'dev-user-001',
-      name: 'Usuario Firebase',
-      email: 'admin@example.test',
-      emojiIcon: null,
-      contexts: [{ role: 'INSTITUTION_ADMIN', rfc: 'XAXX010101000' }]
-    }, { role: 'INSTITUTION_ADMIN', rfc: 'XAXX010101000' });
+    await establishSession(
+      {
+        userId: 'dev-user-001',
+        name: 'Usuario Firebase',
+        email: 'admin@example.test',
+        emojiIcon: null,
+        contexts: [{ role: ROLE.INSTITUTION_ADMIN, rfc: DEFAULT_RFC }],
+      },
+      { role: ROLE.INSTITUTION_ADMIN, rfc: DEFAULT_RFC },
+    );
 
     expect(mocks.getUserById).toHaveBeenCalledTimes(1);
     expect(globalThis.fetch).not.toHaveBeenCalledWith('/api/auth/events/login', expect.anything());
@@ -158,7 +166,7 @@ describe('firebase auth gateway', () => {
 
   it('records logout events before clearing Firebase Auth state', async () => {
     mocks.auth.currentUser = {
-      getIdToken: vi.fn().mockResolvedValue('id-token')
+      getIdToken: vi.fn().mockResolvedValue('id-token'),
     };
     mocks.getUserById.mockResolvedValue({
       userId: 'dev-user-001',
@@ -166,27 +174,33 @@ describe('firebase auth gateway', () => {
       email: 'admin@example.test',
       updates: [],
       createdAt: 1710000000000,
-      updatedAt: 1710000000000
+      updatedAt: 1710000000000,
     });
-    await establishSession({
-      userId: 'dev-user-001',
-      name: 'Usuario Firebase',
-      email: 'admin@example.test',
-      emojiIcon: null,
-      contexts: [{ role: 'SYSTEM_ADMINISTRATOR', rfc: 'IEC120914FV8' }]
-    }, { role: 'SYSTEM_ADMINISTRATOR', rfc: 'IEC120914FV8' });
+    await establishSession(
+      {
+        userId: 'dev-user-001',
+        name: 'Usuario Firebase',
+        email: 'admin@example.test',
+        emojiIcon: null,
+        contexts: [{ role: ROLE.SYSTEM_ADMINISTRATOR, rfc: SYSTEM_RFC }],
+      },
+      { role: ROLE.SYSTEM_ADMINISTRATOR, rfc: SYSTEM_RFC },
+    );
     vi.mocked(globalThis.fetch).mockClear();
 
     await logout();
 
     await Promise.resolve();
     await Promise.resolve();
-    expect(globalThis.fetch).toHaveBeenCalledWith('/api/auth/events/logout', expect.objectContaining({
-      method: 'POST',
-      headers: expect.objectContaining({
-        authorization: 'Bearer id-token'
-      })
-    }));
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      '/api/auth/events/logout',
+      expect.objectContaining({
+        method: 'POST',
+        headers: expect.objectContaining({
+          authorization: 'Bearer id-token',
+        }),
+      }),
+    );
     expect(vi.mocked(globalThis.fetch).mock.calls[0]?.[1]).not.toHaveProperty('body');
     expect(mocks.signOut).toHaveBeenCalledWith(mocks.auth);
   });
@@ -194,7 +208,7 @@ describe('firebase auth gateway', () => {
   it('resolves Firebase user from first auth observer emission when currentUser is empty', async () => {
     const unsubscribe = vi.fn();
     const firebaseUser = {
-      uid: 'dev-user-001'
+      uid: 'dev-user-001',
     } as unknown as { getIdToken: () => Promise<string> };
     mocks.onAuthStateChanged.mockImplementation((_, callback) => {
       callback(firebaseUser);
@@ -207,11 +221,11 @@ describe('firebase auth gateway', () => {
 
   it('hydrates session using profile user data', async () => {
     mocks.auth.currentUser = {
-      uid: 'dev-user-001'
+      uid: 'dev-user-001',
     } as unknown as { getIdToken: () => Promise<string> };
     globalThis.localStorage.setItem(
       'puintegra:web:active-session-context:v1',
-      JSON.stringify({ role: 'INSTITUTION_ADMIN', rfc: 'XAXX010101000' })
+      JSON.stringify({ role: ROLE.INSTITUTION_ADMIN, rfc: DEFAULT_RFC }),
     );
     mocks.getUserById.mockResolvedValue({
       userId: 'dev-user-001',
@@ -219,16 +233,16 @@ describe('firebase auth gateway', () => {
       email: 'admin@example.test',
       updates: [],
       createdAt: 1710000000000,
-      updatedAt: 1710000000000
+      updatedAt: 1710000000000,
     });
     mocks.listPermissionsByEmail.mockResolvedValue([
       {
-        RFC: 'XAXX010101000',
+        RFC: DEFAULT_RFC,
         email: 'admin@example.test',
-        role: 'INSTITUTION_ADMIN',
-        status: 'GRANTED',
-        updates: []
-      }
+        role: ROLE.INSTITUTION_ADMIN,
+        status: PERMISSION_STATUS.GRANTED,
+        updates: [],
+      },
     ]);
 
     const session = await hydrateSession();

@@ -224,7 +224,7 @@ Reference: [Error Prevention Philosophy](./design-system.md#error-prevention-phi
 
 Reference: [Destructive Actions Contract](./design-system.md#destructive-actions-contract).
 
-- **Modal setup**: Use `VaModal` with `color="danger"`, `no-outside-dismiss` and `hide-default-actions`.
+- **Modal setup**: Use `VaModal` with `no-outside-dismiss` and `hide-default-actions`.
 - **Button Slot**: Implement the footer slot with a flex container and `ga-2` gap.
 
 ```vue

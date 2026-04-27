@@ -11,6 +11,7 @@
 import {
   createPinia,
   createAppRouter,
+  DEFAULT_FUB,
   ROLE,
   DEFAULT_RFC,
   SYSTEM_RFC,
@@ -89,10 +90,10 @@ describe('route guards', () => {
   it('redirects unauthenticated users to /auth/login with redirect query', async () => {
     const { router } = createRouterWithStores();
 
-    await router.push(`/app/${DEFAULT_RFC}/requests/FUB-0001`);
+    await router.push(`/app/${DEFAULT_RFC}/requests/${DEFAULT_FUB}`);
 
     expect(router.currentRoute.value.path).toBe('/auth/login');
-    expect(router.currentRoute.value.query.redirect).toBe(`/app/${DEFAULT_RFC}/requests/FUB-0001`);
+    expect(router.currentRoute.value.query.redirect).toBe(`/app/${DEFAULT_RFC}/requests/${DEFAULT_FUB}`);
   });
 
   it('redirects authenticated institution role from /auth/login to institution dashboard', async () => {

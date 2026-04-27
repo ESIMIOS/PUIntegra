@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  LOG_SEVERITY,
   LogSeveritySchema,
   MessageCodeSchema,
   MessageKeySchema,
@@ -11,8 +12,8 @@ describe('system message schema', () => {
     const parsed = SystemMessageSchema.safeParse({
       code: 'WEB-GUARD-001',
       key: 'web.guard.role_mismatch',
-      severity: 'WARNING',
-      package: 'web',
+      severity: LOG_SEVERITY.WARNING,
+      packageName: 'web',
       message: 'Role does not have access to the requested route.',
       meta: {
         route: '/admin/institutions'

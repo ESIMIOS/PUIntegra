@@ -12,6 +12,8 @@ import { describe, expect, it } from 'vitest';
 import {
   COMMERCIAL_PLAN,
   COMMERCIAL_PLAN_STATUS,
+  DEFAULT_FUB,
+  DEFAULT_RFC,
   ContactSchema,
   FINDING_PUI_SYNC_STATUS,
   INSTITUTION_CONTACT_TYPE,
@@ -33,7 +35,7 @@ import {
 } from '../src';
 
 const NOW = Date.now();
-const PUI_CASE_ID = 'FUB-0001-550e8400-e29b-41d4-a716-446655440000';
+const PUI_CASE_ID = `${DEFAULT_FUB}-550e8400-e29b-41d4-a716-446655440000`;
 const REQUEST_DATA = {
   id: PUI_CASE_ID,
   curp: 'AAAA000000HDFXXX00',
@@ -44,7 +46,7 @@ const REQUEST_DATA = {
 };
 const FINDING_DATA = {
   id: PUI_CASE_ID,
-  institucion_id: 'XAXX010101000',
+  institucion_id: DEFAULT_RFC,
   curp: 'AAAA000000HDFXXX00',
   fase_busqueda: PUI_FASE_BUSQUEDA.FASE_1,
   lugar_nacimiento: PUI_LUGAR_NACIMIENTO.DF
@@ -61,7 +63,7 @@ describe('stage1 schemas', () => {
     }).success).toBe(true);
 
     expect(InstitutionSchema.safeParse({
-      RFC: 'XAXX010101000',
+      RFC: DEFAULT_RFC,
       name: 'Institucion Demo',
       plan: COMMERCIAL_PLAN.PORTAL,
       planStatus: COMMERCIAL_PLAN_STATUS.ACTIVE,
@@ -74,7 +76,7 @@ describe('stage1 schemas', () => {
 
     expect(PermissionSchema.safeParse({
       permissionId: 'perm-001',
-      RFC: 'XAXX010101000',
+      RFC: DEFAULT_RFC,
       email: 'admin@example.test',
       userId: 'mock-user-001',
       role: ROLE.INSTITUTION_ADMIN,
@@ -86,7 +88,7 @@ describe('stage1 schemas', () => {
     expect(ContactSchema.safeParse({
       contactId: 'contact-001',
       type: INSTITUTION_CONTACT_TYPE.TECHNICAL,
-      RFC: 'XAXX010101000',
+      RFC: DEFAULT_RFC,
       name: 'Contacto Demo',
       phone: '+525500000000',
       contactCURP: 'AAAA000000HDFXXX00',
@@ -96,8 +98,8 @@ describe('stage1 schemas', () => {
 
     expect(RequestSchema.safeParse({
       requestId: 'req-001',
-      RFC: 'XAXX010101000',
-      FUB: 'FUB-0001',
+      RFC: DEFAULT_RFC,
+      FUB: DEFAULT_FUB,
       CURP: 'AAAA000000HDFXXX00',
       missingDate: NOW,
       searchRequestStatus: SEARCH_REQUEST_STATUS.ACTIVE,
@@ -111,8 +113,8 @@ describe('stage1 schemas', () => {
 
     expect(FindingSchema.safeParse({
       findingId: 'finding-001',
-      RFC: 'XAXX010101000',
-      FUB: 'FUB-0001',
+      RFC: DEFAULT_RFC,
+      FUB: DEFAULT_FUB,
       CURP: 'AAAA000000HDFXXX00',
       searchRequestPhase: SEARCH_REQUEST_PHASE.SEARCH_REQUEST_BASIC_DATA,
       PUISyncStatus: FINDING_PUI_SYNC_STATUS.PENDING,
@@ -125,13 +127,38 @@ describe('stage1 schemas', () => {
     expect(LogSchema.safeParse({
       id: 'log-001',
       category: LOG_CATEGORIES.USER_ACCOUNT_LOGIN,
-      RFC: 'XAXX010101000',
+      RFC: DEFAULT_RFC,
       origin: LOG_ORIGIN.SYSTEM_DATA_TRIGGER,
       userId: 'mock-user-001',
       execution: {},
       impact: {},
       searchRequest: {},
       createdAt: NOW
+    }).success).toBe(true);
+  });
+
+  it('accepts institution onboarding with deferred sharedSecret', () => {
+    expect(InstitutionSchema.safeParse({
+      RFC: 'AAA010101AAA',
+      name: 'Institucion Onboarding',
+      plan: COMMERCIAL_PLAN.PORTAL,
+      planStatus: COMMERCIAL_PLAN_STATUS.ACTIVE,
+      sharedSecret: null,
+      planStartAt: NOW,
+      planFinishAt: NOW,
+      createdAt: NOW,
+      updatedAt: NOW
+    }).success).toBe(true);
+
+    expect(InstitutionSchema.safeParse({
+      RFC: 'BBB010101BBB',
+      name: 'Institucion Onboarding 2',
+      plan: COMMERCIAL_PLAN.CLOUD,
+      planStatus: COMMERCIAL_PLAN_STATUS.WARNING,
+      planStartAt: NOW,
+      planFinishAt: NOW,
+      createdAt: NOW,
+      updatedAt: NOW
     }).success).toBe(true);
   });
 
@@ -145,7 +172,7 @@ describe('stage1 schemas', () => {
     }).success).toBe(false);
 
     expect(InstitutionSchema.safeParse({
-      RFC: 'XAXX010101000',
+      RFC: DEFAULT_RFC,
       name: 'Institucion Demo',
       plan: 'STARTER',
       planStatus: 'UNKNOWN',
@@ -158,7 +185,7 @@ describe('stage1 schemas', () => {
 
     expect(PermissionSchema.safeParse({
       permissionId: 'perm-001',
-      RFC: 'XAXX010101000',
+      RFC: DEFAULT_RFC,
       email: 'admin@example.test',
       userId: 'mock-user-001',
       role: 'WRONG_ROLE',
@@ -170,7 +197,7 @@ describe('stage1 schemas', () => {
     expect(ContactSchema.safeParse({
       contactId: 'contact-001',
       type: 'INVALID',
-      RFC: 'XAXX010101000',
+      RFC: DEFAULT_RFC,
       name: 'Contacto Demo',
       phone: '+525500000000',
       contactCURP: 'AAAA000000HDFXXX00',
@@ -180,8 +207,8 @@ describe('stage1 schemas', () => {
 
     expect(RequestSchema.safeParse({
       requestId: 'req-001',
-      RFC: 'XAXX010101000',
-      FUB: 'FUB-0001',
+      RFC: DEFAULT_RFC,
+      FUB: DEFAULT_FUB,
       CURP: 'AAAA000000HDFXXX00',
       missingDate: NOW,
       searchRequestStatus: SEARCH_REQUEST_STATUS.ACTIVE,
@@ -195,8 +222,8 @@ describe('stage1 schemas', () => {
 
     expect(FindingSchema.safeParse({
       findingId: 'finding-001',
-      RFC: 'XAXX010101000',
-      FUB: 'FUB-0001',
+      RFC: DEFAULT_RFC,
+      FUB: DEFAULT_FUB,
       CURP: 'AAAA000000HDFXXX00',
       searchRequestPhase: 'INVALID_PHASE',
       PUISyncStatus: FINDING_PUI_SYNC_STATUS.PENDING,
@@ -209,7 +236,7 @@ describe('stage1 schemas', () => {
     expect(LogSchema.safeParse({
       id: 'log-001',
       category: 'NOT_VALID',
-      RFC: 'XAXX010101000',
+      RFC: DEFAULT_RFC,
       origin: LOG_ORIGIN.SYSTEM_DATA_TRIGGER,
       userId: 'mock-user-001',
       execution: {},
@@ -222,8 +249,8 @@ describe('stage1 schemas', () => {
   it('requires PUI-shaped request and finding data', () => {
     expect(RequestSchema.safeParse({
       requestId: 'req-001',
-      RFC: 'XAXX010101000',
-      FUB: 'FUB-0001',
+      RFC: DEFAULT_RFC,
+      FUB: DEFAULT_FUB,
       CURP: 'AAAA000000HDFXXX00',
       missingDate: NOW,
       searchRequestStatus: SEARCH_REQUEST_STATUS.ACTIVE,
@@ -237,8 +264,8 @@ describe('stage1 schemas', () => {
 
     expect(FindingSchema.safeParse({
       findingId: 'finding-001',
-      RFC: 'XAXX010101000',
-      FUB: 'FUB-0001',
+      RFC: DEFAULT_RFC,
+      FUB: DEFAULT_FUB,
       CURP: 'AAAA000000HDFXXX00',
       searchRequestPhase: SEARCH_REQUEST_PHASE.SEARCH_REQUEST_BASIC_DATA,
       PUISyncStatus: FINDING_PUI_SYNC_STATUS.PENDING,
