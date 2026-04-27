@@ -131,7 +131,7 @@ export const sharedSystemMessageTree = {
       logoutFailure: {
         code: 'AUTH-LOGOUT-001',
         severity: LOG_SEVERITY.ERROR,
-        message: 'Fallo inesperado el cierre de sesión.',
+        message: 'Fallo inesperado en el cierre de sesión.',
       },
     },
   },
