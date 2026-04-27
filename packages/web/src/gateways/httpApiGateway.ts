@@ -14,14 +14,17 @@ import {
   SYSTEM_PACKAGE_NAME,
   SystemError,
   type ApiError,
-  type ApiResponse
+  type ApiResponse,
+  HTTP_STATUS,
+  HttpStatus,
+  HttpMethod,
 } from '@shared';
 import { z } from 'zod';
 import { systemMessageTree } from '@/shared/constants/systemMessages';
 
 type HttpRequestOptions = {
   url: string;
-  method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+  method: HttpMethod;
   headers?: Record<string, string>;
   body?: string;
   parseData?: z.ZodTypeAny;
@@ -39,7 +42,6 @@ function toSystemMessageFromApiError(error: ApiError) {
     packageName: SYSTEM_PACKAGE_NAME.API,
     message: error.message,
     displayMessage: error.displayMessage,
-    errorKind: error.errorKind
   } as const;
 }
 
@@ -58,22 +60,34 @@ export function resolveApiUrl(path: string) {
  * @description Mapea errores de transporte/envelope HTTP a SystemError consistente para UI.
  */
 function mapTransportError(status: number, fallbackMessage: string, details: Record<string, unknown> = {}) {
-  if (status === 400 || status === 422) {
-    return new SystemError(systemMessageTree.shared.data.operation.validationFailed, { displayMessage: fallbackMessage, details });
+  if (status === HTTP_STATUS.BAD_REQUEST || status === HTTP_STATUS.UNPROCESSABLE_CONTENT) {
+    return new SystemError(systemMessageTree.shared.data.operation.validationFailed, {
+      displayMessage: fallbackMessage,
+      details,
+    });
   }
-  if (status === 403) {
-    return new SystemError(systemMessageTree.shared.data.operation.forbiddenOperation, { displayMessage: fallbackMessage, details });
+  if (status === HTTP_STATUS.FORBIDDEN) {
+    return new SystemError(systemMessageTree.shared.data.operation.forbiddenOperation, {
+      displayMessage: fallbackMessage,
+      details,
+    });
   }
-  if (status === 409) {
-    return new SystemError(systemMessageTree.shared.data.operation.conflictDetected, { displayMessage: fallbackMessage, details });
+  if (status === HTTP_STATUS.CONFLICT) {
+    return new SystemError(systemMessageTree.shared.data.operation.conflictDetected, {
+      displayMessage: fallbackMessage,
+      details,
+    });
   }
-  if (status === 404) {
+  if (status === HTTP_STATUS.NOT_FOUND) {
+    return new SystemError(systemMessageTree.web.ui.data.notFound, { displayMessage: fallbackMessage, details });
+  }
+  if (status >= HTTP_STATUS.INTERNAL_SERVER_ERROR) {
     return new SystemError(systemMessageTree.web.ui.data.serverError, { displayMessage: fallbackMessage, details });
   }
-  if (status >= 500) {
-    return new SystemError(systemMessageTree.web.ui.data.serverError, { displayMessage: fallbackMessage, details });
-  }
-  return new SystemError(systemMessageTree.shared.data.operation.unknownFailure, { displayMessage: fallbackMessage, details });
+  return new SystemError(systemMessageTree.shared.data.operation.unknownFailure, {
+    displayMessage: fallbackMessage,
+    details,
+  });
 }
 
 /**
@@ -82,25 +96,23 @@ function mapTransportError(status: number, fallbackMessage: string, details: Rec
 export async function executeHttpApi<T = unknown>(options: HttpRequestOptions): Promise<T> {
   const requestInit: RequestInit = {
     method: options.method,
-    headers: options.headers
+    headers: options.headers,
   };
   if (typeof options.body === 'string') {
     requestInit.body = options.body;
   }
 
   const response = await fetch(options.url, {
-    ...requestInit
+    ...requestInit,
   });
 
   let payloadResponse: unknown;
   try {
     payloadResponse = await response.json();
   } catch {
-    throw mapTransportError(
-      response.status,
-      options.transportMessage ?? 'Failed to parse API response.',
-      { status: response.status }
-    );
+    throw mapTransportError(response.status, options.transportMessage ?? 'Failed to parse API response.', {
+      status: response.status,
+    });
   }
 
   const apiEnvelope = ApiResponseSchema.safeParse(payloadResponse);
@@ -108,19 +120,18 @@ export async function executeHttpApi<T = unknown>(options: HttpRequestOptions): 
     throw mapTransportError(
       response.status,
       options.transportMessage ?? 'API response does not match envelope contract.',
-      { issues: apiEnvelope.error.issues, status: response.status }
+      { issues: apiEnvelope.error.issues, status: response.status },
     );
   }
 
   const apiResponse: ApiResponse = apiEnvelope.data;
   if (!apiResponse.ok) {
     throw new SystemError(toSystemMessageFromApiError(apiResponse.error), {
-      httpStatus: response.status as 201 | 400 | 401 | 403 | 409 | 500,
+      httpStatus: response.status as HttpStatus,
       details: {
         uiMessageKey: apiResponse.error.uiMessageKey,
-        apiErrorKind: apiResponse.error.errorKind,
-        details: apiResponse.error.details
-      }
+        details: apiResponse.error.details,
+      },
     });
   }
 
@@ -130,11 +141,9 @@ export async function executeHttpApi<T = unknown>(options: HttpRequestOptions): 
 
   const parsedData = options.parseData.safeParse(apiResponse.data);
   if (!parsedData.success) {
-    throw mapTransportError(
-      500,
-      options.transportMessage ?? 'API success payload is invalid.',
-      { issues: parsedData.error.issues }
-    );
+    throw mapTransportError(500, options.transportMessage ?? 'API success payload is invalid.', {
+      issues: parsedData.error.issues,
+    });
   }
   return parsedData.data as T;
 }

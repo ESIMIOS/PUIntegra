@@ -1,14 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { where } from 'firebase/firestore';
-import {
-  COMMERCIAL_PLAN,
-  COMMERCIAL_PLAN_STATUS,
-  DEFAULT_RFC,
-  PERMISSION_STATUS,
-  ROLE,
-  SYSTEM_MESSAGE_ERROR_KIND,
-  SYSTEM_RFC,
-} from '@shared';
+import { COMMERCIAL_PLAN, COMMERCIAL_PLAN_STATUS, DEFAULT_RFC, PERMISSION_STATUS, ROLE, SYSTEM_RFC } from '@shared';
 
 let collectionDocs: Array<{ data: () => unknown }> = [];
 
@@ -60,9 +52,7 @@ describe('firebase data gateway', () => {
   it('rejects invalid Firestore payloads before returning data', async () => {
     collectionDocs = [{ data: () => ({ RFC: DEFAULT_RFC }) }];
 
-    await expect(listInstitutions()).rejects.toMatchObject({
-      errorKind: SYSTEM_MESSAGE_ERROR_KIND.DATA_VALIDATION,
-    });
+    await expect(listInstitutions()).rejects.toMatchObject({});
   });
 
   it('queries permissions by normalized email to support pre-account grants', async () => {

@@ -83,11 +83,9 @@ Define project-wide engineering documentation and code conventions that apply ac
   - `message`
   - optional `displayMessage`
   - optional `httpStatus`
-  - optional `errorKind`
 - Error construction should support code-first usage:
   - `new SystemError('API-ADMIN-001', overrides)`
 - Passing a `SystemMessage` object directly is also allowed when the message node is already available at the call site.
-- Cross-package error classification must use the shared `SYSTEM_MESSAGE_ERROR_KIND` enum.
 - Do not duplicate auth/data/domain error-kind taxonomies in package-local constants.
 - Shared HTTP status constants must come from `packages/shared` and must not be re-declared in package-local files.
 - API error envelopes must preserve the standardized error contract when available:
@@ -95,9 +93,8 @@ Define project-wide engineering documentation and code conventions that apply ac
   - `message`
   - optional `uiMessageKey`
   - optional `displayMessage`
-  - optional `errorKind`
   - optional `details`
-- UI layers should prefer `displayMessage` when present, and otherwise map behavior through standardized `errorKind` or canonical message metadata instead of ad hoc string matching.
+- UI layers should prefer `displayMessage` when present instead of ad hoc string matching.
 
 ## Constant and schema derivation policy
 
@@ -132,9 +129,8 @@ Define project-wide engineering documentation and code conventions that apply ac
 
 ## Web message boundary policy
 
-- `webSystemMessages` is strictly technical/observability catalog.
-- User-facing copy must be defined in `webUIMessages` (or equivalent UI message catalog), never embedded in system telemetry messages.
-- Store/controller layers may map technical errors to UI messages, but must keep both catalogs separated.
+- `webSystemMessages` is strictly technical/observability/user-facing catalog.
+- Store/controller layers may map technical errors to UI messages.
 - Message code format is `PACKAGE-CONTEXT-NNN` (single numeric sequence, zero-padded to 3 digits), for example `WEB-GUARD-001`.
 - Do not encode HTTP semantics in message codes; severity and metadata represent operational context.
 

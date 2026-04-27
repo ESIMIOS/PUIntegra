@@ -10,9 +10,15 @@
  * - 0.0.1	(2026-04-24)	Agrega clase base con código, clave UI, estado y metadatos opcionales.	@codex
  */
 
-import { resolveSystemMessage, type HttpStatus, type SystemPackageName } from '../constants/system-messages';
-import { SYSTEM_MESSAGE_ERROR_KIND_VALUES } from '../schemas/system-message.schema';
-import type { SystemMessage, SystemMessageErrorKind } from '../schemas/system-message.schema';
+import {
+  resolveSystemMessage,
+  isSystemMessageTemplate,
+  type HttpStatus,
+  type SystemPackageName,
+  SystemMessageTemplate,
+  defaultUnknownSystemMessage,
+} from '../constants/system-messages';
+import type { SystemMessage } from '../schemas/system-message.schema';
 
 export type SystemErrorOptions = {
   displayMessage?: string;
@@ -22,13 +28,13 @@ export type SystemErrorOptions = {
 };
 
 export class SystemError extends Error {
+  readonly name: string;
   readonly code: SystemMessage['code'];
   readonly uiMessageKey?: string;
   readonly displayMessage?: string;
   readonly details?: Record<string, unknown>;
   readonly httpStatus?: HttpStatus;
   readonly packageName?: SystemPackageName;
-  readonly errorKind?: SystemMessageErrorKind;
 
   constructor(code: SystemMessage['code'] | SystemMessage, options: SystemErrorOptions = {}) {
     const message = typeof code === 'string' ? resolveSystemMessage(code) : code;
@@ -41,7 +47,6 @@ export class SystemError extends Error {
     this.details = options.details;
     this.httpStatus = typeof resolvedHttpStatus === 'number' ? (resolvedHttpStatus as HttpStatus) : undefined;
     this.packageName = message.packageName as SystemPackageName;
-    this.errorKind = message.errorKind;
     if (options.cause !== undefined) {
       this.cause = options.cause;
     }
@@ -56,23 +61,28 @@ export function isSystemError(value: unknown): value is SystemError {
     return true;
   }
 
-  if (!value || typeof value !== 'object') {
-    return false;
-  }
-
   const candidate = value as Record<string, unknown>;
-  const hasRequiredShape = typeof candidate.name === 'string'
-    && candidate.name === 'SystemError'
-    && typeof candidate.code === 'string'
-    && typeof candidate.message === 'string';
-  if (!hasRequiredShape) {
-    return false;
-  }
+  const hasRequiredShape = typeof candidate.name === 'string' && candidate.name === 'SystemError';
 
-  if (typeof candidate.errorKind === 'undefined') {
+  if (isSystemMessageTemplate(value as SystemMessageTemplate) && hasRequiredShape) {
     return true;
   }
 
-  return typeof candidate.errorKind === 'string'
-    && SYSTEM_MESSAGE_ERROR_KIND_VALUES.includes(candidate.errorKind as SystemMessageErrorKind);
+  return false;
+}
+
+export const getSystemError = (
+  code: SystemMessage['code'] | SystemMessage,
+  options: SystemErrorOptions = {},
+): SystemError => {
+  return new SystemError(code, options);
+};
+
+export function formatUiErrorString(input: unknown): string {
+  let output: SystemMessageTemplate | SystemMessage | SystemError = defaultUnknownSystemMessage;
+
+  if (isSystemMessageTemplate(input as SystemMessageTemplate) || isSystemError(input as SystemError)) {
+    output = input as SystemMessageTemplate | SystemError;
+  }
+  return `${output.code}: ${output.displayMessage ?? output.message}`;
 }

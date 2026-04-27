@@ -10,9 +10,9 @@
 
 import {
   LOG_SEVERITY,
-  SYSTEM_MESSAGE_ERROR_KIND,
+  LOG_SEVERITY_VALUES,
   type SystemMessage,
-  type SystemMessageErrorKind,
+  type LogSeverity,
 } from '../schemas/system-message.schema';
 
 export const SYSTEM_PACKAGE_NAME = {
@@ -28,10 +28,16 @@ export const HTTP_STATUS = {
   BAD_REQUEST: 400,
   UNAUTHORIZED: 401,
   FORBIDDEN: 403,
+  NOT_FOUND: 404,
   CONFLICT: 409,
+  UNPROCESSABLE_CONTENT: 422,
   INTERNAL_SERVER_ERROR: 500,
 } as const;
+
 export type HttpStatus = (typeof HTTP_STATUS)[keyof typeof HTTP_STATUS];
+
+export const HTTP_METHOD = { GET: 'GET', POST: 'POST', PUT: 'PUT', PATCH: 'PATCH', DELETE: 'DELETE' } as const;
+export type HttpMethod = (typeof HTTP_METHOD)[keyof typeof HTTP_METHOD];
 
 export type SystemMessageTemplate = {
   code: string;
@@ -39,7 +45,6 @@ export type SystemMessageTemplate = {
   message: string;
   displayMessage?: string;
   httpStatus?: HttpStatus;
-  errorKind?: SystemMessageErrorKind;
 };
 
 export type MessageTree = {
@@ -60,6 +65,15 @@ type BuildSystemMessagesOptions = {
 
 const systemMessagesByCode = new Map<SystemMessage['code'], SystemMessage>();
 
+export const defaultUnknownSystemMessage: SystemMessage = {
+  code: 'UNKNOWN-ERROR-001',
+  key: 'unknown.error.default',
+  severity: LOG_SEVERITY.ERROR,
+  message: 'Unexpected error occurred.',
+  displayMessage: 'Ocurrió un error inesperado.',
+  packageName: SYSTEM_PACKAGE_NAME.SHARED,
+};
+
 export const sharedSystemMessageTree = {
   data: {
     operation: {
@@ -67,31 +81,26 @@ export const sharedSystemMessageTree = {
         code: 'DATA-OPERATION-001',
         severity: LOG_SEVERITY.WARNING,
         message: 'La operación de datos falló por validación.',
-        errorKind: SYSTEM_MESSAGE_ERROR_KIND.DATA_VALIDATION,
       },
       notFound: {
         code: 'DATA-OPERATION-002',
         severity: LOG_SEVERITY.WARNING,
         message: 'No se encontró la entidad solicitada.',
-        errorKind: SYSTEM_MESSAGE_ERROR_KIND.DATA_NOT_FOUND,
       },
       conflictDetected: {
         code: 'DATA-OPERATION-003',
         severity: LOG_SEVERITY.WARNING,
         message: 'Se detectó un conflicto de datos.',
-        errorKind: SYSTEM_MESSAGE_ERROR_KIND.DATA_CONFLICT,
       },
       forbiddenOperation: {
         code: 'DATA-OPERATION-004',
         severity: LOG_SEVERITY.WARNING,
         message: 'La sesión actual no puede ejecutar la operación de datos.',
-        errorKind: SYSTEM_MESSAGE_ERROR_KIND.DATA_FORBIDDEN,
       },
       unknownFailure: {
         code: 'DATA-OPERATION-005',
         severity: LOG_SEVERITY.ERROR,
         message: 'Falló inesperadamente en operaciones de datos.',
-        errorKind: SYSTEM_MESSAGE_ERROR_KIND.DATA_UNKNOWN,
       },
     },
   },
@@ -101,25 +110,21 @@ export const sharedSystemMessageTree = {
         code: 'AUTH-LOGIN-003',
         severity: LOG_SEVERITY.WARNING,
         message: 'Se registró un intento de autenticación con credenciales inválidas.',
-        errorKind: SYSTEM_MESSAGE_ERROR_KIND.AUTH_INVALID_CREDENTIALS,
       },
       locked: {
         code: 'AUTH-LOGIN-002',
         severity: LOG_SEVERITY.WARNING,
         message: 'La cuenta se encuentra temporalmente bloqueada por intentos fallidos.',
-        errorKind: SYSTEM_MESSAGE_ERROR_KIND.AUTH_REQUIRED,
       },
       noPermissions: {
         code: 'AUTH-LOGIN-004',
         severity: LOG_SEVERITY.WARNING,
         message: 'El usuario no tiene permisos activos para iniciar sesión.',
-        errorKind: SYSTEM_MESSAGE_ERROR_KIND.AUTH_NO_PERMISSIONS,
       },
       invalidContext: {
         code: 'AUTH-LOGIN-005',
         severity: LOG_SEVERITY.WARNING,
         message: 'El contexto seleccionado no es válido para la sesión actual.',
-        errorKind: SYSTEM_MESSAGE_ERROR_KIND.AUTH_INVALID_CONTEXT,
       },
     },
     logout: {
@@ -127,14 +132,27 @@ export const sharedSystemMessageTree = {
         code: 'AUTH-LOGOUT-001',
         severity: LOG_SEVERITY.ERROR,
         message: 'Falló inesperadamente el cierre de sesión.',
-        errorKind: SYSTEM_MESSAGE_ERROR_KIND.SYSTEM_UNEXPECTED,
       },
     },
   },
 } as const satisfies MessageTree;
 
-function isSystemMessageTemplate(value: MessageTree | SystemMessageTemplate): value is SystemMessageTemplate {
-  return typeof value === 'object' && value !== null && 'code' in value && 'severity' in value && 'message' in value;
+export function isSystemMessageTemplate(value: MessageTree | SystemMessageTemplate): value is SystemMessageTemplate {
+  if (!value || typeof value !== 'object') {
+    return false;
+  }
+
+  const candidate = value as Record<string, unknown>;
+  const hasRequiredShape =
+    typeof candidate.code === 'string' &&
+    typeof candidate.message === 'string' &&
+    typeof candidate.severity === 'string' &&
+    LOG_SEVERITY_VALUES.includes(candidate.severity as LogSeverity);
+  if (!hasRequiredShape) {
+    return false;
+  }
+
+  return true;
 }
 
 /**
@@ -195,7 +213,6 @@ export function buildSystemMessagesTree(
         message: value.message,
         displayMessage: value.displayMessage,
         httpStatus: value.httpStatus,
-        errorKind: value.errorKind,
       };
       return [segment, message];
     }
@@ -244,10 +261,7 @@ export function registerSystemMessages(tree: unknown) {
 
 export function resolveSystemMessage(code: SystemMessage['code']) {
   const message = systemMessagesByCode.get(code);
-  if (!message) {
-    throw new Error(`Unknown system message code "${code}".`);
-  }
-  return message;
+  return message ?? defaultUnknownSystemMessage;
 }
 
 /**
@@ -281,3 +295,7 @@ export function buildUnifiedSystemMessageTree<
 export const sharedSystemMessages = buildTypedSystemMessagesTree(sharedSystemMessageTree, {
   packageName: SYSTEM_PACKAGE_NAME.SHARED,
 });
+
+export function formatUiMessageString(input: SystemMessage): string {
+  return `${input.displayMessage ?? input.message}`;
+}

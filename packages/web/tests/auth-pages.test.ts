@@ -218,7 +218,7 @@ describe('Auth Pages', () => {
     await wrapper.find('form').trigger('submit.prevent');
     await flushPromises();
 
-    expect(wrapper.text()).toContain('WEB-UI-002');
+    expect(wrapper.text()).toContain('DATA-OPERATION-002');
     expect(wrapper.text()).not.toContain('AUTH-LOGIN-003');
   });
 

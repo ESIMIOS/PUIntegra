@@ -15,9 +15,9 @@
 
 import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { RoleSchema, SYSTEM_MESSAGE_ERROR_KIND, isSystemError } from '@shared';
+import { RoleSchema, formatUiErrorString } from '@shared';
 import { z } from 'zod';
-import { systemMessageTree, webUiDataErrorByKind } from '@/shared/constants/systemMessages';
+import { systemMessageTree } from '@/shared/constants/systemMessages';
 import { useAuthSession } from '@/composables/useAuthSession';
 import { resolvePreferredAuthenticatedPath } from '@/router/authLanding';
 import { hasSavedContext } from '@/gateways/firebaseAuthGateway';
@@ -37,15 +37,6 @@ const manualLoginStarted = ref(false);
 const redirectAttemptId = ref(0);
 
 const hasPendingLogin = computed(() => !!authStore.pendingLogin);
-const dataErrorKinds = new Set(Object.values(SYSTEM_MESSAGE_ERROR_KIND));
-
-function isDataErrorKind(kind: unknown): kind is keyof typeof webUiDataErrorByKind {
-  return typeof kind === 'string' && dataErrorKinds.has(kind as keyof typeof webUiDataErrorByKind);
-}
-
-function formatUiError(input: { code: string; message: string }) {
-  return `${input.code}: ${input.message}`;
-}
 
 function setFieldError(message: string) {
   errorDisplayMode.value = 'field';
@@ -57,7 +48,7 @@ function setAlertError(message: string) {
   errorMessage.value = message;
 }
 
-async function handleValidateCredentials() {
+function resetValidateCredentialsState() {
   manualLoginStarted.value = true;
   redirectAttemptId.value += 1;
   errorMessage.value = null;
@@ -65,16 +56,30 @@ async function handleValidateCredentials() {
   submitting.value = true;
   authStore.setPendingLogin(null);
   showContextModal.value = false;
+}
+
+function hasValidCredentialsInput(emailCandidate: string) {
+  const validationError = formatUiErrorString(systemMessageTree.web.ui.data.validation);
+  if (!emailCandidate || !emailCandidate.includes('@')) {
+    setFieldError(validationError);
+    submitting.value = false;
+    return false;
+  }
+
+  if (!password.value.trim()) {
+    setFieldError(validationError);
+    submitting.value = false;
+    return false;
+  }
+
+  return true;
+}
+
+async function handleValidateCredentials() {
+  resetValidateCredentialsState();
 
   const emailCandidate = email.value.trim().toLowerCase();
-  if (!emailCandidate || !emailCandidate.includes('@')) {
-    setFieldError(formatUiError(systemMessageTree.web.ui.data.validation));
-    submitting.value = false;
-    return;
-  }
-  if (!password.value.trim()) {
-    setFieldError(formatUiError(systemMessageTree.web.ui.data.validation));
-    submitting.value = false;
+  if (!hasValidCredentialsInput(emailCandidate)) {
     return;
   }
 
@@ -87,29 +92,10 @@ async function handleValidateCredentials() {
     showContextModal.value = true;
   } catch (error) {
     showContextModal.value = false;
-    const parsed = authStore.pendingLogin;
-    if (parsed) {
+    if (authStore.pendingLogin) {
       authStore.setPendingLogin(null);
     }
-
-    if (isSystemError(error) && error.errorKind === SYSTEM_MESSAGE_ERROR_KIND.AUTH_NO_PERMISSIONS) {
-      const userMessage = error.displayMessage ?? error.message;
-      setAlertError(`${error.code}: ${userMessage}`);
-      return;
-    }
-
-    if (isSystemError(error) && error.errorKind === SYSTEM_MESSAGE_ERROR_KIND.AUTH_INVALID_CREDENTIALS) {
-      const userMessage = error.displayMessage ?? error.message;
-      setAlertError(`${error.code}: ${userMessage}`);
-      return;
-    }
-
-    if (isSystemError(error) && isDataErrorKind(error.errorKind)) {
-      setAlertError(formatUiError(webUiDataErrorByKind[error.errorKind]));
-      return;
-    }
-
-    setAlertError(formatUiError(webUiDataErrorByKind[SYSTEM_MESSAGE_ERROR_KIND.DATA_UNKNOWN]));
+    setAlertError(formatUiErrorString(error));
   } finally {
     submitting.value = false;
   }
@@ -127,20 +113,15 @@ async function establishAndRedirect(context: { role: z.infer<typeof RoleSchema>;
     showContextModal.value = false;
     await router.push(redirectPath || defaultPath);
   } catch (error) {
-    const rawMessage = (error as { message?: string }).message;
-    setAlertError(
-      rawMessage
-        ? `${systemMessageTree.shared.data.operation.unknownFailure.code}: ${rawMessage}`
-        : formatUiError(systemMessageTree.shared.data.operation.unknownFailure),
-    );
+    setAlertError(formatUiErrorString(error));
   }
 }
 
 async function handleContinue(context: { role: z.infer<typeof RoleSchema>; rfc: string }) {
   errorMessage.value = null;
-  errorDisplayMode.value = "alert";
+  errorDisplayMode.value = 'alert';
   if (!hasPendingLogin.value) {
-    setAlertError(formatUiError(systemMessageTree.web.ui.data.validation));
+    setAlertError(formatUiErrorString(systemMessageTree.web.ui.data.validation));
     return;
   }
 

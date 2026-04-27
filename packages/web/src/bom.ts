@@ -12,15 +12,7 @@
  * OPENSOURCE
  * Dependencias de terceros usadas por el producto.
  */
-export {
-  computed,
-  createApp,
-  onMounted,
-  onUnmounted,
-  ref,
-  watch,
-  watchEffect
-} from 'vue';
+export { computed, createApp, onMounted, onUnmounted, ref, watch, watchEffect } from 'vue';
 export type { DefineComponent } from 'vue';
 
 export { createPinia, defineStore } from 'pinia';
@@ -31,12 +23,7 @@ export type { Router } from 'vue-router';
 
 export { z } from 'zod';
 
-export {
-  createVuestic,
-  defineVuesticConfig,
-  useBreakpoint,
-  useColors
-} from 'vuestic-ui';
+export { createVuestic, defineVuesticConfig, useBreakpoint, useColors } from 'vuestic-ui';
 
 /**
  * PRODUCT
@@ -57,7 +44,7 @@ export {
   useFindingsController,
   useInstitutionSelectionController,
   useLogsController,
-  useRequestsController
+  useRequestsController,
 } from '@/composables/useDataControllers';
 export { useRouteNavigation } from '@/composables/useRouteNavigation';
 export { useAuthSession } from '@/composables/useAuthSession';
@@ -68,13 +55,12 @@ export { SystemError, isSystemError } from '@shared';
 export { nowUtcMilliseconds, yearsAgoUtcMilliseconds } from '@/shared/utils/dateUtils';
 export { deepClone } from '@/shared/utils/objectUtils';
 
-
 export { systemMessageTree } from '@/shared/constants/systemMessages';
 export {
   logSystemMessage,
   logSystemMessageError,
   logSystemMessageVerbose,
-  logSystemMessageWarning
+  logSystemMessageWarning,
 } from '@/shared/logging/systemLogger';
 
 export { createAppVuestic } from '@/plugins/vuestic';
@@ -83,7 +69,7 @@ export {
   VUESTIC_LIGHT_PRESET,
   appVuesticConfig,
   darkThemeColors,
-  lightThemeColors
+  lightThemeColors,
 } from '@/plugins/vuestic';
 export { createAppRouter } from '@/router/createRouter';
 
@@ -101,7 +87,7 @@ export {
   systemRoleValues,
   SYSTEM_RFC,
   SECONDS_TO_CLOSE_SESSION_FOR_INACTIVITY,
-  SECONDS_TO_SHOW_INACTIVITY_ALERT
+  SECONDS_TO_SHOW_INACTIVITY_ALERT,
 } from '@shared';
 
 export {
@@ -110,13 +96,10 @@ export {
   domainLabels,
   domainOptions,
   domainShell,
-  domainValues
+  domainValues,
 } from '@/shared/constants/domains';
 
-export {
-  allDocumentedPaths,
-  routePaths
-} from '@/shared/constants/routePaths';
+export { allDocumentedPaths, routePaths } from '@/shared/constants/routePaths';
 
 export {
   buildNavigationLinks,
@@ -124,12 +107,12 @@ export {
   defaultNavigationContext,
   getPageContent,
   isPageId,
-  navigationCatalog
+  navigationCatalog,
 } from '@/shared/constants/navigationCatalog';
 export type {
   NavigationContext,
   NavigationDomain,
   NavigationLink,
   PageContent,
-  PageId
+  PageId,
 } from '@/shared/constants/navigationCatalog';

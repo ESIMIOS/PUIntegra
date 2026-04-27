@@ -10,10 +10,10 @@
 
 import {
   LOG_SEVERITY,
-  SYSTEM_MESSAGE_ERROR_KIND,
   buildUnifiedSystemMessageTree,
   sharedSystemMessageTree,
-  type MessageTree
+  type MessageTree,
+  type BuiltMessageTree,
 } from '@shared';
 
 const webSystemMessageTree = {
@@ -113,43 +113,43 @@ const webSystemMessageTree = {
         code: 'WEB-UI-001',
         severity: LOG_SEVERITY.WARNING,
         message: 'Revisa los campos marcados antes de continuar.',
-        errorKind: SYSTEM_MESSAGE_ERROR_KIND.DATA_VALIDATION
       },
       notFound: {
         code: 'WEB-UI-002',
         severity: LOG_SEVERITY.WARNING,
         message: 'No encontramos el registro solicitado.',
-        errorKind: SYSTEM_MESSAGE_ERROR_KIND.DATA_NOT_FOUND
       },
       conflict: {
         code: 'WEB-UI-003',
         severity: LOG_SEVERITY.WARNING,
         message: 'Ya existe un registro con esos datos.',
-        errorKind: SYSTEM_MESSAGE_ERROR_KIND.DATA_CONFLICT
       },
       forbidden: {
         code: 'WEB-UI-004',
         severity: LOG_SEVERITY.WARNING,
         message: 'Tu sesión actual no permite realizar esta acción.',
-        errorKind: SYSTEM_MESSAGE_ERROR_KIND.DATA_FORBIDDEN
       },
       storage: {
         code: 'WEB-UI-005',
         severity: LOG_SEVERITY.ERROR,
         message: 'No pudimos guardar los cambios locales. Intenta de nuevo.',
-        errorKind: SYSTEM_MESSAGE_ERROR_KIND.DATA_STORAGE
       },
       unknown: {
         code: 'WEB-UI-006',
         severity: LOG_SEVERITY.ERROR,
         message: 'Ocurrió un error inesperado. Intenta de nuevo.',
-        errorKind: SYSTEM_MESSAGE_ERROR_KIND.DATA_UNKNOWN
       },
       serverError: {
         code: 'WEB-UI-011',
         severity: LOG_SEVERITY.ERROR,
         message: 'Error de comunicación con el servicio. Intenta de nuevo.',
-        errorKind: SYSTEM_MESSAGE_ERROR_KIND.DATA_SERVER_ERROR
+      },
+    },
+    institutions: {
+      created: {
+        code: 'WEB-UI-012',
+        severity: LOG_SEVERITY.SUCCESS,
+        message: 'Institución creada correctamente.',
       },
     },
   },
@@ -164,26 +164,10 @@ const webSystemMessageTree = {
   },
 } as const satisfies MessageTree;
 
-const unifiedSystemMessageTree = buildUnifiedSystemMessageTree({
+export const systemMessageTree = buildUnifiedSystemMessageTree({
   web: webSystemMessageTree,
   shared: sharedSystemMessageTree,
-});
-
-if (!unifiedSystemMessageTree.web || !unifiedSystemMessageTree.shared) {
-  throw new Error('Unified system message tree is missing required web or shared roots.');
-}
-
-export const systemMessageTree = {
-  web: unifiedSystemMessageTree.web,
-  shared: unifiedSystemMessageTree.shared,
-} as const;
-
-export const webUiDataErrorByKind = {
-  [SYSTEM_MESSAGE_ERROR_KIND.DATA_VALIDATION]: webSystemMessageTree.ui.data.validation,
-  [SYSTEM_MESSAGE_ERROR_KIND.DATA_NOT_FOUND]: webSystemMessageTree.ui.data.notFound,
-  [SYSTEM_MESSAGE_ERROR_KIND.DATA_CONFLICT]: webSystemMessageTree.ui.data.conflict,
-  [SYSTEM_MESSAGE_ERROR_KIND.DATA_FORBIDDEN]: webSystemMessageTree.ui.data.forbidden,
-  [SYSTEM_MESSAGE_ERROR_KIND.DATA_STORAGE]: webSystemMessageTree.ui.data.storage,
-  [SYSTEM_MESSAGE_ERROR_KIND.DATA_SERVER_ERROR]: webSystemMessageTree.ui.data.serverError,
-  [SYSTEM_MESSAGE_ERROR_KIND.DATA_UNKNOWN]: webSystemMessageTree.ui.data.unknown,
-} as const;
+}) as BuiltMessageTree<{
+  web: typeof webSystemMessageTree;
+  shared: typeof sharedSystemMessageTree;
+}>;

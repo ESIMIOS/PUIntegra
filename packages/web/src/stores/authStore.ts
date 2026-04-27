@@ -11,6 +11,7 @@
  */
 
 import { defineStore, AuthenticatedRoleSchema, RoleSchema, ROLE, z } from '@/bom';
+import { SystemError, sharedSystemMessages } from '@shared';
 import {
   LoginResultSchema,
   SessionContextSchema,
@@ -120,7 +121,7 @@ export const useAuthStore = defineStore('auth', {
     },
     async establishSession(context: SessionContext) {
       if (!this.pendingLogin) {
-        throw new Error('No pending login result to establish session.');
+        throw new SystemError(sharedSystemMessages.auth.login.invalidContext);
       }
       const session = await establishSession(this.pendingLogin, context);
       this.applyEstablishedSession(session);

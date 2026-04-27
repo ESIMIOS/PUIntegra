@@ -9,12 +9,7 @@
  */
 
 import { defineStore } from 'pinia';
-import {
-  isSystemError,
-  SYSTEM_MESSAGE_ERROR_KIND,
-  SystemError,
-  type Institution
-} from '@shared';
+import { isSystemError, SystemError, formatUiErrorString, type Institution } from '@shared';
 import {
   getUserById,
   listContactsByRfc,
@@ -22,30 +17,10 @@ import {
   listInstitutions,
   listLogs,
   listPermissionsByUser,
-  listRequestsByRfc
+  listRequestsByRfc,
 } from '@/gateways/firebaseDataGateway';
 import { createInstitutionOnboarding } from '@/gateways/institutionOnboardingGateway';
-import {
-  systemMessageTree,
-  webUiDataErrorByKind
-} from '@/shared/constants/systemMessages';
-
-/**
- * @description Resuelve el mensaje seguro para un error de datos.
- */
-function resolveUserErrorMessage(error: unknown) {
-  if (isSystemError(error)) {
-    const displayMessage = error.displayMessage;
-    if (typeof displayMessage === 'string' && displayMessage.trim().length > 0) {
-      return displayMessage;
-    }
-    if (typeof error.message === 'string' && error.message.trim().length > 0) {
-      return error.message;
-    }
-    return error.code;
-  }
-  return webUiDataErrorByKind[SYSTEM_MESSAGE_ERROR_KIND.DATA_UNKNOWN].message;
-}
+import { systemMessageTree } from '@/shared/constants/systemMessages';
 
 /**
  * @description Normaliza errores desconocidos a errores de datos de aplicación.
@@ -54,9 +29,9 @@ function normalizeDataError(error: unknown, fallbackMessage: string) {
   return isSystemError(error)
     ? error
     : new SystemError(systemMessageTree.shared.data.operation.unknownFailure, {
-      displayMessage: fallbackMessage,
-      details: { error }
-    });
+        displayMessage: fallbackMessage,
+        details: { error },
+      });
 }
 
 export const useDataStore = defineStore('data', {
@@ -64,7 +39,7 @@ export const useDataStore = defineStore('data', {
     isLoading: false,
     isSaving: false,
     error: null as SystemError | null,
-    userErrorMessage: null as string | null
+    userErrorMessage: null as string | null,
   }),
   actions: {
     clearError() {
@@ -73,7 +48,7 @@ export const useDataStore = defineStore('data', {
     },
     captureExternalError(error: unknown, fallbackMessage: string) {
       this.error = normalizeDataError(error, fallbackMessage);
-      this.userErrorMessage = resolveUserErrorMessage(this.error);
+      this.userErrorMessage = formatUiErrorString(this.error);
     },
     async withLoading<T>(operation: () => Promise<T>, fallbackMessage: string) {
       this.isLoading = true;
@@ -82,7 +57,7 @@ export const useDataStore = defineStore('data', {
         return await operation();
       } catch (error) {
         this.error = normalizeDataError(error, fallbackMessage);
-        this.userErrorMessage = resolveUserErrorMessage(this.error);
+        this.userErrorMessage = formatUiErrorString(this.error);
         throw this.error;
       } finally {
         this.isLoading = false;
@@ -95,7 +70,7 @@ export const useDataStore = defineStore('data', {
         return await operation();
       } catch (error) {
         this.error = normalizeDataError(error, fallbackMessage);
-        this.userErrorMessage = resolveUserErrorMessage(this.error);
+        this.userErrorMessage = formatUiErrorString(this.error);
         throw this.error;
       } finally {
         this.isSaving = false;
@@ -131,10 +106,7 @@ export const useDataStore = defineStore('data', {
       planFinishAt: number;
       adminEmail: string;
     }) {
-      return this.withSaving(
-        () => createInstitutionOnboarding(input),
-        'Failed to create institution onboarding.'
-      );
-    }
-  }
+      return this.withSaving(() => createInstitutionOnboarding(input), 'Failed to create institution onboarding.');
+    },
+  },
 });
