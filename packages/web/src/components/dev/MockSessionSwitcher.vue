@@ -73,7 +73,7 @@ const contextualLinks = computed(() => {
       <VaDivider />
       <section class="mock-switcher__section" aria-label="Layout">
         <span class="mock-switcher__section-label">Layout</span>
-        <div class="d-flex flex-wrap ga-2">
+        <div class="d-flex flex-wrap gap-2">
           <VaButton
             v-for="domain in domainOptions"
             :key="domain.key"
@@ -89,7 +89,7 @@ const contextualLinks = computed(() => {
       <VaDivider />
       <section class="mock-switcher__section" aria-label="Page">
         <span class="mock-switcher__section-label">Page</span>
-        <div class="d-flex flex-wrap ga-2">
+        <div class="d-flex flex-wrap gap-2">
           <VaButton
             v-for="link in contextualLinks"
             :key="link.id"

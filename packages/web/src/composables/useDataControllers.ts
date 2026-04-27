@@ -24,6 +24,20 @@ export function useInstitutionSelectionController() {
 }
 
 /**
+ * @description Expone lectura de instituciones para inspección de backoffice.
+ */
+export function useAdminInstitutionsController() {
+  const store = useDataStore();
+  return {
+    isLoading: computed(() => store.isLoading),
+    errorMessage: computed(() => store.userErrorMessage),
+    loadInstitutions: () => store.listInstitutions(),
+    loadInstitutionByRfc: (rfc: string) => store.getInstitutionByRfc(rfc),
+    retry: () => store.clearError()
+  };
+}
+
+/**
  * @description Expone alta institucional de backoffice mediante API HTTP.
  */
 export function useInstitutionOnboardingController() {

@@ -1,10 +1,11 @@
 /**
  * @component firestore
  * @name firestore.rules
- * @version 0.0.5
+ * @version 0.0.6
  * @description Restricts client reads to own identity or granted tenant scope (`users`, `permissions`, tenant collections) and denies all writes.
  * @author @codex
  * @changelog
+ * - 0.0.6	(2026-04-27)	Permite list reads de instituciones para SYSTEM_ADMINISTRATOR sin depender de campos del documento.	@codex
  * - 0.0.5	(2026-04-20)	Permite lectura de permissions por correo propio o por alcance tenant concedido.	@codex
  * - 0.0.4	(2026-04-20)	Habilita lecturas por tenant RFC con permiso GRANTED y excepción SYSTEM_ADMINISTRATOR.	@codex
  * - 0.0.3	(2026-04-19)	Elimina fallback por userId en permissions; acceso queda ligado al email autenticado.	@codex
@@ -90,9 +91,16 @@ service cloud.firestore {
     }
 
     function canReadInstitution(documentId, data) {
-      return data.RFC is string &&
-        normalizedRfc(data.RFC) == normalizedRfc(documentId) &&
-        hasTenantReadGrant(documentId);
+      return isSignedIn() &&
+        signedEmail() != null &&
+        (
+          hasSystemAdministratorGrantForEmail(signedEmail()) ||
+          (
+            data.RFC is string &&
+            normalizedRfc(data.RFC) == normalizedRfc(documentId) &&
+            hasGrantedPermission(signedEmail(), normalizedRfc(documentId))
+          )
+        );
     }
 
     match /users/{documentId} {
