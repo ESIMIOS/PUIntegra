@@ -10,7 +10,7 @@ import {
   initializeTestEnvironment,
   type RulesTestEnvironment,
 } from "@firebase/rules-unit-testing";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, setDoc } from "firebase/firestore";
 import {
   DEFAULT_RFC,
   PERMISSION_STATUS,
@@ -273,6 +273,11 @@ describe("firestore security rules", () => {
     it("allows read for institutions when user is system administrator", async () => {
       const ownerDb = testEnv.authenticatedContext("uid-owner", { email: "owner@example.test" }).firestore();
       await assertSucceeds(getDoc(doc(ownerDb, "institutions", TENANT_OTHER_RFC)));
+    });
+
+    it("allows list read for institutions when user is system administrator", async () => {
+      const ownerDb = testEnv.authenticatedContext("uid-owner", { email: "owner@example.test" }).firestore();
+      await assertSucceeds(getDocs(collection(ownerDb, "institutions")));
     });
 
     it("denies read for institutions without granted permission", async () => {

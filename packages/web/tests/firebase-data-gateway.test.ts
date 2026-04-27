@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { where } from 'firebase/firestore';
+import { getDoc, where } from 'firebase/firestore';
 import { COMMERCIAL_PLAN, COMMERCIAL_PLAN_STATUS, DEFAULT_RFC, PERMISSION_STATUS, ROLE, SYSTEM_RFC } from '@shared';
 
 let collectionDocs: Array<{ data: () => unknown }> = [];
@@ -21,7 +21,7 @@ vi.mock('firebase/firestore', () => ({
   where: vi.fn(),
 }));
 
-const { listInstitutions, listPermissionsByEmail } = await import('@/gateways/firebaseDataGateway');
+const { getInstitutionByRfc, listInstitutions, listPermissionsByEmail } = await import('@/gateways/firebaseDataGateway');
 
 function institution(RFC: string) {
   return {
@@ -41,6 +41,7 @@ function institution(RFC: string) {
 describe('firebase data gateway', () => {
   beforeEach(() => {
     collectionDocs = [];
+    vi.mocked(getDoc).mockReset();
   });
 
   it('filters reserved system RFC from institution reads', async () => {
@@ -53,6 +54,44 @@ describe('firebase data gateway', () => {
     collectionDocs = [{ data: () => ({ RFC: DEFAULT_RFC }) }];
 
     await expect(listInstitutions()).rejects.toMatchObject({});
+  });
+
+  it('loads one institution by RFC', async () => {
+    vi.mocked(getDoc).mockResolvedValue({
+      exists: () => true,
+      data: () => institution(DEFAULT_RFC),
+    } as Awaited<ReturnType<typeof getDoc>>);
+
+    await expect(getInstitutionByRfc(DEFAULT_RFC)).resolves.toEqual(institution(DEFAULT_RFC));
+  });
+
+  it('rejects missing institution documents', async () => {
+    vi.mocked(getDoc).mockResolvedValue({
+      exists: () => false,
+      data: () => undefined,
+    } as Awaited<ReturnType<typeof getDoc>>);
+
+    await expect(getInstitutionByRfc('AAA010101AAA')).rejects.toMatchObject({
+      code: 'DATA-OPERATION-002',
+    });
+  });
+
+  it('rejects invalid institution detail payloads before returning data', async () => {
+    vi.mocked(getDoc).mockResolvedValue({
+      exists: () => true,
+      data: () => ({ RFC: DEFAULT_RFC }),
+    } as Awaited<ReturnType<typeof getDoc>>);
+
+    await expect(getInstitutionByRfc(DEFAULT_RFC)).rejects.toMatchObject({
+      code: 'DATA-OPERATION-001',
+    });
+  });
+
+  it('rejects reserved system RFC for tenant institution detail reads', async () => {
+    await expect(getInstitutionByRfc(SYSTEM_RFC)).rejects.toMatchObject({
+      code: 'DATA-OPERATION-004',
+    });
+    expect(vi.mocked(getDoc)).not.toHaveBeenCalled();
   });
 
   it('queries permissions by normalized email to support pre-account grants', async () => {

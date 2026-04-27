@@ -225,11 +225,11 @@ Reference: [Error Prevention Philosophy](./design-system.md#error-prevention-phi
 Reference: [Destructive Actions Contract](./design-system.md#destructive-actions-contract).
 
 - **Modal setup**: Use `VaModal` with `no-outside-dismiss` and `hide-default-actions`.
-- **Button Slot**: Implement the footer slot with a flex container and `ga-2` gap.
+- **Button Slot**: Implement the footer slot with a flex container and `gap-2` gap.
 
 ```vue
 <template #footer>
-  <div class="d-flex justify-end ga-2">
+  <div class="d-flex justify-end gap-2">
     <VaButton preset="secondary" @click="close">Cancelar</VaButton>
     <VaButton color="danger" @click="confirm">Eliminar</VaButton>
   </div>

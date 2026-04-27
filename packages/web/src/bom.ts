@@ -34,12 +34,14 @@ export { default as MockSessionSwitcher } from '@/components/dev/MockSessionSwit
 export { default as AppLogo } from '@/components/shared/AppLogo.vue';
 export { default as DashboardShell } from '@/components/shared/DashboardShell.vue';
 export { default as PagePlaceholder } from '@/components/shared/PagePlaceholder.vue';
+export { default as StatusBadge } from '@/components/shared/StatusBadge.vue';
 export { default as ThemeToggle } from '@/components/shared/ThemeToggle.vue';
 
 export { useAuthStore } from '@/stores/authStore';
 export { useDataStore } from '@/stores/dataStore';
 export { useInstitutionStore } from '@/stores/institutionStore';
 export {
+  useAdminInstitutionsController,
   useDashboardController,
   useFindingsController,
   useInstitutionSelectionController,

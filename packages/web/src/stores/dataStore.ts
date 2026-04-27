@@ -11,6 +11,7 @@
 import { defineStore } from 'pinia';
 import { isSystemError, SystemError, formatUiErrorString, type Institution } from '@shared';
 import {
+  getInstitutionByRfc,
   getUserById,
   listContactsByRfc,
   listFindingsByRfc,
@@ -81,6 +82,9 @@ export const useDataStore = defineStore('data', {
     },
     listInstitutions() {
       return this.withLoading(() => listInstitutions(), 'Failed to list institutions.');
+    },
+    getInstitutionByRfc(rfc: string) {
+      return this.withLoading(() => getInstitutionByRfc(rfc), 'Failed to load institution.');
     },
     listPermissionsByUser(userId: string) {
       return this.withLoading(() => listPermissionsByUser(userId), 'Failed to list permissions.');
