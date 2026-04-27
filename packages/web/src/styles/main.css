@@ -31,6 +31,14 @@ a {
   background-color: var(--va-background-secondary);
 }
 
+.bg-element {
+  background-color: var(--va-background-element);
+}
+
+.bg.border {
+  background-color: var(--va-background-border);
+}
+
 .primary {
   color: var(--va-primary);
 }
@@ -54,10 +62,6 @@ a {
 
 .flex-wrap {
   flex-wrap: wrap;
-}
-
-.ga-2 {
-  gap: 0.5rem;
 }
 
 /*MARGIN*/

@@ -100,7 +100,7 @@ export const sharedSystemMessageTree = {
       unknownFailure: {
         code: 'DATA-OPERATION-005',
         severity: LOG_SEVERITY.ERROR,
-        message: 'Falló inesperadamente en operaciones de datos.',
+        message: 'Fallo inesperado en operaciones de datos.',
       },
     },
   },
@@ -131,7 +131,7 @@ export const sharedSystemMessageTree = {
       logoutFailure: {
         code: 'AUTH-LOGOUT-001',
         severity: LOG_SEVERITY.ERROR,
-        message: 'Falló inesperadamente el cierre de sesión.',
+        message: 'Fallo inesperado el cierre de sesión.',
       },
     },
   },

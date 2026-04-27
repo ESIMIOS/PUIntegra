@@ -88,6 +88,23 @@ export async function listInstitutions(): Promise<Institution[]> {
   return institutions.filter((institution) => institution.RFC !== SYSTEM_RFC);
 }
 
+export async function getInstitutionByRfc(rfc: string): Promise<Institution> {
+  const normalizedRfc = rfc.trim().toUpperCase();
+  if (normalizedRfc === SYSTEM_RFC) {
+    throw new SystemError(sharedSystemMessages.data.operation.forbiddenOperation, {
+      details: { rfc: normalizedRfc }
+    });
+  }
+
+  const snapshot = await getDoc(documentRef('institutions', normalizedRfc));
+  if (!snapshot.exists()) {
+    throw new SystemError(sharedSystemMessages.data.operation.notFound, {
+      details: { rfc: normalizedRfc }
+    });
+  }
+  return parseEntity<Institution>(InstitutionSchema, snapshot.data(), 'institution');
+}
+
 export async function listPermissionsByEmail(email: string): Promise<Permission[]> {
   const normalizedEmail = email.trim().toLowerCase();
   const snapshot = await getDocs(query(collectionRef('permissions'), where('email', '==', normalizedEmail)));
