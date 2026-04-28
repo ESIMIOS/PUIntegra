@@ -28,6 +28,7 @@ export type LogDatePresetOption = {
 export const logDatePresetOptions: LogDatePresetOption[] = [
   { value: 'all', text: 'TODO' },
   { value: '5m', text: '5 minutos' },
+  { value: '10m', text: '10 minutos' },
   { value: '1h', text: '1 hora' },
   { value: 'today', text: 'Hoy' },
   { value: 'yesterday', text: 'Ayer' },
@@ -40,7 +41,7 @@ export const logDatePresetOptions: LogDatePresetOption[] = [
  * @description Clona una fecha para evitar mutar referencias recibidas.
  */
 function cloneDate(value: Date) {
-  return new Date(value.getTime());
+  return new Date(value);
 }
 
 /**

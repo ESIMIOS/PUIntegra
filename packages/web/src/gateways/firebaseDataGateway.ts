@@ -32,6 +32,7 @@ import {
 } from '@shared';
 import {
   collection,
+  documentId,
   doc,
   getDoc,
   getDocs,
@@ -54,7 +55,10 @@ export type ListLogsFilters = {
   createdAtEnd?: number;
   order?: 'asc' | 'desc';
   pageSize?: number;
-  cursor?: unknown;
+  cursor?: {
+    createdAt: number;
+    id: string;
+  };
 };
 
 /**
@@ -183,7 +187,8 @@ export async function listLogs(filters: ListLogsFilters = {}): Promise<Log[]> {
     ...(typeof filters.createdAtStart === 'number' ? [where('createdAt', '>=', filters.createdAtStart)] : []),
     ...(typeof filters.createdAtEnd === 'number' ? [where('createdAt', '<=', filters.createdAtEnd)] : []),
     orderBy('createdAt', filters.order ?? 'desc'),
-    ...(filters.cursor ? [startAfter(filters.cursor)] : []),
+    orderBy(documentId(), filters.order ?? 'desc'),
+    ...(filters.cursor ? [startAfter(filters.cursor.createdAt, filters.cursor.id)] : []),
     ...(filters.pageSize ? [limit(filters.pageSize)] : [])
   ];
   const snapshot = await getDocs(query(collectionRef('logs'), ...constraints));

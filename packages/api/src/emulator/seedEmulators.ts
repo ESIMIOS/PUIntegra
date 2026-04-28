@@ -95,7 +95,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     .then(() => {
       console.info('Firebase emulators seeded.');
     })
-    .catch((error) => {
+    .catch((error) => { //NOSONAR
       console.error(error);
       process.exitCode = 1;
     });

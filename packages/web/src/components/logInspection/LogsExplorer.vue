@@ -11,11 +11,7 @@
 import { computed, onMounted, ref, watch } from 'vue';
 import { DEFAULT_RFC, type Institution, type Log, type LogCategory, type LogOrigin } from '@shared';
 import { useLogsController } from '@/bom';
-import {
-  getLogDatePresetOptions,
-  resolveLogDateRange,
-  type LogDatePreset,
-} from '@/shared/logInspection/logDateRanges';
+import { getLogDatePresetOptions, resolveLogDateRange, type LogDatePreset } from '@/shared/logInspection/logDateRanges';
 import {
   LOG_PAGE_SIZE_OPTIONS,
   buildLogCsv,
@@ -89,7 +85,7 @@ function pageSizeLimit() {
   return selectedPageSize.value === 'All' ? 100 : selectedPageSize.value;
 }
 
-function buildFilters(cursor?: number, overridePageSize?: number): ListLogsFilters | null {
+function buildFilters(cursor?: ListLogsFilters['cursor'], overridePageSize?: number): ListLogsFilters | null {
   customRangeError.value = null;
   const dateRange = resolveLogDateRange(selectedPreset.value, new Date(), {
     startDate: customStartDate.value,
@@ -128,7 +124,7 @@ function buildFilters(cursor?: number, overridePageSize?: number): ListLogsFilte
   if (selectedOrigin.value) {
     filters.origin = selectedOrigin.value;
   }
-  if (typeof cursor === 'number') {
+  if (cursor) {
     filters.cursor = cursor;
   }
   return filters;
@@ -136,7 +132,13 @@ function buildFilters(cursor?: number, overridePageSize?: number): ListLogsFilte
 
 function lastCursor() {
   const lastLog = logs.value.at(-1);
-  return lastLog?.createdAt;
+  if (!lastLog) {
+    return undefined;
+  }
+  return {
+    createdAt: lastLog.createdAt,
+    id: lastLog.id,
+  };
 }
 
 async function loadLogs() {
@@ -188,7 +190,10 @@ function toggleColumn(column: LogColumnKey, isChecked: boolean) {
   const nextColumns = isChecked
     ? [...selectedColumns.value, column]
     : selectedColumns.value.filter((selectedColumn) => selectedColumn !== column);
-  selectedColumns.value = nextColumns.length > 0 ? nextColumns : ['date'];
+  selectedColumns.value = [
+    ...requiredLogColumnKeys,
+    ...nextColumns.filter((selectedColumn) => !requiredLogColumnKeys.includes(selectedColumn)),
+  ];
 }
 
 function handleScroll(event: Event) {
@@ -241,7 +246,11 @@ function sortedTenantOptions(institutions: Institution[]) {
   if (!byRfc.has(DEFAULT_RFC)) {
     options.unshift({ value: DEFAULT_RFC, text: `Institución por defecto (${DEFAULT_RFC})` });
   }
-  return [{ value: undefined, text: 'Todos los alcances' }, { value: null, text: 'Cuenta / sin RFC (GLOBAL)' }, ...options];
+  return [
+    { value: undefined, text: 'Todos los alcances' },
+    { value: null, text: 'Cuenta / sin RFC (GLOBAL)' },
+    ...options,
+  ];
 }
 
 async function loadAdminTenantOptions() {
@@ -256,9 +265,21 @@ async function loadAdminTenantOptions() {
 }
 
 watch(selectedColumns, (columns) => writeVisibleLogColumns(props.scope, columns), { deep: true });
-watch([selectedCategory, selectedOrigin, selectedTenant, selectedPreset, selectedOrder, selectedPageSize, customStartDate, customEndDate], () => {
-  void loadLogs();
-});
+watch(
+  [
+    selectedCategory,
+    selectedOrigin,
+    selectedTenant,
+    selectedPreset,
+    selectedOrder,
+    selectedPageSize,
+    customStartDate,
+    customEndDate,
+  ],
+  () => {
+    void loadLogs();
+  },
+);
 
 onMounted(async () => {
   await loadAdminTenantOptions();
@@ -281,9 +302,7 @@ onMounted(async () => {
     <VaAlert v-if="controller.errorMessage.value" color="danger" dense data-testid="logs-error">
       {{ controller.errorMessage.value }}
       <template #append>
-        <VaButton size="small" preset="secondary" data-testid="logs-retry" @click="loadLogs">
-          Reintentar
-        </VaButton>
+        <VaButton size="small" preset="secondary" data-testid="logs-retry" @click="loadLogs">Reintentar</VaButton>
       </template>
     </VaAlert>
     <VaAlert v-if="exportWarning" color="warning" dense data-testid="logs-export-warning">
@@ -330,7 +349,13 @@ onMounted(async () => {
         class="logs-filter-select"
         data-testid="logs-date-preset"
       />
-      <VaInput v-if="showCustomDates" v-model="customStartDate" type="date" label="Inicio" data-testid="logs-start-date" />
+      <VaInput
+        v-if="showCustomDates"
+        v-model="customStartDate"
+        type="date"
+        label="Inicio"
+        data-testid="logs-start-date"
+      />
       <VaInput v-if="showCustomDates" v-model="customEndDate" type="date" label="Fin" data-testid="logs-end-date" />
       <VaSelect v-model="selectedOrder" :options="['desc', 'asc']" label="Orden" data-testid="logs-order" />
       <VaSelect v-model="selectedPageSize" :options="pageSizeOptions" label="Tamaño" data-testid="logs-page-size" />
@@ -345,13 +370,17 @@ onMounted(async () => {
             :checked="selectedColumns.includes(column.key)"
             :disabled="requiredLogColumnKeys.includes(column.key)"
             @change="toggleColumn(column.key, ($event.target as HTMLInputElement).checked)"
-          >
+          />
           <span>{{ column.label }}</span>
         </label>
       </div>
     </details>
 
-    <div class="logs-table-shell" :class="{ 'logs-table-shell--all': selectedPageSize === 'All' }" @scroll="handleScroll">
+    <div
+      class="logs-table-shell"
+      :class="{ 'logs-table-shell--all': selectedPageSize === 'All' }"
+      @scroll="handleScroll"
+    >
       <p v-if="controller.isLoading.value && !hasVisibleRows" class="logs-status">Cargando logs...</p>
       <p v-else-if="!hasVisibleRows" class="logs-status text--secondary">No hay logs para los filtros seleccionados.</p>
       <table v-else class="va-table va-table--hoverable logs-table" data-testid="logs-table">
@@ -491,7 +520,7 @@ onMounted(async () => {
 }
 
 .logs-table__mono {
-  font-family: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+  font-family: 'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace;
   font-size: 0.78rem;
 }
 

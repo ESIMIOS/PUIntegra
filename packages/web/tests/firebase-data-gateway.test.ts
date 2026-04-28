@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { getDoc, limit, orderBy, startAfter, where } from 'firebase/firestore';
+import { documentId, getDoc, limit, orderBy, startAfter, where } from 'firebase/firestore';
 import {
   COMMERCIAL_PLAN,
   COMMERCIAL_PLAN_STATUS,
@@ -21,6 +21,7 @@ vi.mock('firebase/firestore', () => ({
   addDoc: vi.fn(),
   collection: vi.fn((_, name: string) => ({ name })),
   doc: vi.fn((_, name: string, id: string) => ({ name, id })),
+  documentId: vi.fn(() => '__name__'),
   getDoc: vi.fn(),
   getDocs: vi.fn(() => Promise.resolve({ docs: collectionDocs })),
   limit: vi.fn(),
@@ -163,7 +164,7 @@ describe('firebase data gateway', () => {
         }),
       },
     ];
-    const cursor = { id: 'cursor' };
+    const cursor = { createdAt: 1710000000000, id: 'cursor' };
 
     await expect(listLogs({
       RFC: DEFAULT_RFC,
@@ -182,8 +183,10 @@ describe('firebase data gateway', () => {
     expect(vi.mocked(where)).toHaveBeenCalledWith('createdAt', '>=', 1710000000000);
     expect(vi.mocked(where)).toHaveBeenCalledWith('createdAt', '<=', 1710000001000);
     expect(vi.mocked(orderBy)).toHaveBeenCalledWith('createdAt', 'asc');
+    expect(vi.mocked(documentId)).toHaveBeenCalled();
+    expect(vi.mocked(orderBy)).toHaveBeenCalledWith('__name__', 'asc');
     expect(vi.mocked(limit)).toHaveBeenCalledWith(50);
-    expect(vi.mocked(startAfter)).toHaveBeenCalledWith(cursor);
+    expect(vi.mocked(startAfter)).toHaveBeenCalledWith(cursor.createdAt, cursor.id);
   });
 
   it('queries account logs with RFC null and user id', async () => {

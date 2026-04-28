@@ -6,6 +6,7 @@ const NOW = new Date('2026-04-29T15:45:30.250');
 describe('log date ranges', () => {
   it('resolves relative presets from current time', () => {
     expect(resolveLogDateRange('5m', NOW)?.startAt).toBe(new Date('2026-04-29T15:40:30.250').getTime());
+    expect(resolveLogDateRange('10m', NOW)?.startAt).toBe(new Date('2026-04-29T15:35:30.250').getTime());
     expect(resolveLogDateRange('1h', NOW)?.startAt).toBe(new Date('2026-04-29T14:45:30.250').getTime());
   });
 
@@ -13,6 +14,7 @@ describe('log date ranges', () => {
     expect(getLogDatePresetOptions().map((option) => option.text)).toEqual([
       'TODO',
       '5 minutos',
+      '10 minutos',
       '1 hora',
       'Hoy',
       'Ayer',
