@@ -31,7 +31,7 @@ async function loadRequests() {
 }
 
 function goBack() {
-  void router.push(routePaths.adminInstitution(routeRfc.value));
+  router.push(routePaths.adminInstitution(routeRfc.value));
 }
 
 function formatDate(value: number | null) {

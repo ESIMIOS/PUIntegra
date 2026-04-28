@@ -103,7 +103,7 @@ async function handleSubmit() {
 }
 
 function goBack() {
-  void router.push(routePaths.adminInstitution(routeRfc.value));
+  router.push(routePaths.adminInstitution(routeRfc.value));
 }
 
 onMounted(loadInstitution);

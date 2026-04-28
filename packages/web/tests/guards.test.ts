@@ -16,18 +16,20 @@ import {
   DEFAULT_RFC,
   SYSTEM_RFC,
   useAuthStore,
-  useInstitutionStore
+  useInstitutionStore,
 } from '@/bom';
 import { routePaths } from '@/shared/constants/routePaths';
 import { hydrateSession } from '@/gateways/firebaseAuthGateway';
 import { beforeEach, vi } from 'vitest';
 
 vi.mock('@/gateways/firebaseAuthGateway', async () => {
-  const actual = await vi.importActual<typeof import('@/gateways/firebaseAuthGateway')>('@/gateways/firebaseAuthGateway');
+  const actual = await vi.importActual<typeof import('@/gateways/firebaseAuthGateway')>(
+    '@/gateways/firebaseAuthGateway',
+  );
   return {
     ...actual,
     clearSavedContext: vi.fn(),
-    hydrateSession: vi.fn()
+    hydrateSession: vi.fn(),
   };
 });
 
@@ -60,9 +62,9 @@ describe('route guards', () => {
       availableContexts: [
         {
           role: ROLE.INSTITUTION_ADMIN,
-          rfc: DEFAULT_RFC
-        }
-      ]
+          rfc: DEFAULT_RFC,
+        },
+      ],
     });
 
     const { router } = createRouterWithStores();
@@ -155,10 +157,9 @@ describe('route guards', () => {
     authStore.setRequiresSecuritySetup(false);
     authStore.setAllowedInstitutionRfcs([DEFAULT_RFC]);
     institutionStore.setActiveRfc(DEFAULT_RFC);
-
-    await router.push(`/auth/login?redirect=${encodeURIComponent(`/app/${DEFAULT_RFC}/requests`)}`);
-
-    expect(router.currentRoute.value.path).toBe(`/app/${DEFAULT_RFC}/requests`);
+    const redirectTarget = `/app/${DEFAULT_RFC}/requests/${DEFAULT_FUB}`;
+    await router.push(`/auth/login?redirect=${encodeURIComponent(redirectTarget)}`);
+    expect(router.currentRoute.value.path).toBe(redirectTarget);
   });
 
   it('redirects to /error/403 on role mismatch', async () => {
