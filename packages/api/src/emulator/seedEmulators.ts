@@ -1,10 +1,11 @@
 /**
  * @package api
  * @name seedEmulators.ts
- * @version 0.0.4
+ * @version 0.0.5
  * @description Siembra Auth y Firestore Emulator con datos locales deterministas.
  * @author @codex
  * @changelog
+ * - 0.0.5	(2026-04-27)	Siembra logs tenant determinísticos para pruebas manuales de paginación.	@codex
  * - 0.0.4	(2026-04-19)	Retira seed directo de logs; se crean por funciones Auth/API.	@codex
  * - 0.0.3	(2026-04-19)	Delega la creación de users al trigger Auth onCreate.	@codex
  * - 0.0.2	(2026-04-19)	Usa contraseña local determinística en lugar de variable de entorno.	@codex
@@ -86,6 +87,7 @@ export async function seedEmulators() {
   await writeCollection('contacts', 'contactId', emulatorSeedData.contacts);
   await writeCollection('requests', 'requestId', emulatorSeedData.requests);
   await writeCollection('findings', 'findingId', emulatorSeedData.findings);
+  await writeCollection('logs', 'id', emulatorSeedData.logs);
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {

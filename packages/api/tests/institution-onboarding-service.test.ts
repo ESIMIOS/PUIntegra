@@ -4,6 +4,7 @@ import {
   COMMERCIAL_PLAN_STATUS,
   DEFAULT_RFC,
   LOG_CATEGORIES,
+  PERMISSION_STATUS,
   ROLE,
   SystemError,
   SYSTEM_RFC,
@@ -124,6 +125,30 @@ describe('institution onboarding service', () => {
       },
       impact: {},
       searchRequest: {}
+    });
+  });
+
+  it('does not duplicate permission impact data on institution creation audit log', () => {
+    const result = buildInstitutionOnboardingRecords({
+      ...baseInput,
+      actor: {
+        userId: 'dev-user-001',
+        email: 'admin@example.test',
+        role: ROLE.SYSTEM_ADMINISTRATOR
+      }
+    });
+
+    expect(result.logs[0]).toMatchObject({
+      category: LOG_CATEGORIES.INSTITUTION_CREATION,
+      impact: {}
+    });
+    expect(result.logs[1]).toMatchObject({
+      category: LOG_CATEGORIES.INSTITUTION_PERMISSION_CREATION,
+      impact: {
+        impactedUserRole: ROLE.INSTITUTION_ADMIN,
+        impactedUserEmail: 'owner@example.test',
+        impactedPermissionStatus: PERMISSION_STATUS.GRANTED
+      }
     });
   });
 

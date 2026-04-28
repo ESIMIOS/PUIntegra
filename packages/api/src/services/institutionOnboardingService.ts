@@ -193,11 +193,7 @@ export function buildInstitutionOnboardingRecords(
       executedByRole: actor.role,
       executedByUserEmail: actor.email,
     },
-    impact: {
-      impactedUserRole: ROLE.INSTITUTION_ADMIN,
-      impactedUserEmail: normalizedInput.adminEmail,
-      impactedPermissionStatus: PERMISSION_STATUS.GRANTED,
-    },
+    impact: {},
     searchRequest: {},
     createdAt: input.now,
   });

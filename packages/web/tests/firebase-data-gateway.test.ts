@@ -1,6 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { getDoc, where } from 'firebase/firestore';
-import { COMMERCIAL_PLAN, COMMERCIAL_PLAN_STATUS, DEFAULT_RFC, PERMISSION_STATUS, ROLE, SYSTEM_RFC } from '@shared';
+import { getDoc, limit, orderBy, startAfter, where } from 'firebase/firestore';
+import {
+  COMMERCIAL_PLAN,
+  COMMERCIAL_PLAN_STATUS,
+  DEFAULT_RFC,
+  LOG_CATEGORIES,
+  LOG_ORIGIN,
+  PERMISSION_STATUS,
+  ROLE,
+  SYSTEM_RFC,
+} from '@shared';
 
 let collectionDocs: Array<{ data: () => unknown }> = [];
 
@@ -14,14 +23,16 @@ vi.mock('firebase/firestore', () => ({
   doc: vi.fn((_, name: string, id: string) => ({ name, id })),
   getDoc: vi.fn(),
   getDocs: vi.fn(() => Promise.resolve({ docs: collectionDocs })),
+  limit: vi.fn(),
   orderBy: vi.fn(),
   query: vi.fn((value) => value),
   setDoc: vi.fn(),
+  startAfter: vi.fn(),
   updateDoc: vi.fn(),
   where: vi.fn(),
 }));
 
-const { getInstitutionByRfc, listInstitutions, listPermissionsByEmail, listPermissionsByRfc } = await import(
+const { getInstitutionByRfc, listInstitutions, listLogs, listPermissionsByEmail, listPermissionsByRfc } = await import(
   '@/gateways/firebaseDataGateway',
 );
 
@@ -134,5 +145,51 @@ describe('firebase data gateway', () => {
 
     await expect(listPermissionsByRfc(` ${DEFAULT_RFC.toLowerCase()} `)).resolves.toHaveLength(1);
     expect(vi.mocked(where)).toHaveBeenCalledWith('RFC', '==', DEFAULT_RFC);
+  });
+
+  it('queries logs with scope, filters, ordering, limit, and cursor', async () => {
+    collectionDocs = [
+      {
+        data: () => ({
+          id: 'log-001',
+          category: LOG_CATEGORIES.INSTITUTION_PLAN_UPDATE,
+          RFC: DEFAULT_RFC,
+          origin: LOG_ORIGIN.SYSTEM_HTTP_API_CALL,
+          userId: 'user-001',
+          execution: {},
+          impact: {},
+          searchRequest: {},
+          createdAt: 1710000000000,
+        }),
+      },
+    ];
+    const cursor = { id: 'cursor' };
+
+    await expect(listLogs({
+      RFC: DEFAULT_RFC,
+      category: LOG_CATEGORIES.INSTITUTION_PLAN_UPDATE,
+      origin: LOG_ORIGIN.SYSTEM_HTTP_API_CALL,
+      createdAtStart: 1710000000000,
+      createdAtEnd: 1710000001000,
+      order: 'asc',
+      pageSize: 50,
+      cursor,
+    })).resolves.toHaveLength(1);
+
+    expect(vi.mocked(where)).toHaveBeenCalledWith('RFC', '==', DEFAULT_RFC);
+    expect(vi.mocked(where)).toHaveBeenCalledWith('category', '==', LOG_CATEGORIES.INSTITUTION_PLAN_UPDATE);
+    expect(vi.mocked(where)).toHaveBeenCalledWith('origin', '==', LOG_ORIGIN.SYSTEM_HTTP_API_CALL);
+    expect(vi.mocked(where)).toHaveBeenCalledWith('createdAt', '>=', 1710000000000);
+    expect(vi.mocked(where)).toHaveBeenCalledWith('createdAt', '<=', 1710000001000);
+    expect(vi.mocked(orderBy)).toHaveBeenCalledWith('createdAt', 'asc');
+    expect(vi.mocked(limit)).toHaveBeenCalledWith(50);
+    expect(vi.mocked(startAfter)).toHaveBeenCalledWith(cursor);
+  });
+
+  it('queries account logs with RFC null and user id', async () => {
+    await listLogs({ RFC: null, userId: 'uid-owner' });
+
+    expect(vi.mocked(where)).toHaveBeenCalledWith('RFC', '==', null);
+    expect(vi.mocked(where)).toHaveBeenCalledWith('userId', '==', 'uid-owner');
   });
 });

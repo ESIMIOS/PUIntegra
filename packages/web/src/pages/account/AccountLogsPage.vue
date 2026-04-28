@@ -2,15 +2,27 @@
 /**
  * @package web
  * @name AccountLogsPage.vue
- * @version 0.0.1
- * @description Vista placeholder de logs de actividad de cuenta personal.
+ * @version 0.0.2
+ * @description Vista readonly de logs de actividad de cuenta personal.
  * @author @tirsomartinezreyes
  * @changelog
+ * - 0.0.2	(2026-04-27)	Reemplaza placeholder por explorador de logs de cuenta.	@codex
  * - 0.0.1	(2026-04-10)	Versión inicial del archivo.	@tirsomartinezreyes
  */
-import { PagePlaceholder } from '@/bom';
+import { computed } from 'vue';
+import { useAuthStore } from '@/bom';
+import LogsExplorer from '@/components/logInspection/LogsExplorer.vue';
+
+const authStore = useAuthStore();
+const userId = computed(() => authStore.uid);
 </script>
 
 <template>
-  <PagePlaceholder />
+  <LogsExplorer
+    scope="account"
+    title="Logs de cuenta"
+    description="Actividad readonly asociada a la cuenta autenticada."
+    :fixed-rfc="null"
+    :user-id="userId"
+  />
 </template>

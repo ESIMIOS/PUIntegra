@@ -1,10 +1,11 @@
 /**
  * @package api
  * @name seedData.ts
- * @version 0.0.5
+ * @version 0.0.6
  * @description Define datos deterministas para Auth y Firestore Emulator.
  * @author @codex
  * @changelog
+ * - 0.0.6	(2026-04-27)	Agrega logs tenant determinísticos para validar filtros y paginación.	@codex
  * - 0.0.5	(2026-04-19)	Retira userId de permisos seed; permisos se asignan por correo.	@codex
  * - 0.0.4	(2026-04-19)	Retira bitácora inicial; logs Auth se generan por funciones.	@codex
  * - 0.0.3	(2026-04-19)	Retira users del seed directo; Auth onCreate genera el perfil.	@codex
@@ -19,6 +20,8 @@ import {
   DEFAULT_RFC,
   FINDING_PUI_SYNC_STATUS,
   INSTITUTION_CONTACT_TYPE,
+  LOG_CATEGORIES,
+  LOG_ORIGIN,
   PERMISSION_STATUS,
   ROLE,
   SEARCH_REQUEST_PHASE,
@@ -46,7 +49,6 @@ const institutionSharedSecret = process.env[INSTITUTION_SHARED_SECRET_ENV];
 if (!institutionSharedSecret) {
   throw new Error(`${INSTITUTION_SHARED_SECRET_ENV} is required to seed the Firebase emulators.`);
 }
-
 
 const institution = {
   RFC: EMULATOR_DEFAULT_RFC,
@@ -164,10 +166,54 @@ const findings = [
   }
 ] as const;
 
+const seededLogCategories = [
+  LOG_CATEGORIES.INSTITUTION_CREATION,
+  LOG_CATEGORIES.INSTITUTION_PLAN_UPDATE,
+  LOG_CATEGORIES.INSTITUTION_PERMISSION_UPDATE,
+  LOG_CATEGORIES.PUI_SEARCH_REQUEST_CREATION,
+  LOG_CATEGORIES.PUI_FINDING_SYNC_SUCCESS,
+] as const;
+
+const seededLogOrigins = [
+  LOG_ORIGIN.SYSTEM_HTTP_API_CALL,
+  LOG_ORIGIN.SYSTEM_AUTH_TRIGGER,
+  LOG_ORIGIN.SYSTEM_DATA_TRIGGER,
+] as const;
+
+const logs = Array.from({ length: 125 }, (_, index) => {
+  const category = seededLogCategories[index % seededLogCategories.length];
+  const hasSearchRequest = category.startsWith('PUI_');
+  return {
+    id: `log-seed-${String(index + 1).padStart(3, '0')}`,
+    category,
+    RFC: EMULATOR_DEFAULT_RFC,
+    origin: seededLogOrigins[index % seededLogOrigins.length],
+    originTraceId: `seed-trace-${String(index + 1).padStart(3, '0')}`,
+    userId: EMULATOR_AUTH_USER.uid,
+    execution: {
+      executedByUserId: EMULATOR_AUTH_USER.uid,
+      executedByRole: index % 2 === 0 ? ROLE.INSTITUTION_ADMIN : ROLE.INSTITUTION_OPERATOR,
+      executedByUserEmail: EMULATOR_AUTH_USER.email,
+    },
+    impact: {},
+    searchRequest: hasSearchRequest
+      ? {
+          FUB: DEFAULT_FUB,
+          CURP: 'AAAA000000HDFXXX00',
+          searchRequestStatus: SEARCH_REQUEST_STATUS.ACTIVE,
+          searchRequestPhase: SEARCH_REQUEST_PHASE.SEARCH_REQUEST_BASIC_DATA,
+          searchRequestPhaseStatus: SEARCH_REQUEST_PHASE_STATUS.IN_PROGRESS,
+        }
+      : {},
+    createdAt: NOW - index * 60_000,
+  };
+});
+
 export const emulatorSeedData = {
   institutions: [institution],
   permissions,
   contacts,
   requests,
-  findings
+  findings,
+  logs,
 } as const;

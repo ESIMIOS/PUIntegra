@@ -160,6 +160,8 @@ describe("firestore security rules", () => {
       await setDoc(doc(db, "findings", "finding-other"), { findingId: "finding-other", RFC: TENANT_OTHER_RFC });
       await setDoc(doc(db, "logs", "log-owner"), { id: "log-owner", RFC: TENANT_OWNER_RFC });
       await setDoc(doc(db, "logs", "log-other"), { id: "log-other", RFC: TENANT_OTHER_RFC });
+      await setDoc(doc(db, "logs", "log-account-owner"), { id: "log-account-owner", RFC: null, userId: "uid-owner" });
+      await setDoc(doc(db, "logs", "log-account-other"), { id: "log-account-other", RFC: null, userId: "uid-other" });
     });
   });
 
@@ -288,6 +290,22 @@ describe("firestore security rules", () => {
     it("denies write access to institutions", async () => {
       const ownerDb = testEnv.authenticatedContext("uid-owner", { email: "owner@example.test" }).firestore();
       await assertFails(setDoc(doc(ownerDb, "institutions", TENANT_OWNER_RFC), { RFC: TENANT_OWNER_RFC }));
+    });
+
+    it("allows users to read only their own account logs", async () => {
+      const otherDb = testEnv.authenticatedContext("uid-other", { email: "other@example.test" }).firestore();
+      await assertSucceeds(getDoc(doc(otherDb, "logs", "log-account-other")));
+      await assertFails(getDoc(doc(otherDb, "logs", "log-account-owner")));
+    });
+
+    it("allows system administrators to read account logs", async () => {
+      const ownerDb = testEnv.authenticatedContext("uid-owner", { email: "owner@example.test" }).firestore();
+      await assertSucceeds(getDoc(doc(ownerDb, "logs", "log-account-other")));
+    });
+
+    it("denies anonymous users reading account logs", async () => {
+      const anonymousDb = testEnv.unauthenticatedContext().firestore();
+      await assertFails(getDoc(doc(anonymousDb, "logs", "log-account-owner")));
     });
   });
 });
