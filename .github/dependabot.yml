@@ -5,6 +5,7 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    target-branch: stage
     groups:
       dev-dependencies:
         dependency-type: development
