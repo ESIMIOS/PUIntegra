@@ -24,7 +24,7 @@ The system SHALL allow system administrators to inspect one tenant institution f
 
 #### Scenario: Related admin routes are available
 - **WHEN** a system administrator views an institution detail page
-- **THEN** the page offers navigation to that institution's requests, plan, and contacts admin routes
+- **THEN** the page offers navigation to `/admin/:rfc/requests`, `/admin/:rfc/plan`, `/admin/:rfc/contacts`, and `/admin/:rfc/permissions`
 
 #### Scenario: Institution cannot be loaded
 - **WHEN** the requested RFC is reserved, missing, or fails validation
@@ -40,3 +40,21 @@ The system SHALL implement admin institution inspection using authorized read he
 #### Scenario: Reserved provider context is excluded
 - **WHEN** the institution list or detail helper reads institution data
 - **THEN** `SYSTEM_RFC` is excluded from tenant institution results
+
+### Requirement: Admin tenant operations
+The system SHALL allow system administrators to inspect tenant requests and contacts by RFC and edit only the tenant commercial plan fields through the API boundary.
+
+#### Scenario: Tenant requests are displayed read-only
+- **WHEN** a system administrator opens `/admin/:rfc/requests`
+- **THEN** the page displays request FUB, CURP, status, phase statuses, and missing date for that tenant
+- **AND** the page does not expose client-side write controls for requests
+
+#### Scenario: Tenant contacts are displayed read-only
+- **WHEN** a system administrator opens `/admin/:rfc/contacts`
+- **THEN** the page displays contact type, name, phone, CURP, and contact RFC for that tenant
+- **AND** the page does not expose client-side write controls for contacts
+
+#### Scenario: Tenant plan is edited through API
+- **WHEN** a system administrator submits `/admin/:rfc/plan` with plan, plan status, plan start, and plan finish values
+- **THEN** the browser calls the authenticated API plan update endpoint
+- **AND** the API writes institution update history and an `INSTITUTION_PLAN_UPDATE` audit log

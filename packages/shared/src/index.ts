@@ -66,6 +66,7 @@ export {
   CommercialPlanStatusValues,
   CommercialPlanStatusSchema,
   InstitutionUpdateSchema,
+  UpdateInstitutionPlanSchema,
   InstitutionSchema,
 } from './schemas/institution.schema';
 export type {
@@ -73,6 +74,7 @@ export type {
   CommercialPlanStatus,
   InstitutionUpdate,
   Institution,
+  UpdateInstitutionPlan,
 } from './schemas/institution.schema';
 
 export {

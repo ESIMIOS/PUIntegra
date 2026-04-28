@@ -9,7 +9,7 @@
  */
 
 import { defineStore } from 'pinia';
-import { isSystemError, SystemError, formatUiErrorString, type Institution } from '@shared';
+import { isSystemError, SystemError, formatUiErrorString, type Institution, type UpdateInstitutionPlan } from '@shared';
 import {
   getInstitutionByRfc,
   getUserById,
@@ -17,10 +17,13 @@ import {
   listFindingsByRfc,
   listInstitutions,
   listLogs,
+  listPermissionsByEmail,
+  listPermissionsByRfc,
   listPermissionsByUser,
   listRequestsByRfc,
 } from '@/gateways/firebaseDataGateway';
 import { createInstitutionOnboarding } from '@/gateways/institutionOnboardingGateway';
+import { updateInstitutionPlan } from '@/gateways/institutionPlanGateway';
 import { systemMessageTree } from '@/shared/constants/systemMessages';
 
 /**
@@ -89,6 +92,12 @@ export const useDataStore = defineStore('data', {
     listPermissionsByUser(userId: string) {
       return this.withLoading(() => listPermissionsByUser(userId), 'Failed to list permissions.');
     },
+    listPermissionsByEmail(email: string) {
+      return this.withLoading(() => listPermissionsByEmail(email), 'Failed to list permissions by email.');
+    },
+    listPermissionsByRfc(rfc: string) {
+      return this.withLoading(() => listPermissionsByRfc(rfc), 'Failed to list permissions by rfc.');
+    },
     listContactsByRfc(rfc: string) {
       return this.withLoading(() => listContactsByRfc(rfc), 'Failed to list contacts.');
     },
@@ -111,6 +120,9 @@ export const useDataStore = defineStore('data', {
       adminEmail: string;
     }) {
       return this.withSaving(() => createInstitutionOnboarding(input), 'Failed to create institution onboarding.');
+    },
+    updateInstitutionPlan(rfc: string, input: UpdateInstitutionPlan) {
+      return this.withSaving(() => updateInstitutionPlan(rfc, input), 'Failed to update institution plan.');
     },
   },
 });

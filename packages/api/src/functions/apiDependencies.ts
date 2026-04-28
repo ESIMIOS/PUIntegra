@@ -11,13 +11,17 @@
 import { getApps, initializeApp } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
-import { PERMISSION_STATUS, ROLE, RoleSchema, SYSTEM_RFC, SystemError } from '@puintegra/shared';
+import { InstitutionSchema, PERMISSION_STATUS, ROLE, RoleSchema, SYSTEM_RFC, SystemError } from '@puintegra/shared';
 import { apiSystemMessages } from '../constants/systemMessages.js';
 import { buildAuthEventLog, type AuthEventName } from '../services/authAuditService.js';
 import {
   buildInstitutionOnboardingRecords,
   parseInstitutionOnboardingInput,
 } from '../services/institutionOnboardingService.js';
+import {
+  buildInstitutionPlanUpdateRecords,
+  parseInstitutionPlanUpdateInput,
+} from '../services/institutionPlanService.js';
 
 type AuthEventWriteInput = {
   event: AuthEventName;
@@ -27,6 +31,17 @@ type AuthEventWriteInput = {
 };
 
 type CreateInstitutionOnboardingInput = {
+  payload: unknown;
+  actor: {
+    userId: string;
+    email?: string | null;
+    role?: string | null;
+  };
+  originTraceId: string;
+};
+
+type UpdateInstitutionPlanInput = {
+  rfc: string;
   payload: unknown;
   actor: {
     userId: string;
@@ -132,6 +147,7 @@ async function createInstitutionOnboarding(input: CreateInstitutionOnboardingInp
     permissionId: `${normalizedPayload.adminEmail.toLowerCase()}__${normalizedPayload.RFC.toLowerCase()}`,
     institutionLogId: firestore.collection('logs').doc().id,
     permissionLogId: firestore.collection('logs').doc().id,
+    planLogId: firestore.collection('logs').doc().id,
   });
 
   const existingInstitution = await firestore.collection('institutions').doc(parsed.institution.RFC).get();
@@ -173,6 +189,50 @@ async function createInstitutionOnboarding(input: CreateInstitutionOnboardingInp
   batch.set(firestore.collection('permissions').doc(parsed.permission.permissionId), parsed.permission);
   batch.set(firestore.collection('logs').doc(parsed.logs[0].id), parsed.logs[0]);
   batch.set(firestore.collection('logs').doc(parsed.logs[1].id), parsed.logs[1]);
+  batch.set(firestore.collection('logs').doc(parsed.logs[2].id), parsed.logs[2]);
+  await batch.commit();
+
+  return parsed.response;
+}
+
+/**
+ * @description Actualiza el plan institucional con historial y bitácora en una escritura atómica.
+ */
+async function updateInstitutionPlan(input: UpdateInstitutionPlanInput) {
+  const actorRole = typeof input.actor.role === 'string' ? input.actor.role : null;
+  const actorEmail = typeof input.actor.email === 'string' ? input.actor.email.toLowerCase() : null;
+  const parsedRole = actorRole ? RoleSchema.safeParse(actorRole) : null;
+  if (!actorEmail || !parsedRole?.success) {
+    throw new SystemError(apiSystemMessages.admin.institutions.forbiddenRole.code);
+  }
+
+  const firestore = getAdminFirestore();
+  const normalizedRfc = input.rfc.trim().toUpperCase();
+  const normalizedPayload = parseInstitutionPlanUpdateInput(input.payload);
+  const institutionRef = firestore.collection('institutions').doc(normalizedRfc);
+  const institutionSnapshot = await institutionRef.get();
+  if (!institutionSnapshot.exists) {
+    throw new SystemError(apiSystemMessages.admin.institutions.institutionNotFound, {
+      displayMessage: `No existe una institución registrada con RFC ${normalizedRfc}.`,
+    });
+  }
+
+  const parsed = buildInstitutionPlanUpdateRecords({
+    rawInput: normalizedPayload,
+    institution: InstitutionSchema.parse(institutionSnapshot.data()),
+    actor: {
+      userId: input.actor.userId,
+      email: actorEmail,
+      role: parsedRole.data,
+    },
+    now: Date.now(),
+    originTraceId: input.originTraceId,
+    logId: firestore.collection('logs').doc().id,
+  });
+
+  const batch = firestore.batch();
+  batch.set(institutionRef, parsed.institution);
+  batch.set(firestore.collection('logs').doc(parsed.log.id), parsed.log);
   await batch.commit();
 
   return parsed.response;
@@ -183,5 +243,6 @@ export function createApiDependencies() {
     verifyBearerToken,
     recordAuthEvent,
     createInstitutionOnboarding,
+    updateInstitutionPlan,
   };
 }

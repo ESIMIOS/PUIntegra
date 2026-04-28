@@ -33,7 +33,7 @@ Define the local Firestore Emulator-backed data architecture used by `packages/w
 - Gateway institution reads include both collection reads for institution lists and single-document reads by RFC for admin inspection.
 - Store layer: reactive loading, saving, and user-facing error orchestration.
 - Controller layer: UI-oriented load/mutate wrappers without artificial backend delay.
-- Provider-managed domain writes that require server-side authorization, pre-existence validation, or audit logging (for example institution onboarding) must go through authenticated HTTP API endpoints in `packages/api` rather than direct client Firestore writes.
+- Provider-managed domain writes that require server-side authorization, pre-existence validation, or audit logging (for example institution onboarding and institution plan updates) must go through authenticated HTTP API endpoints in `packages/api` rather than direct client Firestore writes.
 - Authorized domain reads can remain Firebase SDK-backed where Firestore rules allow them.
 - Existing direct client mutation helpers remain transitional for previously implemented MVP flows and are out of scope for the institution-onboarding change unless explicitly migrated in a dedicated change.
 

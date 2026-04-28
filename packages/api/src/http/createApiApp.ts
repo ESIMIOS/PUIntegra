@@ -23,6 +23,7 @@ import {
   type CreateApiAppDependencies,
   createAuthEventHandler,
   createInstitutionOnboardingHandler,
+  createInstitutionPlanUpdateHandler,
   readOriginTraceId,
 } from './routeHandlers.js';
 
@@ -34,6 +35,7 @@ export function createApiApp(dependencies: CreateApiAppDependencies) {
   const loginHandler = createAuthEventHandler(dependencies, AuthEventNameSchema.enum.login);
   const logoutHandler = createAuthEventHandler(dependencies, AuthEventNameSchema.enum.logout);
   const institutionOnboardingHandler = createInstitutionOnboardingHandler(dependencies);
+  const institutionPlanUpdateHandler = createInstitutionPlanUpdateHandler(dependencies);
 
   app.onError((error, context) => {
     const originTraceId = readOriginTraceId(context, dependencies.createOriginTraceId);
@@ -79,9 +81,11 @@ export function createApiApp(dependencies: CreateApiAppDependencies) {
   app.post('/api/auth/events/login', loginHandler);
   app.post('/api/auth/events/logout', logoutHandler);
   app.post('/api/admin/institutions', institutionOnboardingHandler);
+  app.patch('/api/admin/institutions/:rfc/plan', institutionPlanUpdateHandler);
   app.post('/auth/events/login', loginHandler);
   app.post('/auth/events/logout', logoutHandler);
   app.post('/admin/institutions', institutionOnboardingHandler);
+  app.patch('/admin/institutions/:rfc/plan', institutionPlanUpdateHandler);
 
   return app;
 }

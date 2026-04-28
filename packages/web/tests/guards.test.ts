@@ -18,6 +18,7 @@ import {
   useAuthStore,
   useInstitutionStore
 } from '@/bom';
+import { routePaths } from '@/shared/constants/routePaths';
 import { hydrateSession } from '@/gateways/firebaseAuthGateway';
 import { beforeEach, vi } from 'vitest';
 
@@ -107,6 +108,19 @@ describe('route guards', () => {
     await router.push('/auth/login');
 
     expect(router.currentRoute.value.path).toBe(`/app/${DEFAULT_RFC}/dashboard`);
+  });
+
+  it('redirects authenticated institution role without active RFC from /auth/login to account institutions', async () => {
+    const { router, authStore, institutionStore } = createRouterWithStores();
+
+    authStore.setRole(ROLE.INSTITUTION_ADMIN);
+    authStore.setRequiresSecuritySetup(false);
+    authStore.setAllowedInstitutionRfcs([DEFAULT_RFC]);
+    institutionStore.clearActiveRfc();
+
+    await router.push('/auth/login');
+
+    expect(router.currentRoute.value.path).toBe(routePaths.accountInstitutions);
   });
 
   it('redirects authenticated system role from /auth/login to /admin/institutions', async () => {

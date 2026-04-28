@@ -75,6 +75,27 @@ export const apiSystemMessageTree = {
         message: 'Bootstrap permission already exists.',
         httpStatus: HTTP_STATUS.CONFLICT,
       },
+      institutionNotFound: {
+        code: 'API-ADMIN-009',
+        severity: LOG_SEVERITY.WARNING,
+        message: 'Institution was not found.',
+        displayMessage: 'No se encontró la institución solicitada.',
+        httpStatus: HTTP_STATUS.NOT_FOUND,
+      },
+      forbiddenOperationOnDefaultRfc: {
+        code: 'API-ADMIN-010',
+        severity: LOG_SEVERITY.WARNING,
+        message: 'Operations on DEFAULT_RFC institution are not allowed.',
+        displayMessage: 'No se permiten operaciones sobre la institución DEFAULT_RFC.',
+        httpStatus: HTTP_STATUS.FORBIDDEN,
+      },
+      forbiddenOperationOnSystemRfc: {
+        code: 'API-ADMIN-011',
+        severity: LOG_SEVERITY.WARNING,
+        message: 'Operations on SYSTEM_RFC institution are not allowed.',
+        displayMessage: 'No se permiten operaciones sobre la institución SYSTEM_RFC.',
+        httpStatus: HTTP_STATUS.FORBIDDEN,
+      },
     },
   },
   sys: {

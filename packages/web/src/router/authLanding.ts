@@ -46,7 +46,7 @@ export function resolveAuthenticatedDefaultPath(input: {
     return routePaths.appDashboard(input.activeRfc);
   }
 
-  return routePaths.appInstitutions;
+  return routePaths.accountInstitutions;
 }
 
 /**

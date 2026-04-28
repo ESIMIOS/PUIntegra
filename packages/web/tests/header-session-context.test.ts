@@ -126,6 +126,13 @@ describe('HeaderSessionContext', () => {
 
   it('opens account links actions', async () => {
     const wrapper = mountComponent();
+    const institutionsButton = wrapper.findAll('button').find((button) => button.text().includes('Instituciones'));
+    if (!institutionsButton) {
+      throw new Error('Institutions action not found.');
+    }
+    await institutionsButton.trigger('click');
+    expect(push).toHaveBeenCalledWith(routePaths.accountInstitutions);
+
     const settingsButton = wrapper.findAll('button').find((button) => button.text().includes('Configuración'));
     if (!settingsButton) {
       throw new Error('Settings action not found.');

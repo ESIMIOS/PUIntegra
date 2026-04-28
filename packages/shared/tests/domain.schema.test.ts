@@ -31,6 +31,7 @@ import {
   SEARCH_REQUEST_PHASE,
   SEARCH_REQUEST_PHASE_STATUS,
   SEARCH_REQUEST_STATUS,
+  UpdateInstitutionPlanSchema,
   UserSchema
 } from '../src';
 
@@ -160,6 +161,22 @@ describe('stage1 schemas', () => {
       createdAt: NOW,
       updatedAt: NOW
     }).success).toBe(true);
+  });
+
+  it('validates institution plan update payloads', () => {
+    expect(UpdateInstitutionPlanSchema.safeParse({
+      plan: COMMERCIAL_PLAN.CLOUD,
+      planStatus: COMMERCIAL_PLAN_STATUS.WARNING,
+      planStartAt: NOW,
+      planFinishAt: NOW + 86_400_000,
+    }).success).toBe(true);
+
+    expect(UpdateInstitutionPlanSchema.safeParse({
+      plan: COMMERCIAL_PLAN.CLOUD,
+      planStatus: COMMERCIAL_PLAN_STATUS.WARNING,
+      planStartAt: NOW + 86_400_000,
+      planFinishAt: NOW,
+    }).success).toBe(false);
   });
 
   it('rejects malformed stage1 entity payloads', () => {

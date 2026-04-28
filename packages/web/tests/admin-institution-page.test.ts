@@ -26,6 +26,7 @@ vi.mock('@/gateways/firebaseDataGateway', () => ({
   getUserById: vi.fn(),
   getInstitutionByRfc: vi.fn(),
   listInstitutions: vi.fn(),
+  listPermissionsByRfc: vi.fn(),
   listPermissionsByUser: vi.fn(),
   listContactsByRfc: vi.fn(),
   listRequestsByRfc: vi.fn(),
@@ -115,5 +116,8 @@ describe('admin institution page', () => {
 
     await wrapper.get('[data-testid="admin-institution-contacts"]').trigger('click');
     expect(push).toHaveBeenCalledWith(routePaths.adminInstitutionContacts(DEFAULT_RFC));
+
+    await wrapper.get('[data-testid="admin-institution-permissions"]').trigger('click');
+    expect(push).toHaveBeenCalledWith(routePaths.adminTenantPermissions(DEFAULT_RFC));
   });
 });
