@@ -2,9 +2,12 @@ import {
   ContactSchema,
   FindingSchema,
   InstitutionSchema,
+  LogSchema,
+  LOG_CATEGORIES,
   PermissionSchema,
   RequestSchema,
-  SYSTEM_RFC
+  SYSTEM_RFC,
+  DEFAULT_RFC
 } from '@puintegra/shared';
 
 process.env.PUINTEGRA_EMULATOR_INSTITUTION_SHARED_SECRET = 'test-only-shared-secret';
@@ -18,6 +21,7 @@ describe('emulator seed data', () => {
     expect(() => emulatorSeedData.contacts.forEach((record) => ContactSchema.parse(record))).not.toThrow();
     expect(() => emulatorSeedData.requests.forEach((record) => RequestSchema.parse(record))).not.toThrow();
     expect(() => emulatorSeedData.findings.forEach((record) => FindingSchema.parse(record))).not.toThrow();
+    expect(() => emulatorSeedData.logs.forEach((record) => LogSchema.parse(record))).not.toThrow();
   });
 
   it('keeps system RFC out of tenant institutions', () => {
@@ -28,8 +32,11 @@ describe('emulator seed data', () => {
     expect(EMULATOR_AUTH_PASSWORD).toBe('local-password');
   });
 
-  it('does not seed logs directly because Auth logs are function-owned', () => {
-    expect('logs' in emulatorSeedData).toBe(false);
+  it('seeds enough default tenant logs to validate filters and pagination', () => {
+    expect(emulatorSeedData.logs).toHaveLength(125);
+    expect(emulatorSeedData.logs.every((record) => record.RFC === DEFAULT_RFC)).toBe(true);
+    expect(emulatorSeedData.logs.some((record) => record.category === LOG_CATEGORIES.PUI_SEARCH_REQUEST_CREATION)).toBe(true);
+    expect(emulatorSeedData.logs.some((record) => record.category === LOG_CATEGORIES.INSTITUTION_PLAN_UPDATE)).toBe(true);
   });
 
   it('seeds permissions by email without userId linkage', () => {

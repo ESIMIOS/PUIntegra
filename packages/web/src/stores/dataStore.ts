@@ -5,6 +5,7 @@
  * @description Gestiona estado reactivo de datos respaldados por Firestore.
  * @author @codex
  * @changelog
+ * - 0.0.2	(2026-04-27)	Expone filtros extendidos para bitácora de dominios.	@codex
  * - 0.0.1	(2026-04-18)	Agrega store de datos respaldado por gateway Firestore.	@codex
  */
 
@@ -21,6 +22,7 @@ import {
   listPermissionsByRfc,
   listPermissionsByUser,
   listRequestsByRfc,
+  type ListLogsFilters,
 } from '@/gateways/firebaseDataGateway';
 import { createInstitutionOnboarding } from '@/gateways/institutionOnboardingGateway';
 import { updateInstitutionPlan } from '@/gateways/institutionPlanGateway';
@@ -107,7 +109,7 @@ export const useDataStore = defineStore('data', {
     listFindingsByRfc(rfc: string) {
       return this.withLoading(() => listFindingsByRfc(rfc), 'Failed to list findings.');
     },
-    listLogs(filters: { RFC?: string; userId?: string } = {}) {
+    listLogs(filters: ListLogsFilters = {}) {
       return this.withLoading(() => listLogs(filters), 'Failed to list logs.');
     },
     createInstitutionOnboarding(input: {

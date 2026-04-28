@@ -237,6 +237,45 @@ describe('route guards', () => {
     expect(institutionStore.activeRfc).toBe(SYSTEM_RFC);
   });
 
+  it('allows system administrator to open global logs', async () => {
+    const { router, authStore, institutionStore } = createRouterWithStores();
+
+    authStore.setRole(ROLE.SYSTEM_ADMINISTRATOR);
+    authStore.setRequiresSecuritySetup(false);
+    institutionStore.setActiveRfc(SYSTEM_RFC);
+
+    await router.push(routePaths.adminLogs);
+
+    expect(router.currentRoute.value.path).toBe(routePaths.adminLogs);
+  });
+
+  it('allows institution role to open active tenant logs', async () => {
+    const { router, authStore, institutionStore } = createRouterWithStores();
+
+    authStore.setRole(ROLE.INSTITUTION_OPERATOR);
+    authStore.setRequiresSecuritySetup(false);
+    authStore.setAllowedInstitutionRfcs([DEFAULT_RFC]);
+    institutionStore.setActiveRfc(DEFAULT_RFC);
+
+    await router.push(routePaths.appLogs(DEFAULT_RFC));
+
+    expect(router.currentRoute.value.path).toBe(routePaths.appLogs(DEFAULT_RFC));
+  });
+
+  it('allows authenticated users to open account logs', async () => {
+    const { router, authStore, institutionStore } = createRouterWithStores();
+
+    authStore.setRole(ROLE.INSTITUTION_OPERATOR);
+    authStore.setIdentity({ uid: 'uid-owner', email: 'owner@example.test' });
+    authStore.setRequiresSecuritySetup(false);
+    authStore.setAllowedInstitutionRfcs([DEFAULT_RFC]);
+    institutionStore.setActiveRfc(DEFAULT_RFC);
+
+    await router.push(routePaths.accountLogs);
+
+    expect(router.currentRoute.value.path).toBe(routePaths.accountLogs);
+  });
+
   it('rejects institution administrator when SYSTEM_RFC is active', async () => {
     const { router, authStore, institutionStore } = createRouterWithStores();
 

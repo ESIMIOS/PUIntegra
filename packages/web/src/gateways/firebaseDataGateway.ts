@@ -5,6 +5,7 @@
  * @description Lee datos de dominio desde Firestore usando contratos compartidos.
  * @author @codex
  * @changelog
+ * - 0.0.2	(2026-04-27)	Agrega filtros de bitácora por dominio, fecha, orden y paginación.	@codex
  * - 0.0.1	(2026-04-18)	Agrega gateway Firestore para datos de dominio.	@codex
  */
 
@@ -23,23 +24,42 @@ import {
   type Finding,
   type Institution,
   type Log,
+  type LogCategory,
+  type LogOrigin,
   type Permission,
   type Request,
   type User
 } from '@shared';
 import {
   collection,
+  documentId,
   doc,
   getDoc,
   getDocs,
+  limit,
   orderBy,
   query,
+  startAfter,
   where
 } from 'firebase/firestore';
 import { z } from 'zod';
 import { getFirebaseRuntime } from '@/plugins/firebase';
 
 type CollectionName = 'users' | 'institutions' | 'permissions' | 'contacts' | 'requests' | 'findings' | 'logs';
+export type ListLogsFilters = {
+  RFC?: string | null;
+  userId?: string;
+  category?: LogCategory;
+  origin?: LogOrigin;
+  createdAtStart?: number;
+  createdAtEnd?: number;
+  order?: 'asc' | 'desc';
+  pageSize?: number;
+  cursor?: {
+    createdAt: number;
+    id: string;
+  };
+};
 
 /**
  * @description Resuelve referencia de colección Firestore por nombre permitido.
@@ -157,11 +177,19 @@ export async function listFindingsByRfc(rfc: string): Promise<Finding[]> {
   return snapshot.docs.map((item) => parseEntity<Finding>(FindingSchema, item.data(), 'finding'));
 }
 
-export async function listLogs(filters: { RFC?: string; userId?: string } = {}): Promise<Log[]> {
+export async function listLogs(filters: ListLogsFilters = {}): Promise<Log[]> {
+  const hasRfcFilter = Object.prototype.hasOwnProperty.call(filters, 'RFC');
   const constraints = [
-    ...(filters.RFC ? [where('RFC', '==', filters.RFC)] : []),
+    ...(hasRfcFilter ? [where('RFC', '==', filters.RFC ?? null)] : []),
     ...(filters.userId ? [where('userId', '==', filters.userId)] : []),
-    orderBy('createdAt', 'desc')
+    ...(filters.category ? [where('category', '==', filters.category)] : []),
+    ...(filters.origin ? [where('origin', '==', filters.origin)] : []),
+    ...(typeof filters.createdAtStart === 'number' ? [where('createdAt', '>=', filters.createdAtStart)] : []),
+    ...(typeof filters.createdAtEnd === 'number' ? [where('createdAt', '<=', filters.createdAtEnd)] : []),
+    orderBy('createdAt', filters.order ?? 'desc'),
+    orderBy(documentId(), filters.order ?? 'desc'),
+    ...(filters.cursor ? [startAfter(filters.cursor.createdAt, filters.cursor.id)] : []),
+    ...(filters.pageSize ? [limit(filters.pageSize)] : [])
   ];
   const snapshot = await getDocs(query(collectionRef('logs'), ...constraints));
   return snapshot.docs.map((item) => parseEntity<Log>(LogSchema, item.data(), 'log'));

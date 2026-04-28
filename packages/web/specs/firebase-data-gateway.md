@@ -31,6 +31,12 @@ Define the local Firestore Emulator-backed data architecture used by `packages/w
 - Seed layer: deterministic emulator seed records validated with shared schemas.
 - Gateway layer: Firestore access and shared Zod validation before data leaves the gateway.
 - Gateway institution reads include both collection reads for institution lists and single-document reads by RFC for admin inspection.
+- Gateway log reads support scoped query inputs for domain log pages:
+  - global admin reads omit `RFC` to inspect all logs;
+  - admin tenant/account filters pass `RFC` as a tenant RFC or `null`;
+  - app reads pass the active route RFC;
+  - account reads pass `RFC: null` and the authenticated Firebase `userId`;
+  - optional `category`, `origin`, local date-range timestamps, order, cursor, and page-size constraints are pushed to Firestore where supported.
 - Store layer: reactive loading, saving, and user-facing error orchestration.
 - Controller layer: UI-oriented load/mutate wrappers without artificial backend delay.
 - Provider-managed domain writes that require server-side authorization, pre-existence validation, or audit logging (for example institution onboarding and institution plan updates) must go through authenticated HTTP API endpoints in `packages/api` rather than direct client Firestore writes.
