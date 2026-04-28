@@ -64,7 +64,7 @@ function isValidPlanDateRange() {
 }
 
 const requiredTextRule = (label: string) => (value: string) => value.trim().length > 0 || `${label} es requerido.`;
-const dateRangeRule = () => isValidPlanDateRange() || 'Rango de fechas invalido.';
+const dateRangeRule = () => isValidPlanDateRange() || 'Rango de fechas no válido.';
 
 async function loadInstitution() {
   try {
