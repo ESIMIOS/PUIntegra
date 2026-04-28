@@ -21,7 +21,9 @@ vi.mock('firebase/firestore', () => ({
   where: vi.fn(),
 }));
 
-const { getInstitutionByRfc, listInstitutions, listPermissionsByEmail } = await import('@/gateways/firebaseDataGateway');
+const { getInstitutionByRfc, listInstitutions, listPermissionsByEmail, listPermissionsByRfc } = await import(
+  '@/gateways/firebaseDataGateway',
+);
 
 function institution(RFC: string) {
   return {
@@ -112,5 +114,25 @@ describe('firebase data gateway', () => {
 
     await expect(listPermissionsByEmail(' Admin@Example.Test ')).resolves.toHaveLength(1);
     expect(vi.mocked(where)).toHaveBeenCalledWith('email', '==', 'admin@example.test');
+  });
+
+  it('queries permissions by normalized RFC for tenant inspection reads', async () => {
+    collectionDocs = [
+      {
+        data: () => ({
+          permissionId: 'perm-institution-operator-001',
+          RFC: DEFAULT_RFC,
+          email: 'operator@example.test',
+          role: ROLE.INSTITUTION_OPERATOR,
+          status: PERMISSION_STATUS.GRANTED,
+          updates: [],
+          createdAt: 1710000000000,
+          updatedAt: 1710000000000,
+        }),
+      },
+    ];
+
+    await expect(listPermissionsByRfc(` ${DEFAULT_RFC.toLowerCase()} `)).resolves.toHaveLength(1);
+    expect(vi.mocked(where)).toHaveBeenCalledWith('RFC', '==', DEFAULT_RFC);
   });
 });

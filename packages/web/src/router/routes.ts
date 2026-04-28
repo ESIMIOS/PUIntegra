@@ -24,7 +24,6 @@ import AuthForgotPasswordPage from '@/pages/auth/AuthForgotPasswordPage.vue';
 import AuthResetPasswordPage from '@/pages/auth/AuthResetPasswordPage.vue';
 import AuthSecuritySetupPage from '@/pages/auth/AuthSecuritySetupPage.vue';
 import AuthLogoutPage from '@/pages/auth/AuthLogoutPage.vue';
-import AppInstitutionsPage from '@/pages/app/AppInstitutionsPage.vue';
 import AppDashboardPage from '@/pages/app/AppDashboardPage.vue';
 import AppAdminPlanPage from '@/pages/app/AppAdminPlanPage.vue';
 import AppAdminContactsPage from '@/pages/app/AppAdminContactsPage.vue';
@@ -40,7 +39,9 @@ import AdminInstitutionRequestsPage from '@/pages/admin/AdminInstitutionRequests
 import AdminInstitutionRequestDetailPage from '@/pages/admin/AdminInstitutionRequestDetailPage.vue';
 import AdminInstitutionPlanPage from '@/pages/admin/AdminInstitutionPlanPage.vue';
 import AdminInstitutionContactsPage from '@/pages/admin/AdminInstitutionContactsPage.vue';
+import AdminInstitutionPermissionsPage from '@/pages/admin/AdminInstitutionPermissionsPage.vue';
 import AdminLogsPage from '@/pages/admin/AdminLogsPage.vue';
+import AccountInstitutionsPage from '@/pages/account/AccountInstitutionsPage.vue';
 import AccountSettingsPage from '@/pages/account/AccountSettingsPage.vue';
 import AccountLogsPage from '@/pages/account/AccountLogsPage.vue';
 import Error403Page from '@/pages/error/Error403Page.vue';
@@ -169,18 +170,8 @@ export const appRoutes = [
     }),
     children: [
       {
-        path: 'institutions',
-        name: 'app-institutions',
-        component: AppInstitutionsPage,
-        meta: createPageRouteMeta('app-institutions', {
-          layout: DOMAIN.APP,
-          requiresAuth: true,
-          requiresSecuritySetup: true,
-          allowedRoles: institutionRoles
-        })
-      },
-      {
-        path: ':rfc',
+        path: ':rfc([A-Z0-9]{4,13})',
+        sensitive: true,
         redirect: (to: { params: { rfc?: string } }) => `/app/${to.params.rfc}/dashboard`,
         meta: createRouteMeta({
           layout: DOMAIN.APP,
@@ -192,7 +183,8 @@ export const appRoutes = [
         })
       },
       {
-        path: ':rfc/dashboard',
+        path: ':rfc([A-Z0-9]{4,13})/dashboard',
+        sensitive: true,
         name: 'app-dashboard',
         component: AppDashboardPage,
         meta: createPageRouteMeta('app-dashboard', {
@@ -204,7 +196,8 @@ export const appRoutes = [
         })
       },
       {
-        path: ':rfc/admin',
+        path: ':rfc([A-Z0-9]{4,13})/admin',
+        sensitive: true,
         redirect: (to: { params: { rfc?: string } }) => `/app/${to.params.rfc}/admin/plan`,
         meta: createRouteMeta({
           layout: DOMAIN.APP,
@@ -216,7 +209,8 @@ export const appRoutes = [
         })
       },
       {
-        path: ':rfc/admin/plan',
+        path: ':rfc([A-Z0-9]{4,13})/admin/plan',
+        sensitive: true,
         name: 'app-admin-plan',
         component: AppAdminPlanPage,
         meta: createPageRouteMeta('app-admin-plan', {
@@ -228,7 +222,8 @@ export const appRoutes = [
         })
       },
       {
-        path: ':rfc/admin/contacts',
+        path: ':rfc([A-Z0-9]{4,13})/admin/contacts',
+        sensitive: true,
         name: 'app-admin-contacts',
         component: AppAdminContactsPage,
         meta: createPageRouteMeta('app-admin-contacts', {
@@ -240,7 +235,8 @@ export const appRoutes = [
         })
       },
       {
-        path: ':rfc/admin/settings',
+        path: ':rfc([A-Z0-9]{4,13})/admin/settings',
+        sensitive: true,
         name: 'app-admin-settings',
         component: AppAdminSettingsPage,
         meta: createPageRouteMeta('app-admin-settings', {
@@ -252,7 +248,8 @@ export const appRoutes = [
         })
       },
       {
-        path: ':rfc/admin/permissions',
+        path: ':rfc([A-Z0-9]{4,13})/admin/permissions',
+        sensitive: true,
         name: 'app-admin-permissions',
         component: AppAdminPermissionsPage,
         meta: createPageRouteMeta('app-admin-permissions', {
@@ -264,7 +261,8 @@ export const appRoutes = [
         })
       },
       {
-        path: ':rfc/requests',
+        path: ':rfc([A-Z0-9]{4,13})/requests',
+        sensitive: true,
         name: 'app-requests',
         component: AppRequestsPage,
         meta: createPageRouteMeta('app-requests', {
@@ -276,7 +274,8 @@ export const appRoutes = [
         })
       },
       {
-        path: ':rfc/requests/:fub',
+        path: ':rfc([A-Z0-9]{4,13})/requests/:fub',
+        sensitive: true,
         name: 'app-request-detail',
         component: AppRequestDetailPage,
         meta: createPageRouteMeta('app-request-detail', {
@@ -288,7 +287,8 @@ export const appRoutes = [
         })
       },
       {
-        path: ':rfc/logs',
+        path: ':rfc([A-Z0-9]{4,13})/logs',
+        sensitive: true,
         name: 'app-logs',
         component: AppLogsPage,
         meta: createPageRouteMeta('app-logs', {
@@ -298,7 +298,11 @@ export const appRoutes = [
           requiresSecuritySetup: true,
           allowedRoles: institutionRoles
         })
-      }
+      },
+      {
+        path: ':pathMatch(.*)*',
+        redirect: routePaths.error404
+      },
     ]
   },
   {
@@ -346,7 +350,8 @@ export const appRoutes = [
         })
       },
       {
-        path: 'institutions/:rfc/requests',
+        path: ':rfc([A-Z0-9]{4,13})/requests',
+        sensitive: true,
         name: 'admin-institution-requests',
         component: AdminInstitutionRequestsPage,
         meta: createPageRouteMeta('admin-institution-requests', {
@@ -357,7 +362,8 @@ export const appRoutes = [
         })
       },
       {
-        path: 'institutions/:rfc/requests/:fub',
+        path: ':rfc([A-Z0-9]{4,13})/requests/:fub',
+        sensitive: true,
         name: 'admin-institution-request-detail',
         component: AdminInstitutionRequestDetailPage,
         meta: createPageRouteMeta('admin-institution-request-detail', {
@@ -368,7 +374,8 @@ export const appRoutes = [
         })
       },
       {
-        path: 'institutions/:rfc/plan',
+        path: ':rfc([A-Z0-9]{4,13})/plan',
+        sensitive: true,
         name: 'admin-institution-plan',
         component: AdminInstitutionPlanPage,
         meta: createPageRouteMeta('admin-institution-plan', {
@@ -379,10 +386,23 @@ export const appRoutes = [
         })
       },
       {
-        path: 'institutions/:rfc/contacts',
+        path: ':rfc([A-Z0-9]{4,13})/contacts',
+        sensitive: true,
         name: 'admin-institution-contacts',
         component: AdminInstitutionContactsPage,
         meta: createPageRouteMeta('admin-institution-contacts', {
+          layout: DOMAIN.ADMIN,
+          requiresAuth: true,
+          requiresSecuritySetup: true,
+          allowedRoles: systemRoles
+        })
+      },
+      {
+        path: ':rfc([A-Z0-9]{4,13})/permissions',
+        sensitive: true,
+        name: 'admin-tenant-permissions',
+        component: AdminInstitutionPermissionsPage,
+        meta: createPageRouteMeta('admin-tenant-permissions', {
           layout: DOMAIN.ADMIN,
           requiresAuth: true,
           requiresSecuritySetup: true,
@@ -414,6 +434,17 @@ export const appRoutes = [
     }),
     children: [
       { path: '', redirect: routePaths.accountSettings },
+      {
+        path: 'institutions',
+        name: 'account-institutions',
+        component: AccountInstitutionsPage,
+        meta: createPageRouteMeta('account-institutions', {
+          layout: DOMAIN.ACCOUNT,
+          requiresAuth: true,
+          requiresSecuritySetup: true,
+          allowedRoles: authenticatedRoles
+        })
+      },
       {
         path: 'settings',
         name: 'account-settings',

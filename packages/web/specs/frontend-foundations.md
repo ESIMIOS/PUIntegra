@@ -16,6 +16,7 @@ Define the baseline webapp architecture for local development and navigable skel
 - Deployment environments live in [`environments.md`](./environments.md).
 - Full documented route skeleton with placeholders and default redirects.
 - Guard pipeline backed by Firebase Auth state and app session context.
+- Admin tenant operation routes use canonical RFC-scoped paths: `/admin/:rfc/requests`, `/admin/:rfc/plan`, `/admin/:rfc/contacts`, and `/admin/:rfc/permissions`.
 
 ## Route and guard contract
 

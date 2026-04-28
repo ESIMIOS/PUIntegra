@@ -39,6 +39,11 @@ async function goToAccountSettings() {
   await router.push(routePaths.accountSettings);
 }
 
+async function goToAccountInstitutions() {
+  showAccountMenu.value = false;
+  await router.push(routePaths.accountInstitutions);
+}
+
 async function goToAccountLogs() {
   showAccountMenu.value = false;
   await router.push(routePaths.accountLogs);
@@ -80,6 +85,14 @@ async function applySelectedContext(context: { role: z.infer<typeof RoleSchema>;
       <VaDropdownContent class="mt-3">
         <VaList>
           <VaListLabel>Cuenta</VaListLabel>
+          <VaListItem class="cp" @click="goToAccountInstitutions">
+            <VaListItemSection icon class="mr0 ml0">
+              <VaIcon name="account_balance" />
+            </VaListItemSection>
+            <VaListItemSection>
+              <VaListItemLabel>Instituciones</VaListItemLabel>
+            </VaListItemSection>
+          </VaListItem>
           <VaListItem class="cp" @click="goToAccountSettings">
             <VaListItemSection icon class="mr0 ml0">
               <VaIcon name="manage_accounts" />

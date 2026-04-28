@@ -116,6 +116,12 @@ export async function listPermissionsByUser(userId: string): Promise<Permission[
   return snapshot.docs.map((item) => parseEntity<Permission>(PermissionSchema, item.data(), 'permission'));
 }
 
+export async function listPermissionsByRfc(rfc: string): Promise<Permission[]> {
+  const normalizedRfc = rfc.trim().toUpperCase();
+  const snapshot = await getDocs(query(collectionRef('permissions'), where('RFC', '==', normalizedRfc)));
+  return snapshot.docs.map((item) => parseEntity<Permission>(PermissionSchema, item.data(), 'permission'));
+}
+
 export async function getPermissionById(permissionId: string): Promise<Permission> {
   const snapshot = await getDoc(documentRef('permissions', permissionId));
   if (!snapshot.exists()) {

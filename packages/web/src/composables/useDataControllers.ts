@@ -19,7 +19,9 @@ export function useInstitutionSelectionController() {
   return {
     isLoading: computed(() => store.isLoading),
     errorMessage: computed(() => store.userErrorMessage),
-    loadInstitutions: () => store.listInstitutions()
+    loadInstitutions: () => store.listInstitutions(),
+    loadPermissionsByEmail: (email: string) => store.listPermissionsByEmail(email),
+    retry: () => store.clearError(),
   };
 }
 
@@ -33,7 +35,39 @@ export function useAdminInstitutionsController() {
     errorMessage: computed(() => store.userErrorMessage),
     loadInstitutions: () => store.listInstitutions(),
     loadInstitutionByRfc: (rfc: string) => store.getInstitutionByRfc(rfc),
-    retry: () => store.clearError()
+    retry: () => store.clearError(),
+  };
+}
+
+/**
+ * @description Expone permisos institucionales para inspección por RFC tenant.
+ */
+export function useAdminTenantPermissionsController() {
+  const store = useDataStore();
+  return {
+    isLoading: computed(() => store.isLoading),
+    errorMessage: computed(() => store.userErrorMessage),
+    loadInstitutionByRfc: (rfc: string) => store.getInstitutionByRfc(rfc),
+    loadPermissionsByRfc: (rfc: string) => store.listPermissionsByRfc(rfc),
+    retry: () => store.clearError(),
+  };
+}
+
+/**
+ * @description Expone lecturas tenant de backoffice por RFC.
+ */
+export function useAdminTenantInspectionController() {
+  const store = useDataStore();
+  return {
+    isLoading: computed(() => store.isLoading),
+    isSaving: computed(() => store.isSaving),
+    errorMessage: computed(() => store.userErrorMessage),
+    loadInstitutionByRfc: (rfc: string) => store.getInstitutionByRfc(rfc),
+    loadContactsByRfc: (rfc: string) => store.listContactsByRfc(rfc),
+    loadRequestsByRfc: (rfc: string) => store.listRequestsByRfc(rfc),
+    updateInstitutionPlan: (rfc: string, input: Parameters<typeof store.updateInstitutionPlan>[1]) =>
+      store.updateInstitutionPlan(rfc, input),
+    retry: () => store.clearError(),
   };
 }
 
@@ -45,8 +79,9 @@ export function useInstitutionOnboardingController() {
   return {
     isSaving: computed(() => store.isSaving),
     errorMessage: computed(() => store.userErrorMessage),
-    create: (input: Parameters<typeof store.createInstitutionOnboarding>[0]) => store.createInstitutionOnboarding(input),
-    retry: () => store.clearError()
+    create: (input: Parameters<typeof store.createInstitutionOnboarding>[0]) =>
+      store.createInstitutionOnboarding(input),
+    retry: () => store.clearError(),
   };
 }
 
@@ -59,7 +94,7 @@ export function useDashboardController() {
     isLoading: computed(() => store.isLoading),
     errorMessage: computed(() => store.userErrorMessage),
     loadRequests: (rfc: string) => store.listRequestsByRfc(rfc),
-    loadFindings: (rfc: string) => store.listFindingsByRfc(rfc)
+    loadFindings: (rfc: string) => store.listFindingsByRfc(rfc),
   };
 }
 
@@ -71,7 +106,7 @@ export function useRequestsController() {
   return {
     isLoading: computed(() => store.isLoading),
     errorMessage: computed(() => store.userErrorMessage),
-    loadByRfc: (rfc: string) => store.listRequestsByRfc(rfc)
+    loadByRfc: (rfc: string) => store.listRequestsByRfc(rfc),
   };
 }
 
@@ -83,7 +118,7 @@ export function useFindingsController() {
   return {
     isLoading: computed(() => store.isLoading),
     errorMessage: computed(() => store.userErrorMessage),
-    loadByRfc: (rfc: string) => store.listFindingsByRfc(rfc)
+    loadByRfc: (rfc: string) => store.listFindingsByRfc(rfc),
   };
 }
 
@@ -95,6 +130,6 @@ export function useLogsController() {
   return {
     isLoading: computed(() => store.isLoading),
     errorMessage: computed(() => store.userErrorMessage),
-    load: (filters: { RFC?: string; userId?: string } = {}) => store.listLogs(filters)
+    load: (filters: { RFC?: string; userId?: string } = {}) => store.listLogs(filters),
   };
 }
