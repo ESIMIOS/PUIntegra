@@ -260,6 +260,34 @@ a {
   font-size: 3rem !important;
 }
 
+.fs-xxs {
+  font-size: xx-small !important;
+}
+
+.fs-xs {
+  font-size: x-small !important;
+}
+
+.fs-sm {
+  font-size: small !important;
+}
+
+.fs-md {
+  font-size: medium !important;
+}
+
+.fs-lg {
+  font-size: large !important;
+}
+
+.fs-xl {
+  font-size: x-large !important;
+}
+
+.fs-xxl {
+  font-size: xx-large !important;
+}
+
 .danger {
   color: var(--va-danger) !important;
 }

@@ -26,7 +26,7 @@ export type LogDatePresetOption = {
 };
 
 export const logDatePresetOptions: LogDatePresetOption[] = [
-  { value: 'all', text: 'TODO' },
+  { value: 'all', text: 'Todo' },
   { value: '5m', text: '5 minutos' },
   { value: '10m', text: '10 minutos' },
   { value: '1h', text: '1 hora' },

@@ -131,8 +131,8 @@ describe('logs pages', () => {
     await flushPromises();
 
     expect(mockedListLogs).toHaveBeenCalledWith(expect.objectContaining({ RFC: null, userId: 'uid-owner' }));
-    expect(wrapper.text()).toContain('Logs de cuenta');
-    expect(wrapper.text()).toContain('TODO');
+    expect(wrapper.text()).toContain('Logs');
+    expect(wrapper.text()).toContain('Todo');
     expect(wrapper.text()).toContain('Fecha');
     expect(wrapper.text()).toContain('Categoría');
   });
