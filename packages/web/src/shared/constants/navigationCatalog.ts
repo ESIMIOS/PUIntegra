@@ -32,6 +32,8 @@ type NavigationDefinition = {
   // eslint-disable-next-line no-unused-vars
   to: (context: NavigationContext) => string;
   // eslint-disable-next-line no-unused-vars
+  visible?: (context: NavigationContext) => boolean;
+  // eslint-disable-next-line no-unused-vars
   disabled?: (context: NavigationContext) => boolean;
 };
 
@@ -126,14 +128,6 @@ export const navigationCatalog = {
   ],
   [DOMAIN.APP]: [
     {
-      id: 'app-institutions',
-      label: 'Instituciones',
-      icon: 'account_balance',
-      description: 'Selección de contexto institucional para iniciar operación.',
-      to: () => routePaths.appInstitutions,
-      disabled: (context) => !context.isInstitutionRole,
-    },
-    {
       id: 'app-dashboard',
       label: 'Dashboard',
       icon: 'dashboard',
@@ -221,7 +215,8 @@ export const navigationCatalog = {
       icon: 'business',
       description: 'Vista pivote institucional desde la perspectiva del proveedor.',
       to: (context) => routePaths.adminInstitution(context.adminInspectionRfc),
-      disabled: (context) => !context.isSystemRole,
+      visible: (context) => !context.isSystemRole,
+      disabled: (context) => !context.isInstitutionRole,
     },
     {
       id: 'admin-institution-requests',
@@ -229,7 +224,8 @@ export const navigationCatalog = {
       icon: 'rule',
       description: 'Vista resumida de solicitudes institucionales en backoffice.',
       to: (context) => routePaths.adminInstitutionRequests(context.adminInspectionRfc),
-      disabled: (context) => !context.isSystemRole,
+      visible: (context) => !context.isSystemRole,
+      disabled: (context) => !context.isInstitutionRole,
     },
     {
       id: 'admin-institution-request-detail',
@@ -237,7 +233,8 @@ export const navigationCatalog = {
       icon: 'article',
       description: 'Detalle de solicitud con foco de supervisión y trazabilidad.',
       to: (context) => routePaths.adminInstitutionRequestDetail(context.adminInspectionRfc, context.defaultFub),
-      disabled: (context) => !context.isSystemRole,
+      visible: (context) => !context.isSystemRole,
+      disabled: (context) => !context.isInstitutionRole,
     },
     {
       id: 'admin-institution-plan',
@@ -245,7 +242,8 @@ export const navigationCatalog = {
       icon: 'assignment',
       description: 'Supervisión comercial y operativa del plan institucional.',
       to: (context) => routePaths.adminInstitutionPlan(context.adminInspectionRfc),
-      disabled: (context) => !context.isSystemRole,
+      visible: (context) => !context.isSystemRole,
+      disabled: (context) => !context.isInstitutionRole,
     },
     {
       id: 'admin-institution-contacts',
@@ -253,7 +251,17 @@ export const navigationCatalog = {
       icon: 'contacts',
       description: 'Consulta transversal de contactos institucionales.',
       to: (context) => routePaths.adminInstitutionContacts(context.adminInspectionRfc),
-      disabled: (context) => !context.isSystemRole,
+      visible: (context) => !context.isSystemRole,
+      disabled: (context) => !context.isInstitutionRole,
+    },
+    {
+      id: 'admin-tenant-permissions',
+      label: 'Permisos institución',
+      icon: 'admin_panel_settings',
+      description: 'Listado de permisos por institución en contexto de inspección.',
+      to: (context) => routePaths.adminTenantPermissions(context.adminInspectionRfc),
+      visible: (context) => !context.isSystemRole,
+      disabled: (context) => !context.isInstitutionRole,
     },
     {
       id: 'admin-logs',
@@ -265,6 +273,14 @@ export const navigationCatalog = {
     },
   ],
   [DOMAIN.ACCOUNT]: [
+    {
+      id: 'account-institutions',
+      label: 'Instituciones',
+      icon: 'account_balance',
+      description: 'Listado de instituciones disponibles para la cuenta según sus permisos.',
+      to: () => routePaths.accountInstitutions,
+      disabled: (context) => !context.isAuthenticated,
+    },
     {
       id: 'account-settings',
       label: 'Configuración',
@@ -345,13 +361,15 @@ export function isPageId(value: unknown): value is PageId {
  * @description Construye los links navegables de un dominio aplicando reglas de disponibilidad por contexto.
  */
 export function buildNavigationLinks(domain: NavigationDomain, context: NavigationContext): NavigationLink[] {
-  return navigationCatalog[domain].map((link) => ({
-    id: link.id,
-    label: link.label,
-    icon: link.icon,
-    to: link.to(context),
-    disabled: 'disabled' in link ? link.disabled(context) : false,
-  }));
+  return navigationCatalog[domain]
+    .filter((link) => ('visible' in link ? link.visible(context) : true))
+    .map((link) => ({
+      id: link.id,
+      label: link.label,
+      icon: link.icon,
+      to: link.to(context),
+      disabled: 'disabled' in link ? link.disabled(context) : false,
+    }));
 }
 
 /**

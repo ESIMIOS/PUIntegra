@@ -57,6 +57,10 @@ async function goToContacts() {
   await router.push(routePaths.adminInstitutionContacts(routeRfc.value));
 }
 
+async function goToPermissions() {
+  await router.push(routePaths.adminTenantPermissions(routeRfc.value));
+}
+
 onMounted(() => {
   void loadInstitution();
 });
@@ -170,6 +174,9 @@ onMounted(() => {
             </VaButton>
             <VaButton preset="secondary" data-testid="admin-institution-contacts" @click="goToContacts">
               Contactos
+            </VaButton>
+            <VaButton preset="secondary" data-testid="admin-institution-permissions" @click="goToPermissions">
+              Permisos
             </VaButton>
           </div>
         </VaCardContent>

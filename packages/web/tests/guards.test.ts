@@ -16,17 +16,20 @@ import {
   DEFAULT_RFC,
   SYSTEM_RFC,
   useAuthStore,
-  useInstitutionStore
+  useInstitutionStore,
 } from '@/bom';
+import { routePaths } from '@/shared/constants/routePaths';
 import { hydrateSession } from '@/gateways/firebaseAuthGateway';
 import { beforeEach, vi } from 'vitest';
 
 vi.mock('@/gateways/firebaseAuthGateway', async () => {
-  const actual = await vi.importActual<typeof import('@/gateways/firebaseAuthGateway')>('@/gateways/firebaseAuthGateway');
+  const actual = await vi.importActual<typeof import('@/gateways/firebaseAuthGateway')>(
+    '@/gateways/firebaseAuthGateway',
+  );
   return {
     ...actual,
     clearSavedContext: vi.fn(),
-    hydrateSession: vi.fn()
+    hydrateSession: vi.fn(),
   };
 });
 
@@ -59,9 +62,9 @@ describe('route guards', () => {
       availableContexts: [
         {
           role: ROLE.INSTITUTION_ADMIN,
-          rfc: DEFAULT_RFC
-        }
-      ]
+          rfc: DEFAULT_RFC,
+        },
+      ],
     });
 
     const { router } = createRouterWithStores();
@@ -109,6 +112,19 @@ describe('route guards', () => {
     expect(router.currentRoute.value.path).toBe(`/app/${DEFAULT_RFC}/dashboard`);
   });
 
+  it('redirects authenticated institution role without active RFC from /auth/login to account institutions', async () => {
+    const { router, authStore, institutionStore } = createRouterWithStores();
+
+    authStore.setRole(ROLE.INSTITUTION_ADMIN);
+    authStore.setRequiresSecuritySetup(false);
+    authStore.setAllowedInstitutionRfcs([DEFAULT_RFC]);
+    institutionStore.clearActiveRfc();
+
+    await router.push('/auth/login');
+
+    expect(router.currentRoute.value.path).toBe(routePaths.accountInstitutions);
+  });
+
   it('redirects authenticated system role from /auth/login to /admin/institutions', async () => {
     const { router, authStore, institutionStore } = createRouterWithStores();
 
@@ -141,10 +157,9 @@ describe('route guards', () => {
     authStore.setRequiresSecuritySetup(false);
     authStore.setAllowedInstitutionRfcs([DEFAULT_RFC]);
     institutionStore.setActiveRfc(DEFAULT_RFC);
-
-    await router.push(`/auth/login?redirect=${encodeURIComponent(`/app/${DEFAULT_RFC}/requests`)}`);
-
-    expect(router.currentRoute.value.path).toBe(`/app/${DEFAULT_RFC}/requests`);
+    const redirectTarget = `/app/${DEFAULT_RFC}/requests/${DEFAULT_FUB}`;
+    await router.push(`/auth/login?redirect=${encodeURIComponent(redirectTarget)}`);
+    expect(router.currentRoute.value.path).toBe(redirectTarget);
   });
 
   it('redirects to /error/403 on role mismatch', async () => {
@@ -220,6 +235,45 @@ describe('route guards', () => {
 
     expect(router.currentRoute.value.path).toBe(`/admin/institutions/${DEFAULT_RFC}`);
     expect(institutionStore.activeRfc).toBe(SYSTEM_RFC);
+  });
+
+  it('allows system administrator to open global logs', async () => {
+    const { router, authStore, institutionStore } = createRouterWithStores();
+
+    authStore.setRole(ROLE.SYSTEM_ADMINISTRATOR);
+    authStore.setRequiresSecuritySetup(false);
+    institutionStore.setActiveRfc(SYSTEM_RFC);
+
+    await router.push(routePaths.adminLogs);
+
+    expect(router.currentRoute.value.path).toBe(routePaths.adminLogs);
+  });
+
+  it('allows institution role to open active tenant logs', async () => {
+    const { router, authStore, institutionStore } = createRouterWithStores();
+
+    authStore.setRole(ROLE.INSTITUTION_OPERATOR);
+    authStore.setRequiresSecuritySetup(false);
+    authStore.setAllowedInstitutionRfcs([DEFAULT_RFC]);
+    institutionStore.setActiveRfc(DEFAULT_RFC);
+
+    await router.push(routePaths.appLogs(DEFAULT_RFC));
+
+    expect(router.currentRoute.value.path).toBe(routePaths.appLogs(DEFAULT_RFC));
+  });
+
+  it('allows authenticated users to open account logs', async () => {
+    const { router, authStore, institutionStore } = createRouterWithStores();
+
+    authStore.setRole(ROLE.INSTITUTION_OPERATOR);
+    authStore.setIdentity({ uid: 'uid-owner', email: 'owner@example.test' });
+    authStore.setRequiresSecuritySetup(false);
+    authStore.setAllowedInstitutionRfcs([DEFAULT_RFC]);
+    institutionStore.setActiveRfc(DEFAULT_RFC);
+
+    await router.push(routePaths.accountLogs);
+
+    expect(router.currentRoute.value.path).toBe(routePaths.accountLogs);
   });
 
   it('rejects institution administrator when SYSTEM_RFC is active', async () => {

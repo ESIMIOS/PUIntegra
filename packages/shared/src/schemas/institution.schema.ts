@@ -69,7 +69,18 @@ export const InstitutionSchema = z.object({
   updatedAt: TimestampMillisecondsUtcSchema
 });
 
+export const UpdateInstitutionPlanSchema = z.object({
+  plan: CommercialPlanSchema,
+  planStatus: CommercialPlanStatusSchema,
+  planStartAt: TimestampMillisecondsUtcSchema,
+  planFinishAt: TimestampMillisecondsUtcSchema
+}).refine((value) => value.planStartAt <= value.planFinishAt, {
+  message: 'planStartAt must be less than or equal to planFinishAt.',
+  path: ['planFinishAt']
+});
+
 export type CommercialPlanStatus = z.infer<typeof CommercialPlanStatusSchema>;
 export type CommercialPlan = z.infer<typeof CommercialPlanSchema>;
 export type InstitutionUpdate = z.infer<typeof InstitutionUpdateSchema>;
 export type Institution = z.infer<typeof InstitutionSchema>;
+export type UpdateInstitutionPlan = z.infer<typeof UpdateInstitutionPlanSchema>;

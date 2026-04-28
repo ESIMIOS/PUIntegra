@@ -8,7 +8,9 @@ import {
   SYSTEM_RFC,
   roleValues,
   HTTP_STATUS,
+  SystemError,
 } from '@puintegra/shared';
+import { apiSystemMessages } from '../src/constants/systemMessages';
 
 describe('auth event API routes', () => {
   it('rejects auth event writes without a bearer token', async () => {
@@ -231,14 +233,14 @@ describe('admin institution onboarding API route', () => {
       }),
     });
 
-    expect(response.status).toBe(HTTP_STATUS.BAD_REQUEST);
+    expect(response.status).toBe(HTTP_STATUS.FORBIDDEN);
     expect(await response.json()).toEqual({
       ok: false,
       error: {
-        code: 'API-ADMIN-004',
-        message: 'SYSTEM_RFC cannot be used as a tenant institution RFC.',
-        uiMessageKey: 'api.admin.institutions.invalid_system_rfc',
-        displayMessage: 'SYSTEM_RFC es un RFC reservado y no puede usarse para una institución.',
+        code: 'API-ADMIN-011',
+        message: 'Operations on SYSTEM_RFC institution are not allowed.',
+        uiMessageKey: 'api.admin.institutions.forbidden_operation_on_system_rfc',
+        displayMessage: 'No se permiten operaciones sobre la institución SYSTEM_RFC.',
       },
       meta: {
         originTraceId: 'trace-reserved-system',
@@ -267,17 +269,157 @@ describe('admin institution onboarding API route', () => {
       }),
     });
 
-    expect(response.status).toBe(HTTP_STATUS.BAD_REQUEST);
+    expect(response.status).toBe(HTTP_STATUS.FORBIDDEN);
     expect(await response.json()).toEqual({
       ok: false,
       error: {
-        code: 'API-ADMIN-005',
-        message: 'DEFAULT_RFC cannot be reused for tenant institution onboarding.',
-        uiMessageKey: 'api.admin.institutions.invalid_default_rfc',
-        displayMessage: 'DEFAULT_RFC es un RFC reservado y no puede usarse para una institución.',
+        code: 'API-ADMIN-010',
+        message: 'Operations on DEFAULT_RFC institution are not allowed.',
+        uiMessageKey: 'api.admin.institutions.forbidden_operation_on_default_rfc',
+        displayMessage: 'No se permiten operaciones sobre la institución DEFAULT_RFC.',
       },
       meta: {
         originTraceId: 'trace-reserved-default',
+      },
+    });
+  });
+});
+
+describe('admin institution plan API route', () => {
+  const validPayload = {
+    plan: COMMERCIAL_PLAN.CLOUD,
+    planStatus: COMMERCIAL_PLAN_STATUS.WARNING,
+    planStartAt: 1710000000200,
+    planFinishAt: 1710000000300,
+  };
+
+  it('accepts plan updates only for SYSTEM_ADMINISTRATOR', async () => {
+    const updateInstitutionPlan = vi.fn().mockResolvedValue({
+      institution: { RFC: 'AAA010101AAA' },
+    });
+
+    for (const role of roleValues) {
+      const app = createApiApp({
+        verifyBearerToken: vi.fn().mockResolvedValue({
+          userId: 'dev-user-001',
+          email: 'admin@example.test',
+          role,
+        }),
+        recordAuthEvent: vi.fn(),
+        createInstitutionOnboarding: vi.fn(),
+        updateInstitutionPlan,
+        createOriginTraceId: vi.fn().mockReturnValue('trace-plan-role-check'),
+      });
+
+      const response = await app.request('/api/admin/institutions/AAA010101AAA/plan', {
+        method: 'PATCH',
+        headers: { authorization: 'Bearer token' },
+        body: JSON.stringify(validPayload),
+      });
+
+      if (role === ROLE.SYSTEM_ADMINISTRATOR) {
+        expect(response.status).toBe(HTTP_STATUS.OK);
+      } else {
+        expect(response.status).toBe(HTTP_STATUS.FORBIDDEN);
+      }
+    }
+  });
+
+  it('rejects invalid plan update payloads', async () => {
+    const app = createApiApp({
+      verifyBearerToken: vi.fn().mockResolvedValue({
+        userId: 'dev-user-001',
+        email: 'admin@example.test',
+        role: ROLE.SYSTEM_ADMINISTRATOR,
+      }),
+      recordAuthEvent: vi.fn(),
+      createInstitutionOnboarding: vi.fn(),
+      updateInstitutionPlan: vi.fn(),
+      createOriginTraceId: vi.fn().mockReturnValue('trace-invalid-plan'),
+    });
+
+    const response = await app.request('/api/admin/institutions/AAA010101AAA/plan', {
+      method: 'PATCH',
+      headers: { authorization: 'Bearer token' },
+      body: JSON.stringify({
+        ...validPayload,
+        planStartAt: 1710000000300,
+        planFinishAt: 1710000000200,
+      }),
+    });
+
+    expect(response.status).toBe(HTTP_STATUS.BAD_REQUEST);
+    expect(await response.json()).toMatchObject({
+      ok: false,
+      error: {
+        code: 'API-ADMIN-001',
+        uiMessageKey: 'api.admin.institutions.invalid_payload',
+      },
+    });
+  });
+
+  it('passes normalized plan update input to the write dependency', async () => {
+    const updateInstitutionPlan = vi.fn().mockResolvedValue({
+      institution: { RFC: 'AAA010101AAA' },
+    });
+    const app = createApiApp({
+      verifyBearerToken: vi.fn().mockResolvedValue({
+        userId: 'dev-user-001',
+        email: 'admin@example.test',
+        role: ROLE.SYSTEM_ADMINISTRATOR,
+      }),
+      recordAuthEvent: vi.fn(),
+      createInstitutionOnboarding: vi.fn(),
+      updateInstitutionPlan,
+      createOriginTraceId: vi.fn().mockReturnValue('trace-plan-success'),
+    });
+
+    const response = await app.request('/api/admin/institutions/aaa010101aaa/plan', {
+      method: 'PATCH',
+      headers: { authorization: 'Bearer token' },
+      body: JSON.stringify(validPayload),
+    });
+
+    expect(response.status).toBe(HTTP_STATUS.OK);
+    expect(updateInstitutionPlan).toHaveBeenCalledWith({
+      rfc: 'AAA010101AAA',
+      payload: validPayload,
+      actor: {
+        userId: 'dev-user-001',
+        email: 'admin@example.test',
+        role: ROLE.SYSTEM_ADMINISTRATOR,
+      },
+      originTraceId: 'trace-plan-success',
+    });
+  });
+
+  it('returns not found when the tenant institution does not exist', async () => {
+    const app = createApiApp({
+      verifyBearerToken: vi.fn().mockResolvedValue({
+        userId: 'dev-user-001',
+        email: 'admin@example.test',
+        role: ROLE.SYSTEM_ADMINISTRATOR,
+      }),
+      recordAuthEvent: vi.fn(),
+      createInstitutionOnboarding: vi.fn(),
+      updateInstitutionPlan: vi
+        .fn()
+        .mockRejectedValue(new SystemError(apiSystemMessages.admin.institutions.institutionNotFound)),
+      createOriginTraceId: vi.fn().mockReturnValue('trace-plan-missing'),
+    });
+
+    const response = await app.request('/api/admin/institutions/AAA010101AAA/plan', {
+      method: 'PATCH',
+      headers: { authorization: 'Bearer token' },
+      body: JSON.stringify(validPayload),
+    });
+
+    expect(response.status).toBe(HTTP_STATUS.NOT_FOUND);
+    expect(await response.json()).toMatchObject({
+      ok: false,
+      error: {
+        code: 'API-ADMIN-009',
+        uiMessageKey: 'api.admin.institutions.institution_not_found',
       },
     });
   });

@@ -58,12 +58,13 @@ type InstitutionOnboardingBuildInput = {
   permissionId: string;
   institutionLogId: string;
   permissionLogId: string;
+  planLogId: string;
 };
 
 type InstitutionOnboardingBuildResult = {
   institution: Institution;
   permission: Permission;
-  logs: [Log, Log];
+  logs: [Log, Log, Log];
   response: {
     institution: {
       RFC: string;
@@ -192,11 +193,7 @@ export function buildInstitutionOnboardingRecords(
       executedByRole: actor.role,
       executedByUserEmail: actor.email,
     },
-    impact: {
-      impactedUserRole: ROLE.INSTITUTION_ADMIN,
-      impactedUserEmail: normalizedInput.adminEmail,
-      impactedPermissionStatus: PERMISSION_STATUS.GRANTED,
-    },
+    impact: {},
     searchRequest: {},
     createdAt: input.now,
   });
@@ -222,10 +219,27 @@ export function buildInstitutionOnboardingRecords(
     createdAt: input.now,
   });
 
+  const planLog = LogSchema.parse({
+    id: input.planLogId,
+    category: LOG_CATEGORIES.INSTITUTION_PLAN_CREATION,
+    RFC: normalizedInput.RFC,
+    origin: LOG_ORIGIN.SYSTEM_HTTP_API_CALL,
+    originTraceId: input.originTraceId,
+    userId: actor.userId,
+    execution: {
+      executedByUserId: actor.userId,
+      executedByRole: actor.role,
+      executedByUserEmail: actor.email,
+    },
+    impact: {},
+    searchRequest: {},
+    createdAt: input.now,
+  });
+
   return {
     institution,
     permission,
-    logs: [institutionLog, permissionLog],
+    logs: [institutionLog, permissionLog, planLog],
     response: {
       institution: {
         RFC: institution.RFC,

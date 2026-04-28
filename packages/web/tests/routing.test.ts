@@ -70,6 +70,13 @@ describe('routing contract', () => {
     expect(router.currentRoute.value.path).toBe('/account/settings');
   });
 
+  it('routes /app/institutions to 404 after removing app institutions page', async () => {
+    const { router } = createRouterWithInstitutionAdminContext();
+    await router.push('/app/institutions');
+
+    expect(router.currentRoute.value.path).toBe('/error/404');
+  });
+
   it('sends unknown routes to /error/404', async () => {
     const { router } = createRouterWithInstitutionAdminContext();
 
@@ -86,6 +93,11 @@ describe('routing contract', () => {
       ['/auth/login', DOMAIN.AUTH],
       [`/app/${DEFAULT_RFC}/dashboard`, DOMAIN.APP],
       ['/admin/institutions', DOMAIN.ADMIN],
+      [`/admin/${DEFAULT_RFC}/requests`, DOMAIN.ADMIN],
+      [`/admin/${DEFAULT_RFC}/plan`, DOMAIN.ADMIN],
+      [`/admin/${DEFAULT_RFC}/contacts`, DOMAIN.ADMIN],
+      [`/admin/${DEFAULT_RFC}/permissions`, DOMAIN.ADMIN],
+      ['/account/institutions', DOMAIN.ACCOUNT],
       ['/account/settings', DOMAIN.ACCOUNT],
       ['/error/500', DOMAIN.ERROR]
     ] as const;
