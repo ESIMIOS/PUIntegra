@@ -12,7 +12,7 @@ describe('log date ranges', () => {
 
   it('exposes Spanish date preset labels for the UI', () => {
     expect(getLogDatePresetOptions().map((option) => option.text)).toEqual([
-      'TODO',
+      'Todo',
       '5 minutos',
       '10 minutos',
       '1 hora',

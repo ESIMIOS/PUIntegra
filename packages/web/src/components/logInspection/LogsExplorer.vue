@@ -57,6 +57,7 @@ const exportWarning = ref<string | null>(null);
 const hasMore = ref(false);
 const isLoadingMore = ref(false);
 const isExporting = ref(false);
+const showSettings = ref(false);
 const tenantOptions = ref<TenantOption[]>([{ value: undefined, text: 'Todos los alcances' }]);
 
 const availableColumns = computed(() => getAvailableLogColumns(props.scope));
@@ -65,11 +66,11 @@ const visibleColumns = computed(() => {
   return availableColumns.value.filter((column) => visible.has(column.key));
 });
 const categoryOptions = computed(() => [
-  { value: null, text: 'TODO' },
+  { value: null, text: 'Todas' },
   ...getLogCategoryOptions(props.scope).map((category) => ({ value: category, text: category })),
 ]);
 const originOptions = [
-  { value: null, text: 'TODO' },
+  { value: null, text: 'Todos' },
   ...getLogOriginOptions().map((origin) => ({ value: origin, text: origin })),
 ];
 const pageSizeOptions = [...LOG_PAGE_SIZE_OPTIONS];
@@ -288,15 +289,16 @@ onMounted(async () => {
 </script>
 
 <template>
-  <section class="logs-explorer space-y-4">
+  <section class="logs-explorer space-y-4 pt-2">
     <div class="flex flex-wrap items-end justify-between gap-3">
       <div>
         <h1 class="text-2xl font-semibold">{{ title }}</h1>
-        <p class="text--secondary">{{ description }}</p>
+        <p class="text--secondary pt-2">{{ description }}</p>
       </div>
       <VaButton preset="secondary" :loading="isExporting" data-testid="logs-export-csv" @click="exportCsv">
         Exportar CSV
       </VaButton>
+      <VaButton round icon="settings" data-testid="logs-settings" @click="showSettings = !showSettings" />
     </div>
 
     <VaAlert v-if="controller.errorMessage.value" color="danger" dense data-testid="logs-error">
@@ -312,7 +314,8 @@ onMounted(async () => {
       {{ customRangeError }}
     </VaAlert>
 
-    <div class="logs-toolbar">
+    <VaDivider />
+    <div class="logs-toolbar mt-3">
       <VaSelect
         v-if="scope === 'admin'"
         v-model="selectedTenant"
@@ -320,6 +323,8 @@ onMounted(async () => {
         text-by="text"
         value-by="value"
         label="Tenant"
+        class="fs-xs bold"
+        content-class="fs-xs"
         data-testid="logs-tenant-filter"
       />
       <VaSelect
@@ -328,8 +333,9 @@ onMounted(async () => {
         text-by="text"
         value-by="value"
         label="Categoría"
-        class="logs-filter-select"
         data-testid="logs-category-filter"
+        class="fs-xs bold"
+        content-class="fs-xs"
       />
       <VaSelect
         v-model="selectedOrigin"
@@ -337,16 +343,18 @@ onMounted(async () => {
         text-by="text"
         value-by="value"
         label="Origen"
-        class="logs-filter-select"
         data-testid="logs-origin-filter"
+        class="fs-xs bold"
+        content-class="fs-xs"
       />
       <VaSelect
         v-model="selectedPreset"
         :options="datePresetOptions"
         text-by="text"
         value-by="value"
-        label="Rango"
-        class="logs-filter-select"
+        label="Rango de tiempo"
+        class="fs-xs bold"
+        content-class="fs-xs"
         data-testid="logs-date-preset"
       />
       <VaInput
@@ -354,30 +362,24 @@ onMounted(async () => {
         v-model="customStartDate"
         type="date"
         label="Inicio"
+        class="fs-xs bold"
+        content-class="fs-xs"
         data-testid="logs-start-date"
       />
-      <VaInput v-if="showCustomDates" v-model="customEndDate" type="date" label="Fin" data-testid="logs-end-date" />
-      <VaSelect v-model="selectedOrder" :options="['desc', 'asc']" label="Orden" data-testid="logs-order" />
-      <VaSelect v-model="selectedPageSize" :options="pageSizeOptions" label="Tamaño" data-testid="logs-page-size" />
+      <VaInput
+        v-if="showCustomDates"
+        v-model="customEndDate"
+        type="date"
+        label="Fin"
+        data-testid="logs-end-date"
+        class="fs-xs bold"
+        content-class="fs-xs"
+      />
     </div>
-
-    <details class="logs-columns">
-      <summary>Columnas visibles</summary>
-      <div class="logs-columns__grid">
-        <label v-for="column in availableColumns" :key="column.key" class="logs-columns__option">
-          <input
-            type="checkbox"
-            :checked="selectedColumns.includes(column.key)"
-            :disabled="requiredLogColumnKeys.includes(column.key)"
-            @change="toggleColumn(column.key, ($event.target as HTMLInputElement).checked)"
-          />
-          <span>{{ column.label }}</span>
-        </label>
-      </div>
-    </details>
+    <VaDivider />
 
     <div
-      class="logs-table-shell"
+      class="logs-table-shell mt-2"
       :class="{ 'logs-table-shell--all': selectedPageSize === 'All' }"
       @scroll="handleScroll"
     >
@@ -393,7 +395,7 @@ onMounted(async () => {
           <tr
             v-for="log in logs"
             :key="log.id"
-            :class="`logs-table__row logs-table__row--${getLogCategoryFamily(log.category)}`"
+            :class="`fs-xs logs-table__row logs-table__row--${getLogCategoryFamily(log.category)}`"
           >
             <td
               v-for="column in visibleColumns"
@@ -412,6 +414,44 @@ onMounted(async () => {
         Cargar más
       </VaButton>
     </div>
+    <VaModal
+      v-model="showSettings"
+      title="Configuración de columnas"
+      data-testid="logs-settings-modal"
+      hide-default-actions
+    >
+      <div class="logs-columns__grid">
+        <label v-for="column in availableColumns" :key="column.key" class="logs-columns__option">
+          <input
+            type="checkbox"
+            :checked="selectedColumns.includes(column.key)"
+            :disabled="requiredLogColumnKeys.includes(column.key)"
+            @change="toggleColumn(column.key, ($event.target as HTMLInputElement).checked)"
+          />
+          <span>{{ column.label }}</span>
+        </label>
+      </div>
+      <VaDivider />
+      <VaSelect
+        v-model="selectedOrder"
+        :options="['desc', 'asc']"
+        label="Orden"
+        data-testid="logs-order"
+        class="fs-xs bold mr-2"
+        content-class="fs-xs"
+      />
+      <VaSelect
+        v-model="selectedPageSize"
+        :options="pageSizeOptions"
+        label="Tamaño de página"
+        data-testid="logs-page-size"
+        class="fs-xs bold mr-2"
+        content-class="fs-xs"
+      />
+      <template #footer>
+        <va-button @click="showSettings = false">Cerrar</va-button>
+      </template>
+    </VaModal>
   </section>
 </template>
 
@@ -425,6 +465,7 @@ onMounted(async () => {
 
 .logs-filter-select {
   font-size: 0.82rem;
+  background-color: red;
 }
 
 .logs-filter-select :deep(.va-input-wrapper__field),
@@ -521,7 +562,7 @@ onMounted(async () => {
 
 .logs-table__mono {
   font-family: 'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace;
-  font-size: 0.78rem;
+  font-size:x-small;
 }
 
 .logs-status {

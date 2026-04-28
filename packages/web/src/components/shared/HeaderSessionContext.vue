@@ -12,13 +12,13 @@
  * - 0.0.1	(2026-04-12)	Contexto visual de sesión para headers autenticados.	@antigravity
  */
 
-import { computed, ref } from "vue";
-import { useRouter } from "vue-router";
-import { RoleSchema } from "@shared";
-import { z } from "zod";
-import { routePaths } from "@/shared/constants/routePaths";
-import { useAuthSession } from "@/composables/useAuthSession";
-import SessionContextModal from "@/components/shared/SessionContextModal.vue";
+import { computed, ref } from 'vue';
+import { useRouter } from 'vue-router';
+import { RoleSchema } from '@shared';
+import { z } from 'zod';
+import { routePaths } from '@/shared/constants/routePaths';
+import { useAuthSession } from '@/composables/useAuthSession';
+import SessionContextModal from '@/components/shared/SessionContextModal.vue';
 
 const router = useRouter();
 const { authStore, applyContext } = useAuthSession();
@@ -28,11 +28,12 @@ const showLogoutModal = ref(false);
 const showContextModal = ref(false);
 const switchingContext = ref(false);
 
-const displayName = computed(() => authStore.name ?? "Sin nombre");
-const displayEmail = computed(() => authStore.email ?? "Sin correo");
+const displayName = computed(() => authStore.name ?? 'Sin nombre');
+const displayEmail = computed(() => authStore.email ?? 'Sin correo');
+const displayUserId = computed(() => authStore.uid ?? 'Sin ID');
 const displayRole = computed(() => authStore.activeRole);
-const displayRfc = computed(() => authStore.activeContext?.rfc ?? "");
-const displayIcon = computed(() => authStore.emojiIcon || "person");
+const displayRfc = computed(() => authStore.activeContext?.rfc ?? '');
+const displayIcon = computed(() => authStore.emojiIcon || 'person');
 
 async function goToAccountSettings() {
   showAccountMenu.value = false;
@@ -79,6 +80,7 @@ async function applySelectedContext(context: { role: z.infer<typeof RoleSchema>;
           <div class="header-session-context__account">
             <strong class="header-session-context__name">{{ displayName }}</strong>
             <span class="header-session-context__label">{{ displayEmail }}</span>
+            <span class="header-session-context__uid text-center">({{ displayUserId }})</span>
           </div>
         </button>
       </template>
@@ -164,7 +166,6 @@ async function applySelectedContext(context: { role: z.infer<typeof RoleSchema>;
 </template>
 
 <style scoped>
-
 .va-list-item-label {
   color: var(--va-text-primary);
 }
@@ -208,9 +209,15 @@ async function applySelectedContext(context: { role: z.infer<typeof RoleSchema>;
   white-space: nowrap;
 }
 
-.header-session-context__label {
+.header-session-context__label {  
   color: var(--va-text-secondary);
   font-size: 0.78rem;
+  line-height: 1.1;
+}
+
+.header-session-context__uid {
+  color: var(--va-text-secondary);
+  font-size: xx-small;
   line-height: 1.1;
 }
 
