@@ -11,12 +11,30 @@
  * - 0.0.1	(2026-04-18)	Agrega gateway de autenticación con Firebase Auth Emulator.	@codex
  */
 
-import { ROLE, RoleSchema, PERMISSION_STATUS, SystemError, sharedSystemMessages, type Permission, type User } from '@shared';
+import {
+  ROLE,
+  RoleSchema,
+  PERMISSION_STATUS,
+  SystemError,
+  sharedSystemMessages,
+  LOG_SEVERITY,
+  SYSTEM_PACKAGE_NAME,
+  type Permission,
+  type User
+} from '@shared';
 import { z } from 'zod';
 import {
+  applyActionCode,
+  confirmPasswordReset,
+  createUserWithEmailAndPassword,
+  multiFactor,
   onAuthStateChanged,
+  sendEmailVerification,
+  sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signOut,
+  updateProfile,
+  verifyPasswordResetCode,
   type User as FirebaseUser
 } from 'firebase/auth';
 import { getFirebaseRuntime } from '@/plugins/firebase';
@@ -25,6 +43,16 @@ import { getUserById, listPermissionsByEmail } from '@/gateways/firebaseDataGate
 
 const ACTIVE_CONTEXT_STORAGE_KEY = 'puintegra:web:active-session-context:v1';
 const AUTH_EVENT_API_PATH = '/api/auth/events';
+const AUTH_LIFECYCLE_API_PATH = '/api/auth/lifecycle';
+
+const EMAIL_NOT_VERIFIED_MESSAGE = {
+  code: 'AUTH-LOGIN-006',
+  key: 'auth.login.email_not_verified',
+  severity: LOG_SEVERITY.WARNING,
+  packageName: SYSTEM_PACKAGE_NAME.WEB,
+  message: 'El correo electrónico de la cuenta aún no ha sido verificado.',
+  displayMessage: 'Verifica tu correo electrónico antes de entrar a PUIntegra.',
+} as const;
 
 export const SessionContextSchema = z.object({
   role: RoleSchema,
@@ -46,13 +74,41 @@ export const AppSessionSchema = z.object({
   emojiIcon: z.string().min(1).nullable(),
   activeRole: RoleSchema,
   activeRfc: z.string().min(1),
+  emailVerified: z.boolean().default(true),
   allowedInstitutionRfcs: z.array(z.string().min(1)),
   availableContexts: z.array(SessionContextSchema)
+});
+
+export const AccountCreationResultSchema = z.object({
+  email: z.string().email()
+});
+
+export const AccountCreationInputSchema = z.object({
+  displayName: z.string().trim().min(1),
+  email: z.string().trim().toLowerCase().email(),
+  password: z.string().min(1)
+});
+
+export const PasswordRecoveryResultSchema = z.object({
+  accepted: z.literal(true)
+});
+
+export const TotpSetupStateSchema = z.object({
+  available: z.boolean(),
+  hasTotpFactor: z.boolean(),
+  requiresAdminReset: z.boolean(),
+  reason: z.enum(['provider-unavailable', 'already-enrolled'])
 });
 
 export type SessionContext = z.infer<typeof SessionContextSchema>;
 export type LoginResult = z.infer<typeof LoginResultSchema>;
 export type AppSession = z.infer<typeof AppSessionSchema>;
+export type AccountCreationResult = z.infer<typeof AccountCreationResultSchema>;
+export type AccountCreationInput = z.infer<typeof AccountCreationInputSchema>;
+export type PasswordRecoveryResult = z.infer<typeof PasswordRecoveryResultSchema>;
+export type TotpSetupState = z.infer<typeof TotpSetupStateSchema>;
+
+let lastVerifiedResetEmail: string | null = null;
 
 /**
  * @description Resuelve almacenamiento local disponible para el contexto activo.
@@ -132,6 +188,36 @@ function assertFirebaseUser(value: FirebaseUser | null): FirebaseUser {
 }
 
 /**
+ * @description Normaliza correo para llamadas de Auth y política pública.
+ */
+function normalizeEmail(email: string) {
+  return email.trim().toLowerCase();
+}
+
+/**
+ * @description Construye URL absoluta para acciones de correo Firebase.
+ */
+function buildActionUrl(path: string) {
+  const origin = typeof globalThis.location?.origin === 'string' ? globalThis.location.origin : '';
+  return `${origin}${path}`;
+}
+
+/**
+ * @description Envía evento HTTP del ciclo de vida Auth con datos sanitizados.
+ */
+async function recordAuthLifecycleEvent(path: string, body: Record<string, unknown>) {
+  await executeHttpApi({
+    url: resolveApiUrl(`${AUTH_LIFECYCLE_API_PATH}/${path}`),
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify(body),
+    transportMessage: 'Auth lifecycle API request failed.',
+  });
+}
+
+/**
  * @description Reporta evento Auth al API sin romper el flujo si el emulador API no está disponible.
  */
 async function recordAuthEvent(event: 'login' | 'logout') {
@@ -159,6 +245,10 @@ async function recordAuthEvent(event: 'login' | 'logout') {
  * @description Resuelve perfil de dominio y contextos concedidos para un usuario Firebase.
  */
 async function resolveProfile(firebaseUser: FirebaseUser): Promise<LoginResult> {
+  if (firebaseUser.emailVerified === false) {
+    throw new SystemError(EMAIL_NOT_VERIFIED_MESSAGE);
+  }
+
   const user = await getUserById(firebaseUser.uid);
   const permissions = await listPermissionsByEmail(user.email);
   const contexts = permissions
@@ -190,8 +280,134 @@ function buildSession(user: User, contexts: SessionContext[], selectedContext: S
     emojiIcon: user.emojiIcon ?? null,
     activeRole: selectedContext.role,
     activeRfc: selectedContext.rfc,
+    emailVerified: true,
     allowedInstitutionRfcs: toAllowedInstitutionRfcs(contexts),
     availableContexts: contexts
+  });
+}
+
+/**
+ * @description Crea cuenta Firebase después de política pública y envía verificación.
+ */
+export async function createAccount(input: AccountCreationInput): Promise<AccountCreationResult> {
+  const parsedInput = AccountCreationInputSchema.parse(input);
+  const normalizedEmail = normalizeEmail(parsedInput.email);
+  await executeHttpApi({
+    url: resolveApiUrl(`${AUTH_LIFECYCLE_API_PATH}/account-creation-policy`),
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({ email: normalizedEmail }),
+    transportMessage: 'Account creation policy request failed.',
+  });
+
+  let credential: Awaited<ReturnType<typeof createUserWithEmailAndPassword>>;
+  try {
+    credential = await createUserWithEmailAndPassword(getFirebaseRuntime().auth, normalizedEmail, parsedInput.password);
+  } catch (error) {
+    throw new SystemError(sharedSystemMessages.data.operation.conflictDetected, {
+      displayMessage: 'No pudimos crear la cuenta con esos datos. Revisa la invitación institucional o solicita apoyo.',
+      cause: error,
+    });
+  }
+
+  await updateProfile(credential.user, {
+    displayName: parsedInput.displayName,
+  });
+  await sendEmailVerification(credential.user, {
+    url: buildActionUrl('/auth/verify-email'),
+  });
+  return AccountCreationResultSchema.parse({ email: normalizedEmail });
+}
+
+/**
+ * @description Indica si la sesión Firebase actual puede reenviar verificación.
+ */
+export function canResendEmailVerification() {
+  const firebaseUser = getFirebaseRuntime().auth.currentUser;
+  return !!firebaseUser && !firebaseUser.emailVerified;
+}
+
+/**
+ * @description Reenvía verificación para la cuenta Firebase actual sin simular flujo proveedor.
+ */
+export async function resendEmailVerification() {
+  const firebaseUser = assertFirebaseUser(getFirebaseRuntime().auth.currentUser);
+  if (firebaseUser.emailVerified) {
+    return;
+  }
+  await sendEmailVerification(firebaseUser, {
+    url: buildActionUrl('/auth/verify-email'),
+  });
+}
+
+/**
+ * @description Aplica código Firebase de verificación de correo.
+ */
+export async function applyEmailVerificationCode(oobCode: string) {
+  await applyActionCode(getFirebaseRuntime().auth, oobCode);
+  await recordAuthLifecycleEvent('email-verification-completed', {});
+}
+
+/**
+ * @description Solicita recuperación de contraseña con respuesta neutral.
+ */
+export async function requestPasswordRecovery(email: string): Promise<PasswordRecoveryResult> {
+  const normalizedEmail = normalizeEmail(email);
+  await executeHttpApi({
+    url: resolveApiUrl(`${AUTH_LIFECYCLE_API_PATH}/password-recovery`),
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({ email: normalizedEmail }),
+    parseData: PasswordRecoveryResultSchema,
+    transportMessage: 'Password recovery request failed.',
+  });
+
+  try {
+    await sendPasswordResetEmail(getFirebaseRuntime().auth, normalizedEmail, {
+      url: buildActionUrl('/auth/reset-password'),
+    });
+  } catch {
+    // Firebase account existence must remain neutral to the browser user.
+  }
+  return { accepted: true };
+}
+
+/**
+ * @description Valida código de restablecimiento y conserva correo para auditoría posterior.
+ */
+export async function verifyPasswordResetCodeForEmail(oobCode: string) {
+  const email = await verifyPasswordResetCode(getFirebaseRuntime().auth, oobCode);
+  lastVerifiedResetEmail = email;
+  return email;
+}
+
+/**
+ * @description Confirma nueva contraseña y registra finalización sanitizada.
+ */
+export async function confirmPasswordResetWithCode(oobCode: string, newPassword: string) {
+  await confirmPasswordReset(getFirebaseRuntime().auth, oobCode, newPassword);
+  await recordAuthLifecycleEvent('password-reset-completed', {
+    email: lastVerifiedResetEmail ?? undefined,
+  });
+  lastVerifiedResetEmail = null;
+}
+
+/**
+ * @description Devuelve estado TOTP sin habilitar simulación local.
+ */
+export async function getTotpSetupState(): Promise<TotpSetupState> {
+  const firebaseUser = assertFirebaseUser(getFirebaseRuntime().auth.currentUser);
+  const factors = multiFactor(firebaseUser).enrolledFactors;
+  const hasTotpFactor = factors.some((factor) => factor.factorId === 'totp');
+  return TotpSetupStateSchema.parse({
+    available: false,
+    hasTotpFactor,
+    requiresAdminReset: hasTotpFactor,
+    reason: hasTotpFactor ? 'already-enrolled' : 'provider-unavailable',
   });
 }
 
@@ -211,9 +427,22 @@ export async function validateCredentials(email: string, password: string): Prom
     await recordAuthEvent('login');
     return profile;
   } catch (error) {
-    await signOut(getFirebaseRuntime().auth);
+    if (!(error instanceof SystemError) || error.code !== EMAIL_NOT_VERIFIED_MESSAGE.code) {
+      await signOut(getFirebaseRuntime().auth);
+    }
     throw error;
   }
+}
+
+/**
+ * @description Reanuda un login Firebase ya abierto después de verificar correo y resuelve contextos de dominio.
+ */
+export async function validateCurrentFirebaseUser(): Promise<LoginResult> {
+  const firebaseUser = assertFirebaseUser(getFirebaseRuntime().auth.currentUser);
+  await firebaseUser.reload();
+  const profile = await resolveProfile(firebaseUser);
+  await recordAuthEvent('login');
+  return profile;
 }
 
 /**

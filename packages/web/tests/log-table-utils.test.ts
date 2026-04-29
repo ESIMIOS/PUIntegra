@@ -3,6 +3,7 @@ import { DEFAULT_RFC, LOG_CATEGORIES, LOG_ORIGIN, ROLE, type Log } from '@shared
 import {
   buildLogCsv,
   getAvailableLogColumns,
+  getLogCategoryOptions,
   readVisibleLogColumns,
   requiredLogColumnKeys,
   writeVisibleLogColumns,
@@ -62,6 +63,19 @@ describe('log table utilities', () => {
     expect(accountColumnKeys).not.toContain('searchRequest.status');
     expect(accountColumnKeys).not.toContain('searchRequest.phase');
     expect(accountColumnKeys).not.toContain('searchRequest.phaseStatus');
+  });
+
+  it('exposes auth account lifecycle categories in account and admin log filters', () => {
+    const expectedCategories = [
+      LOG_CATEGORIES.USER_ACCOUNT_PASSWORD_RECOVERY_REQUEST,
+      LOG_CATEGORIES.USER_ACCOUNT_PASSWORD_UPDATE,
+      LOG_CATEGORIES.USER_ACCOUNT_EMAIL_VERIFICATION,
+      LOG_CATEGORIES.USER_ACCOUNT_MFA_ENROLL,
+      LOG_CATEGORIES.USER_ACCOUNT_MFA_UNENROLL,
+    ];
+
+    expect(getLogCategoryOptions('account')).toEqual(expect.arrayContaining(expectedCategories));
+    expect(getLogCategoryOptions('admin')).toEqual(expect.arrayContaining(expectedCategories));
   });
 
   it('exports all fields and caps CSV records at 1000', () => {

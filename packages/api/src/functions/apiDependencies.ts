@@ -13,7 +13,13 @@ import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
 import { InstitutionSchema, PERMISSION_STATUS, ROLE, RoleSchema, SYSTEM_RFC, SystemError } from '@puintegra/shared';
 import { apiSystemMessages } from '../constants/systemMessages.js';
-import { buildAuthEventLog, type AuthEventName } from '../services/authAuditService.js';
+import {
+  AUTH_LIFECYCLE_EVENT_CATEGORY,
+  buildAuthEventLog,
+  buildUserAccountLifecycleLog,
+  type AuthEventName,
+  type AuthLifecycleEventName,
+} from '../services/authAuditService.js';
 import {
   buildInstitutionOnboardingRecords,
   parseInstitutionOnboardingInput,
@@ -51,6 +57,34 @@ type UpdateInstitutionPlanInput = {
   originTraceId: string;
 };
 
+type AuthLifecyclePolicyInput = {
+  email: string;
+  originTraceId: string;
+  requestKey: string;
+};
+
+type AuthLifecycleEventWriteInput = {
+  event: AuthLifecycleEventName;
+  originTraceId: string;
+  userId?: string | null;
+  email?: string | null;
+};
+
+type ResetUserMfaInput = {
+  userId: string;
+  verificationNote: string;
+  actor: {
+    userId: string;
+    email?: string | null;
+    role?: string | null;
+  };
+  originTraceId: string;
+};
+
+const RATE_LIMIT_WINDOW_MS = 5 * 60 * 1000;
+const RATE_LIMIT_MAX_ATTEMPTS = 5;
+const rateLimitBuckets = new Map<string, { count: number; resetAt: number }>();
+
 /**
  * @description Inicializa Firebase Admin SDK una sola vez.
  */
@@ -64,6 +98,24 @@ function initializeAdmin() {
 function getAdminFirestore() {
   initializeAdmin();
   return getFirestore();
+}
+
+/**
+ * @description Aplica una cuota simple en memoria para proteger flujos públicos en runtime API.
+ */
+function assertRateLimit(scope: string, requestKey: string) {
+  const now = Date.now();
+  const key = `${scope}:${requestKey}`;
+  const bucket = rateLimitBuckets.get(key);
+  if (!bucket || bucket.resetAt <= now) {
+    rateLimitBuckets.set(key, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    return;
+  }
+
+  if (bucket.count >= RATE_LIMIT_MAX_ATTEMPTS) {
+    throw new SystemError(apiSystemMessages.auth.lifecycle.rateLimited);
+  }
+  bucket.count += 1;
 }
 
 /**
@@ -120,6 +172,96 @@ async function recordAuthEvent(input: AuthEventWriteInput) {
   );
   await logRef.set(log);
   return log;
+}
+
+/**
+ * @description Verifica elegibilidad de creación de cuenta sin modificar Firebase Auth.
+ */
+async function checkAccountCreationPolicy(input: AuthLifecyclePolicyInput) {
+  assertRateLimit('account-create', input.requestKey);
+  const firestore = getAdminFirestore();
+  const permissions = await firestore
+    .collection('permissions')
+    .where('email', '==', input.email)
+    .where('status', '==', PERMISSION_STATUS.GRANTED)
+    .limit(1)
+    .get();
+  if (permissions.empty) {
+    throw new SystemError(apiSystemMessages.auth.lifecycle.accountCreationUnavailable);
+  }
+
+  try {
+    await getAuth().getUserByEmail(input.email);
+    throw new SystemError(apiSystemMessages.auth.lifecycle.accountCreationUnavailable);
+  } catch (error) {
+    if (error instanceof SystemError) {
+      throw error;
+    }
+    const firebaseError = error as { code?: string };
+    if (firebaseError.code !== 'auth/user-not-found') {
+      throw error;
+    }
+  }
+
+  return { eligible: true };
+}
+
+/**
+ * @description Registra solicitud neutral de recuperación y aplica cuota por correo/IP.
+ */
+async function requestPasswordRecovery(input: AuthLifecyclePolicyInput) {
+  assertRateLimit('password-recovery', input.requestKey);
+  await recordAuthLifecycleEvent({
+    event: 'password-recovery-request',
+    originTraceId: input.originTraceId,
+    email: input.email,
+  });
+  return { accepted: true };
+}
+
+/**
+ * @description Persiste una bitácora sanitizada del ciclo de vida Auth.
+ */
+async function recordAuthLifecycleEvent(input: AuthLifecycleEventWriteInput) {
+  const logRef = getAdminFirestore().collection('logs').doc();
+  const log = buildUserAccountLifecycleLog(
+    {
+      id: logRef.id,
+      category: AUTH_LIFECYCLE_EVENT_CATEGORY[input.event],
+      originTraceId: input.originTraceId,
+      userId: input.userId ?? null,
+      email: input.email ?? null,
+    },
+    Date.now(),
+  );
+  await logRef.set(log);
+  return log;
+}
+
+/**
+ * @description Restablece MFA por asistencia administrativa y audita el evento.
+ */
+async function resetUserMfa(input: ResetUserMfaInput) {
+  const actorRole = typeof input.actor.role === 'string' ? input.actor.role : null;
+  if (actorRole !== ROLE.SYSTEM_ADMINISTRATOR) {
+    throw new SystemError(apiSystemMessages.auth.lifecycle.forbiddenMfaReset);
+  }
+
+  const auth = getAuth();
+  await auth.updateUser(input.userId, {
+    multiFactor: {
+      enrolledFactors: [],
+    },
+  });
+  const user = await auth.getUser(input.userId);
+  await recordAuthLifecycleEvent({
+    event: 'mfa-unenroll',
+    originTraceId: input.originTraceId,
+    userId: input.userId,
+    email: user.email ?? null,
+  });
+
+  return { reset: true };
 }
 
 /**
@@ -242,7 +384,11 @@ export function createApiDependencies() {
   return {
     verifyBearerToken,
     recordAuthEvent,
+    checkAccountCreationPolicy,
     createInstitutionOnboarding,
+    requestPasswordRecovery,
+    recordAuthLifecycleEvent,
+    resetUserMfa,
     updateInstitutionPlan,
   };
 }

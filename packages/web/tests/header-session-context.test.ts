@@ -92,6 +92,7 @@ describe('HeaderSessionContext', () => {
       emojiIcon: 'FI',
       activeRole: ROLE.SYSTEM_ADMINISTRATOR,
       activeRfc: SYSTEM_RFC,
+      emailVerified: true,
       allowedInstitutionRfcs: [DEFAULT_RFC],
       availableContexts: [
         { role: ROLE.INSTITUTION_ADMIN, rfc: DEFAULT_RFC },
@@ -107,6 +108,7 @@ describe('HeaderSessionContext', () => {
       emojiIcon: 'FI',
       activeRole: ROLE.INSTITUTION_ADMIN,
       activeRfc: DEFAULT_RFC,
+      emailVerified: true,
       allowedInstitutionRfcs: [DEFAULT_RFC],
       availableContexts: [
         { role: ROLE.INSTITUTION_ADMIN, rfc: DEFAULT_RFC },

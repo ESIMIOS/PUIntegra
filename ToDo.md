@@ -7,7 +7,6 @@
   - Set a length limit for each text field, and validate on frontEnd and Backend 
   - Validate text fields against RegExp
   - Improve visual success message with a resume of the created institution
-  - Improve error mesages returned from backend to be more explicit (for example, if the RFC is already registered, the error message will be "RFC 'XXX010101GPA' already exists" instead of a generic "An error occurred while creating the institution")
 
 **API**
 ***

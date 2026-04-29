@@ -22,6 +22,7 @@ export function useInstitutionSelectionController() {
     isLoading: computed(() => store.isLoading),
     errorMessage: computed(() => store.userErrorMessage),
     loadInstitutions: () => store.listInstitutions(),
+    loadInstitutionByRfc: (rfc: string) => store.getInstitutionByRfc(rfc),
     loadPermissionsByEmail: (email: string) => store.listPermissionsByEmail(email),
     retry: () => store.clearError(),
   };

@@ -21,9 +21,13 @@ import { apiSystemMessages } from '../constants/systemMessages.js';
 import { apiError, apiOk } from './apiResponse.js';
 import {
   type CreateApiAppDependencies,
+  createAccountCreationPolicyHandler,
   createAuthEventHandler,
+  createAuthLifecycleEventHandler,
   createInstitutionOnboardingHandler,
   createInstitutionPlanUpdateHandler,
+  createMfaResetHandler,
+  createPasswordRecoveryHandler,
   readOriginTraceId,
 } from './routeHandlers.js';
 
@@ -34,6 +38,12 @@ export function createApiApp(dependencies: CreateApiAppDependencies) {
   const app = new Hono();
   const loginHandler = createAuthEventHandler(dependencies, AuthEventNameSchema.enum.login);
   const logoutHandler = createAuthEventHandler(dependencies, AuthEventNameSchema.enum.logout);
+  const accountCreationPolicyHandler = createAccountCreationPolicyHandler(dependencies);
+  const passwordRecoveryHandler = createPasswordRecoveryHandler(dependencies);
+  const passwordResetCompletedHandler = createAuthLifecycleEventHandler(dependencies, 'password-update');
+  const emailVerificationCompletedHandler = createAuthLifecycleEventHandler(dependencies, 'email-verification');
+  const mfaEnrollmentCompletedHandler = createAuthLifecycleEventHandler(dependencies, 'mfa-enroll');
+  const mfaResetHandler = createMfaResetHandler(dependencies);
   const institutionOnboardingHandler = createInstitutionOnboardingHandler(dependencies);
   const institutionPlanUpdateHandler = createInstitutionPlanUpdateHandler(dependencies);
 
@@ -80,12 +90,24 @@ export function createApiApp(dependencies: CreateApiAppDependencies) {
   app.get('/health', (context) => context.json(apiOk({ service: 'puintegra-api' })));
   app.post('/api/auth/events/login', loginHandler);
   app.post('/api/auth/events/logout', logoutHandler);
+  app.post('/api/auth/lifecycle/account-creation-policy', accountCreationPolicyHandler);
+  app.post('/api/auth/lifecycle/password-recovery', passwordRecoveryHandler);
+  app.post('/api/auth/lifecycle/password-reset-completed', passwordResetCompletedHandler);
+  app.post('/api/auth/lifecycle/email-verification-completed', emailVerificationCompletedHandler);
+  app.post('/api/auth/lifecycle/mfa-enrollment-completed', mfaEnrollmentCompletedHandler);
   app.post('/api/admin/institutions', institutionOnboardingHandler);
   app.patch('/api/admin/institutions/:rfc/plan', institutionPlanUpdateHandler);
+  app.post('/api/admin/users/:userId/mfa-reset', mfaResetHandler);
   app.post('/auth/events/login', loginHandler);
   app.post('/auth/events/logout', logoutHandler);
+  app.post('/auth/lifecycle/account-creation-policy', accountCreationPolicyHandler);
+  app.post('/auth/lifecycle/password-recovery', passwordRecoveryHandler);
+  app.post('/auth/lifecycle/password-reset-completed', passwordResetCompletedHandler);
+  app.post('/auth/lifecycle/email-verification-completed', emailVerificationCompletedHandler);
+  app.post('/auth/lifecycle/mfa-enrollment-completed', mfaEnrollmentCompletedHandler);
   app.post('/admin/institutions', institutionOnboardingHandler);
   app.patch('/admin/institutions/:rfc/plan', institutionPlanUpdateHandler);
+  app.post('/admin/users/:userId/mfa-reset', mfaResetHandler);
 
   return app;
 }

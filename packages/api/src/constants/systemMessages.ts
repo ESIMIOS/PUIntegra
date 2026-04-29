@@ -25,6 +25,36 @@ export const apiSystemMessageTree = {
       displayMessage: 'Tu sesión no está autenticada. Inicia sesión y vuelve a intentarlo.',
       httpStatus: HTTP_STATUS.UNAUTHORIZED,
     },
+    lifecycle: {
+      invalidPayload: {
+        code: 'API-AUTH-009',
+        severity: LOG_SEVERITY.WARNING,
+        message: 'Invalid auth lifecycle payload.',
+        displayMessage: 'Revisa los datos enviados antes de continuar.',
+        httpStatus: HTTP_STATUS.BAD_REQUEST,
+      },
+      accountCreationUnavailable: {
+        code: 'API-AUTH-010',
+        severity: LOG_SEVERITY.WARNING,
+        message: 'Account creation is not available for this email.',
+        displayMessage: 'No pudimos crear la cuenta con esos datos. Revisa la invitación institucional o solicita apoyo.',
+        httpStatus: HTTP_STATUS.CONFLICT,
+      },
+      rateLimited: {
+        code: 'API-AUTH-011',
+        severity: LOG_SEVERITY.WARNING,
+        message: 'Auth lifecycle operation was rate limited.',
+        displayMessage: 'Recibimos demasiados intentos. Espera unos minutos antes de volver a intentar.',
+        httpStatus: HTTP_STATUS.UNPROCESSABLE_CONTENT,
+      },
+      forbiddenMfaReset: {
+        code: 'API-AUTH-012',
+        severity: LOG_SEVERITY.WARNING,
+        message: 'Role is not allowed to reset MFA.',
+        displayMessage: 'Tu rol actual no tiene permisos para restablecer MFA.',
+        httpStatus: HTTP_STATUS.FORBIDDEN,
+      },
+    },
   },
   admin: {
     institutions: {

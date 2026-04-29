@@ -58,6 +58,7 @@ describe('route guards', () => {
       emojiIcon: 'FI',
       activeRole: ROLE.INSTITUTION_ADMIN,
       activeRfc: DEFAULT_RFC,
+      emailVerified: true,
       allowedInstitutionRfcs: [DEFAULT_RFC],
       availableContexts: [
         {
@@ -198,6 +199,33 @@ describe('route guards', () => {
     await router.push('/admin/institutions');
 
     expect(router.currentRoute.value.path).toBe('/auth/security-setup');
+  });
+
+  it('redirects authenticated unverified users to /auth/verify-email from protected routes', async () => {
+    const { router, authStore, institutionStore } = createRouterWithStores();
+
+    authStore.setRole(ROLE.INSTITUTION_OPERATOR);
+    authStore.setEmailVerified(false);
+    authStore.setRequiresSecuritySetup(false);
+    authStore.setAllowedInstitutionRfcs([DEFAULT_RFC]);
+    institutionStore.setActiveRfc(DEFAULT_RFC);
+
+    await router.push(`/app/${DEFAULT_RFC}/dashboard`);
+
+    expect(router.currentRoute.value.path).toBe(routePaths.authVerifyEmail);
+  });
+
+  it('allows authenticated unverified users to open verify-email standby page', async () => {
+    const { router, authStore, institutionStore } = createRouterWithStores();
+
+    authStore.setRole(ROLE.INSTITUTION_OPERATOR);
+    authStore.setEmailVerified(false);
+    authStore.setAllowedInstitutionRfcs([DEFAULT_RFC]);
+    institutionStore.setActiveRfc(DEFAULT_RFC);
+
+    await router.push(routePaths.authVerifyEmail);
+
+    expect(router.currentRoute.value.path).toBe(routePaths.authVerifyEmail);
   });
 
   it('redirects to /error/403 when system administrator does not use SYSTEM_RFC', async () => {
