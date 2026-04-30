@@ -413,7 +413,7 @@ describe('Auth Pages', () => {
     await wrapper.find('form').trigger('submit.prevent');
     await flushPromises();
 
-    expect(wrapper.text()).toContain('Código Firebase: auth/invalid-action-code');
+    expect(wrapper.text()).toContain('Código: auth/invalid-action-code');
     expect(wrapper.text()).not.toContain('UNKNOWN-ERROR-001');
   });
 

@@ -30,8 +30,12 @@ onMounted(async () => {
       <VaCardTitle>Configura tu autenticador</VaCardTitle>
       <div class="grid gap-3 text-left mt-4">
         <p class="text-sm opacity-80">
-          PUIntegra usa una sola app de autenticación por usuario para proteger el acceso operativo. Conserva acceso a
-          esa app; si pierdes el dispositivo, contacta a un administrador para restablecer el factor de seguridad.
+          PUIntegra usa MFA(Múltiple factor de autenticación), por o que es necesario contar con un app de autenticación
+          en tu dispositivo móvil para proteger el acceso operativo.
+          <br>
+          <br>
+          Conserva acceso a esa app; si pierdes el dispositivo, contacta a un administrador para restablecer el factor
+          de seguridad.
         </p>
         <VaAlert v-if="state?.reason === 'already-enrolled'" color="info" icon="verified_user" dense>
           Ya tienes una app de autenticación configurada. Para cambiarla, solicita un restablecimiento administrativo.

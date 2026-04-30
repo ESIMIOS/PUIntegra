@@ -40,7 +40,7 @@ function formatVerificationError(error: unknown) {
     ? error.code
     : null;
   if (code) {
-    return `No pudimos verificar el correo porque el código no es válido, ya fue usado o expiró. Código Firebase: ${code}. Solicita un nuevo correo de verificación.`;
+    return `No pudimos verificar el correo porque el código no es válido, ya fue usado o expiró. Código: ${code}. Solicita un nuevo correo de verificación.`;
   }
   return formatUiErrorString(error);
 }
@@ -214,7 +214,7 @@ onMounted(() => {
     title="Cerrar sesión"
     hide-default-actions
   >
-    <p>Se cerrará la sesión Firebase abierta para esta cuenta.</p>
+    <p>Se cerrará la sesión abierta para esta cuenta.</p>
     <template #footer>
       <div class="flex justify-end gap-2">
         <VaButton preset="secondary" :disabled="submitting" @click="showLogoutConfirmation = false">Cancelar</VaButton>
