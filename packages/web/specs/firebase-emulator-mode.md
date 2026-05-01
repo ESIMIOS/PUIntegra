@@ -25,6 +25,8 @@ Define the local development contract for `packages/web` after removing the fron
 
 - The first supported local auth flow is Firebase Auth email/password through the Auth Emulator.
 - Account creation, email verification, password recovery, and password reset use Firebase Auth SDK primitives plus PUIntegra API policy/audit calls.
+- Account settings profile updates (`/account/settings`) use an authenticated API write boundary; the browser does not write Firestore user profile fields directly.
+- Account settings name changes synchronize Firebase Auth `displayName`; phone updates remain Firestore-domain fields in this phase.
 - Users with unverified Firebase email cannot resolve PUIntegra permission contexts or enter protected domains.
 - MFA is deferred for Firebase project configuration and must not be simulated in web runtime.
 - TOTP setup pages show a controlled unavailable state when Firebase TOTP MFA is not enabled.

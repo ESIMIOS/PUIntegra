@@ -1,10 +1,11 @@
 /**
  * @package api
  * @name routeHandlers.ts
- * @version 0.0.1
+ * @version 0.0.2
  * @description Define handlers HTTP de Hono para mantener createApiApp enfocado en wiring de rutas.
  * @author @codex
  * @changelog
+ * - 0.0.2	(2026-05-01)	Agrega handler autenticado para actualización de perfil de cuenta.	@codex
  * - 0.0.1	(2026-04-23)	Extrae handlers de rutas y tipos de dependencias del API.	@codex
  */
 
@@ -66,6 +67,11 @@ export type CreateApiAppDependencies = {
     actor: VerifiedBearerToken;
     originTraceId: string;
   }) => Promise<unknown>;
+  updateAccountProfile?: (input: {
+    payload: unknown;
+    actor: VerifiedBearerToken;
+    originTraceId: string;
+  }) => Promise<unknown>;
   createOriginTraceId: () => string;
 };
 
@@ -80,6 +86,12 @@ const LifecycleCompletionPayloadSchema = z.object({
 
 const MfaResetPayloadSchema = z.object({
   verificationNote: z.string().trim().min(12),
+});
+
+const AccountProfilePayloadSchema = z.object({
+  name: z.string().trim().min(1),
+  emojiIcon: z.string().trim().min(1),
+  phone: z.string().trim().optional().nullable(),
 });
 
 /**
@@ -364,6 +376,41 @@ export function createInstitutionPlanUpdateHandler(dependencies: CreateApiAppDep
     const updated = await dependencies.updateInstitutionPlan({
       rfc,
       payload: normalizedPayload,
+      actor: verified,
+      originTraceId,
+    });
+
+    return context.json(apiOk(updated, { originTraceId }));
+  };
+}
+
+/**
+ * @description Crea handler autenticado para edición de perfil de cuenta propia.
+ */
+export function createAccountProfileUpdateHandler(dependencies: CreateApiAppDependencies) {
+  return async (context: Context) => {
+    const token = readBearerToken(context.req.header('authorization'));
+    const originTraceId = readOriginTraceId(context, dependencies.createOriginTraceId);
+    if (!token) {
+      throw new SystemError(apiSystemMessages.auth.missingBearerToken);
+    }
+
+    const verified = await dependencies.verifyBearerToken(token);
+    if (!dependencies.updateAccountProfile) {
+      throw new Error('updateAccountProfile dependency is not configured.');
+    }
+
+    const parsedPayload = AccountProfilePayloadSchema.safeParse(await readJsonPayload(context));
+    if (!parsedPayload.success) {
+      throw new SystemError(apiSystemMessages.auth.lifecycle.invalidPayload, {
+        details: {
+          issues: parsedPayload.error.issues,
+        },
+      });
+    }
+
+    const updated = await dependencies.updateAccountProfile({
+      payload: parsedPayload.data,
       actor: verified,
       originTraceId,
     });

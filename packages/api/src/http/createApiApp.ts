@@ -1,10 +1,11 @@
 /**
  * @package api
  * @name createApiApp.ts
- * @version 0.0.6
+ * @version 0.0.7
  * @description Construye la aplicación Hono de API con dependencias inyectables para pruebas.
  * @author @codex
  * @changelog
+ * - 0.0.7	(2026-05-01)	Agrega rutas de actualización de perfil de cuenta autenticada.	@codex
  * - 0.0.6	(2026-04-23)	Extrae handlers HTTP a módulos dedicados para evitar crecimiento por archivo.	@codex
  * - 0.0.5	(2026-04-19)	Usa envelope estándar para respuestas API.	@codex
  * - 0.0.4	(2026-04-19)	Elimina payload de contexto para eventos Auth de cuenta.	@codex
@@ -22,6 +23,7 @@ import { apiError, apiOk } from './apiResponse.js';
 import {
   type CreateApiAppDependencies,
   createAccountCreationPolicyHandler,
+  createAccountProfileUpdateHandler,
   createAuthEventHandler,
   createAuthLifecycleEventHandler,
   createInstitutionOnboardingHandler,
@@ -46,6 +48,7 @@ export function createApiApp(dependencies: CreateApiAppDependencies) {
   const mfaResetHandler = createMfaResetHandler(dependencies);
   const institutionOnboardingHandler = createInstitutionOnboardingHandler(dependencies);
   const institutionPlanUpdateHandler = createInstitutionPlanUpdateHandler(dependencies);
+  const accountProfileUpdateHandler = createAccountProfileUpdateHandler(dependencies);
 
   app.onError((error, context) => {
     const originTraceId = readOriginTraceId(context, dependencies.createOriginTraceId);
@@ -98,6 +101,7 @@ export function createApiApp(dependencies: CreateApiAppDependencies) {
   app.post('/api/admin/institutions', institutionOnboardingHandler);
   app.patch('/api/admin/institutions/:rfc/plan', institutionPlanUpdateHandler);
   app.post('/api/admin/users/:userId/mfa-reset', mfaResetHandler);
+  app.patch('/api/account/profile', accountProfileUpdateHandler);
   app.post('/auth/events/login', loginHandler);
   app.post('/auth/events/logout', logoutHandler);
   app.post('/auth/lifecycle/account-creation-policy', accountCreationPolicyHandler);
@@ -108,6 +112,7 @@ export function createApiApp(dependencies: CreateApiAppDependencies) {
   app.post('/admin/institutions', institutionOnboardingHandler);
   app.patch('/admin/institutions/:rfc/plan', institutionPlanUpdateHandler);
   app.post('/admin/users/:userId/mfa-reset', mfaResetHandler);
+  app.patch('/account/profile', accountProfileUpdateHandler);
 
   return app;
 }

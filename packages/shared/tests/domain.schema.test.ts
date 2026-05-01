@@ -59,6 +59,14 @@ describe('stage1 schemas', () => {
       userId: 'mock-user-001',
       name: 'Usuario Mock',
       email: 'admin@example.test',
+      updates: [
+        {
+          updateOrigin: 'USER',
+          updatedAt: NOW,
+          previousPhone: '+525500000000',
+          updatedPhone: '+525500000001',
+        },
+      ],
       createdAt: NOW,
       updatedAt: NOW
     }).success).toBe(true);
@@ -184,6 +192,22 @@ describe('stage1 schemas', () => {
       userId: '',
       name: 'Usuario Mock',
       email: 'admin@example.test',
+      createdAt: NOW,
+      updatedAt: NOW
+    }).success).toBe(false);
+
+    expect(UserSchema.safeParse({
+      userId: 'mock-user-001',
+      name: 'Usuario Mock',
+      email: 'admin@example.test',
+      updates: [
+        {
+          updateOrigin: 'USER',
+          updatedAt: NOW,
+          previousPhone: '',
+          updatedPhone: '+525500000001',
+        },
+      ],
       createdAt: NOW,
       updatedAt: NOW
     }).success).toBe(false);

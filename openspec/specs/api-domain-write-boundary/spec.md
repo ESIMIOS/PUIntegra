@@ -76,3 +76,21 @@ The system SHALL route auth lifecycle operations that require PUIntegra policy, 
 - **THEN** the browser sends the request to an authenticated admin API endpoint
 - **AND** the API removes or resets the Firebase TOTP enrollment through a server-owned path
 - **AND** the API writes a sanitized `USER_ACCOUNT_MFA_UNENROLL` account-level audit log
+
+### Requirement: Account settings profile writes use the API boundary
+
+The system SHALL route authenticated self-profile settings writes through HTTP services in `packages/api`.
+
+#### Scenario: Browser updates account settings
+
+- **WHEN** an authenticated user submits `/account/settings` changes
+- **THEN** the browser sends the payload to an authenticated account profile API endpoint
+- **AND** the browser does not write `users/{uid}` profile fields directly through the Firebase SDK
+
+#### Scenario: Server synchronizes and audits account profile updates
+
+- **WHEN** the API receives a valid authenticated self-profile update request
+- **THEN** the API validates and normalizes `name`, `emojiIcon`, and `phone` before persistence
+- **AND** the API synchronizes Firebase Auth `displayName` when `name` changes
+- **AND** the API appends user update history deltas in `users/{uid}.updates`
+- **AND** the API records a `USER_ACCOUNT_SETTINGS_UPDATE` account-level log with `RFC: null`

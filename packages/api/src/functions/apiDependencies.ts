@@ -1,17 +1,30 @@
 /**
  * @package api
  * @name apiDependencies.ts
- * @version 0.0.1
+ * @version 0.0.2
  * @description Encapsula dependencias del runtime API para reducir complejidad en apiFunction.ts.
  * @author @codex
  * @changelog
+ * - 0.0.2	(2026-05-01)	Agrega actualización autenticada de perfil de cuenta con bitácora y rollback de displayName.	@codex
  * - 0.0.1	(2026-04-23)	Extrae verificación de token, persistencia de logs y onboarding institucional.	@codex
  */
 
 import { getApps, initializeApp } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
-import { InstitutionSchema, PERMISSION_STATUS, ROLE, RoleSchema, SYSTEM_RFC, SystemError } from '@puintegra/shared';
+import {
+  InstitutionSchema,
+  LOG_CATEGORIES,
+  LOG_ORIGIN,
+  LogSchema,
+  PERMISSION_STATUS,
+  ROLE,
+  RoleSchema,
+  SYSTEM_RFC,
+  SystemError,
+  UPDATE_ORIGIN,
+  UserSchema,
+} from '@puintegra/shared';
 import { apiSystemMessages } from '../constants/systemMessages.js';
 import {
   AUTH_LIFECYCLE_EVENT_CATEGORY,
@@ -73,6 +86,16 @@ type AuthLifecycleEventWriteInput = {
 type ResetUserMfaInput = {
   userId: string;
   verificationNote: string;
+  actor: {
+    userId: string;
+    email?: string | null;
+    role?: string | null;
+  };
+  originTraceId: string;
+};
+
+type AccountProfileUpdateInput = {
+  payload: unknown;
   actor: {
     userId: string;
     email?: string | null;
@@ -380,6 +403,156 @@ async function updateInstitutionPlan(input: UpdateInstitutionPlanInput) {
   return parsed.response;
 }
 
+function normalizePhone(value: unknown): string | null {
+  if (typeof value !== 'string') {
+    return null;
+  }
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return null;
+  }
+  const sanitized = trimmed.replaceAll(/\s+/g, '').replaceAll('-', '').replaceAll('(', '').replaceAll(')', '');
+  if (!sanitized.startsWith('+') || sanitized === '+52' || !/^\+\d{8,15}$/.test(sanitized)) {
+    throw new SystemError(apiSystemMessages.auth.lifecycle.invalidPayload, {
+      details: {
+        field: 'phone',
+        reason: 'invalid_phone_format',
+      },
+    });
+  }
+  return sanitized;
+}
+
+/**
+ * @description Actualiza perfil de cuenta propia y persiste trazabilidad de cambios de perfil.
+ */
+async function updateAccountProfile(input: AccountProfileUpdateInput) {
+  const actorRole = typeof input.actor.role === 'string' ? input.actor.role : null;
+  const actorEmail = typeof input.actor.email === 'string' ? input.actor.email.toLowerCase() : null;
+  const parsedRole = actorRole ? RoleSchema.safeParse(actorRole) : null;
+  if (!actorEmail || !parsedRole?.success) {
+    throw new SystemError(apiSystemMessages.auth.lifecycle.invalidPayload, {
+      details: {
+        reason: 'actor_identity_missing',
+      },
+    });
+  }
+
+  const payload = input.payload as {
+    name: string;
+    emojiIcon: string;
+    phone?: string | null;
+  };
+  const normalizedName = payload.name.trim();
+  const normalizedEmojiIcon = payload.emojiIcon.trim();
+  if (!normalizedName || !normalizedEmojiIcon) {
+    throw new SystemError(apiSystemMessages.auth.lifecycle.invalidPayload);
+  }
+  const normalizedPhone = normalizePhone(payload.phone);
+  const now = Date.now();
+  const firestore = getAdminFirestore();
+  const userRef = firestore.collection('users').doc(input.actor.userId);
+  const userSnapshot = await userRef.get();
+  if (!userSnapshot.exists) {
+    throw new SystemError(apiSystemMessages.auth.lifecycle.invalidPayload, {
+      details: { userId: input.actor.userId, reason: 'user_profile_not_found' },
+    });
+  }
+  const currentUser = UserSchema.parse(userSnapshot.data());
+  const previousDisplayName = currentUser.name;
+  const nextPhone = normalizedPhone;
+  const hasNameChange = currentUser.name !== normalizedName;
+  const hasEmojiChange = (currentUser.emojiIcon ?? null) !== normalizedEmojiIcon;
+  const hasPhoneInput = typeof payload.phone === 'string' || payload.phone === null;
+  const hasPhoneChange = hasPhoneInput && (currentUser.phone ?? null) !== nextPhone;
+
+  if (!hasNameChange && !hasEmojiChange && !hasPhoneChange) {
+    return {
+      userId: currentUser.userId,
+      name: currentUser.name,
+      email: currentUser.email,
+      emojiIcon: currentUser.emojiIcon ?? null,
+      phone: currentUser.phone ?? null,
+      updatedAt: currentUser.updatedAt,
+    };
+  }
+
+  const auth = getAuth();
+  if (hasNameChange) {
+    await auth.updateUser(input.actor.userId, { displayName: normalizedName });
+  }
+
+  const updateEntry = {
+    updateOrigin: UPDATE_ORIGIN.USER,
+    updatedByUserId: input.actor.userId,
+    updatedByUserRole: parsedRole.data,
+    updatedByUserEmail: actorEmail,
+    updatedAt: now,
+    ...(hasNameChange ? { previousName: currentUser.name, updatedName: normalizedName } : {}),
+    ...(hasEmojiChange ? { previousEmojiIcon: currentUser.emojiIcon ?? null, updatedEmojiIcon: normalizedEmojiIcon } : {}),
+    ...(hasPhoneChange ? { previousPhone: currentUser.phone ?? null, updatedPhone: nextPhone } : {}),
+  };
+
+  const nextUser = UserSchema.parse({
+    ...currentUser,
+    name: normalizedName,
+    emojiIcon: normalizedEmojiIcon,
+    ...(nextPhone ? { phone: nextPhone } : {}),
+    updates: [...currentUser.updates, updateEntry],
+    updatedAt: now,
+  });
+
+  if (!nextPhone) {
+    delete (nextUser as { phone?: string }).phone;
+  }
+
+  const logRef = firestore.collection('logs').doc();
+  const log = LogSchema.parse({
+    id: logRef.id,
+    category: LOG_CATEGORIES.USER_ACCOUNT_SETTINGS_UPDATE,
+    RFC: null,
+    origin: LOG_ORIGIN.SYSTEM_HTTP_API_CALL,
+    originTraceId: input.originTraceId,
+    userId: input.actor.userId,
+    execution: {
+      executedByUserId: input.actor.userId,
+      executedByUserRole: parsedRole.data,
+      executedByUserEmail: actorEmail,
+    },
+    impact: {
+      impactedUserId: input.actor.userId,
+      impactedUserEmail: actorEmail,
+    },
+    searchRequest: {},
+    createdAt: now,
+  });
+
+  try {
+    const batch = firestore.batch();
+    batch.set(userRef, nextUser);
+    batch.set(logRef, log);
+    await batch.commit();
+  } catch (error) {
+    if (hasNameChange) {
+      try {
+        await auth.updateUser(input.actor.userId, { displayName: previousDisplayName });
+      } catch {
+        // Keep the original persistence failure as the response error.
+      }
+    }
+    throw error;
+  }
+
+  return {
+    userId: nextUser.userId,
+    name: nextUser.name,
+    email: nextUser.email,
+    emojiIcon: nextUser.emojiIcon ?? null,
+    phone: nextUser.phone ?? null,
+    updatedAt: nextUser.updatedAt,
+  };
+}
+
 export function createApiDependencies() {
   return {
     verifyBearerToken,
@@ -390,5 +563,6 @@ export function createApiDependencies() {
     recordAuthLifecycleEvent,
     resetUserMfa,
     updateInstitutionPlan,
+    updateAccountProfile,
   };
 }

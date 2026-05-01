@@ -476,7 +476,7 @@ describe('Auth Pages', () => {
     await flushPromises();
 
     expect(wrapper.text()).toContain('Configura tu autenticador');
-    expect(wrapper.text()).toContain('una sola app de autenticación');
+    expect(wrapper.text()).toContain('Múltiple factor de autenticación');
     expect(wrapper.text()).toContain('contacta a un administrador');
   });
 

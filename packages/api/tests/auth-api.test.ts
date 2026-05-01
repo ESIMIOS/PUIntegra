@@ -604,3 +604,107 @@ describe('auth lifecycle API routes', () => {
     });
   });
 });
+
+describe('account profile API route', () => {
+  it('requires bearer token for self profile updates', async () => {
+    const app = createApiApp(createDefaultDependencies());
+
+    const response = await app.request('/api/account/profile', {
+      method: 'PATCH',
+      body: JSON.stringify({
+        name: 'Nombre Nuevo',
+        emojiIcon: '😀',
+      }),
+    });
+
+    expect(response.status).toBe(HTTP_STATUS.UNAUTHORIZED);
+    expect(await response.json()).toMatchObject({
+      ok: false,
+      error: {
+        code: 'API-AUTH-001',
+      },
+    });
+  });
+
+  it('validates payload before calling account profile update dependency', async () => {
+    const updateAccountProfile = vi.fn();
+    const app = createApiApp(
+      createDefaultDependencies({
+        verifyBearerToken: vi.fn().mockResolvedValue({
+          userId: 'dev-user-001',
+          email: 'owner@example.test',
+          role: ROLE.INSTITUTION_ADMIN,
+        }),
+        updateAccountProfile,
+      }),
+    );
+
+    const response = await app.request('/api/account/profile', {
+      method: 'PATCH',
+      headers: {
+        authorization: 'Bearer token',
+      },
+      body: JSON.stringify({
+        name: ' ',
+        emojiIcon: '',
+      }),
+    });
+
+    expect(response.status).toBe(HTTP_STATUS.BAD_REQUEST);
+    expect(updateAccountProfile).not.toHaveBeenCalled();
+  });
+
+  it('passes normalized actor and payload to account profile update dependency', async () => {
+    const updateAccountProfile = vi.fn().mockResolvedValue({
+      userId: 'dev-user-001',
+      email: 'owner@example.test',
+      name: 'Nombre Nuevo',
+      emojiIcon: '😎',
+      phone: '+525500000001',
+      updatedAt: 1710000000000,
+    });
+    const app = createApiApp(
+      createDefaultDependencies({
+        verifyBearerToken: vi.fn().mockResolvedValue({
+          userId: 'dev-user-001',
+          email: 'owner@example.test',
+          role: ROLE.INSTITUTION_OPERATOR,
+        }),
+        updateAccountProfile,
+      }),
+    );
+
+    const response = await app.request('/api/account/profile', {
+      method: 'PATCH',
+      headers: {
+        authorization: 'Bearer token',
+      },
+      body: JSON.stringify({
+        name: '  Nombre Nuevo  ',
+        emojiIcon: '😎',
+        phone: ' +52 55 0000 0001 ',
+      }),
+    });
+
+    expect(response.status).toBe(HTTP_STATUS.OK);
+    expect(updateAccountProfile).toHaveBeenCalledWith({
+      actor: {
+        userId: 'dev-user-001',
+        email: 'owner@example.test',
+        role: ROLE.INSTITUTION_OPERATOR,
+      },
+      originTraceId: 'generated-trace-id',
+      payload: {
+        name: 'Nombre Nuevo',
+        emojiIcon: '😎',
+        phone: '+52 55 0000 0001',
+      },
+    });
+    expect(await response.json()).toMatchObject({
+      ok: true,
+      data: {
+        name: 'Nombre Nuevo',
+      },
+    });
+  });
+});
