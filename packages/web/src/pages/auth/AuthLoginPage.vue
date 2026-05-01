@@ -21,6 +21,7 @@ import { systemMessageTree } from '@/shared/constants/systemMessages';
 import { useAuthSession } from '@/composables/useAuthSession';
 import { resolvePreferredAuthenticatedPath } from '@/router/authLanding';
 import { hasSavedContext } from '@/gateways/firebaseAuthGateway';
+import { routePaths } from '@/shared/constants/routePaths';
 import SessionContextModal from '@/components/shared/SessionContextModal.vue';
 
 const router = useRouter();
@@ -46,6 +47,10 @@ function setFieldError(message: string) {
 function setAlertError(message: string) {
   errorDisplayMode.value = 'alert';
   errorMessage.value = message;
+}
+
+function isUnverifiedEmailError(error: unknown) {
+  return typeof error === 'object' && error !== null && 'code' in error && error.code === 'AUTH-LOGIN-006';
 }
 
 function resetValidateCredentialsState() {
@@ -94,6 +99,10 @@ async function handleValidateCredentials() {
     showContextModal.value = false;
     if (authStore.pendingLogin) {
       authStore.setPendingLogin(null);
+    }
+    if (isUnverifiedEmailError(error)) {
+      await router.push(routePaths.authVerifyEmail);
+      return;
     }
     setAlertError(formatUiErrorString(error));
   } finally {
@@ -198,6 +207,10 @@ onMounted(() => {
           {{ errorMessage }}
         </VaAlert>
         <VaButton type="submit" :loading="submitting" :disabled="submitting">Iniciar Sesión</VaButton>
+        <div class="flex flex-wrap items-center justify-between gap-2 text-sm">
+          <VaButton preset="plain" size="small" :to="routePaths.authCreateAccount">Crear cuenta</VaButton>
+          <VaButton preset="plain" size="small" :to="routePaths.authForgotPassword">Olvidé mi contraseña</VaButton>
+        </div>
       </form>
     </VaCardContent>
   </VaCard>

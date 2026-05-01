@@ -1,187 +1,37 @@
 /**
  * @package api
  * @name routeHandlers.ts
- * @version 0.0.1
- * @description Define handlers HTTP de Hono para mantener createApiApp enfocado en wiring de rutas.
+ * @version 0.0.3
+ * @description Fachada de handlers HTTP y tipos para mantener createApiApp estable mientras los handlers viven por dominio.
  * @author @codex
  * @changelog
+ * - 0.0.3	(2026-05-01)	Convierte routeHandlers en fachada y delega implementación en módulos por responsabilidad.	@codex
+ * - 0.0.2	(2026-05-01)	Agrega handler autenticado para actualización de perfil de cuenta.	@codex
  * - 0.0.1	(2026-04-23)	Extrae handlers de rutas y tipos de dependencias del API.	@codex
  */
 
-import type { Context } from 'hono';
-import { DEFAULT_RFC, ROLE, SYSTEM_RFC, SystemError, HTTP_STATUS } from '@puintegra/shared';
-import { type AuthEventName } from '../services/authAuditService.js';
-import { apiSystemMessages } from '../constants/systemMessages.js';
-import { parseInstitutionOnboardingInput } from '../services/institutionOnboardingService.js';
-import { parseInstitutionPlanUpdateInput } from '../services/institutionPlanService.js';
-import { apiOk } from './apiResponse.js';
+export type {
+  AuthLifecyclePolicyInput,
+  CreateApiAppDependencies,
+  RecordAuthEventInput,
+  RecordAuthLifecycleEventInput,
+  ResetUserMfaInput,
+  VerifiedBearerToken,
+} from './handlers/types.js';
 
-export type VerifiedBearerToken = {
-  userId: string;
-  email?: string | null;
-  role?: string | null;
-};
+export { readOriginTraceId } from './handlers/shared.js';
 
-export type RecordAuthEventInput = VerifiedBearerToken & {
-  event: AuthEventName;
-  originTraceId: string;
-};
+export {
+  createAccountCreationPolicyHandler,
+  createAuthEventHandler,
+  createAuthLifecycleEventHandler,
+  createMfaResetHandler,
+  createPasswordRecoveryHandler,
+} from './handlers/authHandlers.js';
 
-export type CreateApiAppDependencies = {
-  verifyBearerToken: (token: string) => Promise<VerifiedBearerToken>;
-  recordAuthEvent: (input: RecordAuthEventInput) => Promise<unknown>;
-  createInstitutionOnboarding: (input: {
-    payload: unknown;
-    actor: VerifiedBearerToken;
-    originTraceId: string;
-  }) => Promise<unknown>;
-  updateInstitutionPlan?: (input: {
-    rfc: string;
-    payload: unknown;
-    actor: VerifiedBearerToken;
-    originTraceId: string;
-  }) => Promise<unknown>;
-  createOriginTraceId: () => string;
-};
+export {
+  createInstitutionOnboardingHandler,
+  createInstitutionPlanUpdateHandler,
+} from './handlers/adminHandlers.js';
 
-/**
- * @description Extrae token Bearer del encabezado Authorization.
- */
-function readBearerToken(authorization: string | undefined) {
-  const [scheme, token] = authorization?.split(' ') ?? [];
-  return scheme?.toLowerCase() === 'bearer' && token ? token : null;
-}
-
-/**
- * @description Usa identificadores de ejecución/traza disponibles para correlación con logs de Cloud Functions.
- */
-export function readOriginTraceId(context: Context, createOriginTraceId: () => string) {
-  return (
-    context.req.header('function-execution-id') ??
-    context.req.header('x-cloud-trace-context') ??
-    context.req.header('x-request-id') ??
-    createOriginTraceId()
-  );
-}
-
-/**
- * @description Crea handler de login/logout auditado.
- */
-export function createAuthEventHandler(dependencies: CreateApiAppDependencies, event: AuthEventName) {
-  return async (context: Context) => {
-    const token = readBearerToken(context.req.header('authorization'));
-    const originTraceId = readOriginTraceId(context, dependencies.createOriginTraceId);
-    if (!token) {
-      throw new SystemError(apiSystemMessages.auth.missingBearerToken);
-    }
-
-    const verified = await dependencies.verifyBearerToken(token);
-    await dependencies.recordAuthEvent({
-      event,
-      originTraceId,
-      userId: verified.userId,
-      email: verified.email ?? null,
-    });
-
-    return context.json(
-      apiOk(
-        {
-          recorded: true,
-        },
-        { originTraceId },
-      ),
-    );
-  };
-}
-
-/**
- * @description Crea handler de onboarding institucional de backoffice.
- */
-export function createInstitutionOnboardingHandler(dependencies: CreateApiAppDependencies) {
-  return async (context: Context) => {
-    const token = readBearerToken(context.req.header('authorization'));
-    const originTraceId = readOriginTraceId(context, dependencies.createOriginTraceId);
-    if (!token) {
-      throw new SystemError(apiSystemMessages.auth.missingBearerToken);
-    }
-
-    const verified = await dependencies.verifyBearerToken(token);
-    if (verified.role !== ROLE.SYSTEM_ADMINISTRATOR) {
-      throw new SystemError(apiSystemMessages.admin.institutions.forbiddenRole);
-    }
-
-    let payload: unknown;
-    try {
-      payload = await context.req.json();
-    } catch {
-      throw new SystemError(apiSystemMessages.admin.institutions.invalidPayload, {
-        displayMessage: 'No se pudo leer el payload del alta institucional.',
-      });
-    }
-
-    const normalizedPayload = parseInstitutionOnboardingInput(payload);
-    if (normalizedPayload.RFC === SYSTEM_RFC) {
-      throw new SystemError(apiSystemMessages.admin.institutions.forbiddenOperationOnSystemRfc);
-    }
-    if (normalizedPayload.RFC === DEFAULT_RFC) {
-      throw new SystemError(apiSystemMessages.admin.institutions.forbiddenOperationOnDefaultRfc);
-    }
-
-    const created = await dependencies.createInstitutionOnboarding({
-      payload: normalizedPayload,
-      actor: verified,
-      originTraceId,
-    });
-
-    return context.json(apiOk(created, { originTraceId }), HTTP_STATUS.CREATED);
-  };
-}
-
-/**
- * @description Crea handler de edición auditada de plan institucional de backoffice.
- */
-export function createInstitutionPlanUpdateHandler(dependencies: CreateApiAppDependencies) {
-  return async (context: Context) => {
-    const token = readBearerToken(context.req.header('authorization'));
-    const originTraceId = readOriginTraceId(context, dependencies.createOriginTraceId);
-    if (!token) {
-      throw new SystemError(apiSystemMessages.auth.missingBearerToken);
-    }
-
-    const verified = await dependencies.verifyBearerToken(token);
-    if (verified.role !== ROLE.SYSTEM_ADMINISTRATOR) {
-      throw new SystemError(apiSystemMessages.admin.institutions.forbiddenRole);
-    }
-
-    const rfc = (context.req.param('rfc') ?? '').trim().toUpperCase();
-    if (rfc === SYSTEM_RFC) {
-      throw new SystemError(apiSystemMessages.admin.institutions.forbiddenOperationOnSystemRfc);
-    }
-    if (rfc === DEFAULT_RFC) {
-      throw new SystemError(apiSystemMessages.admin.institutions.forbiddenOperationOnDefaultRfc);
-    }
-
-    let payload: unknown;
-    try {
-      payload = await context.req.json();
-    } catch {
-      throw new SystemError(apiSystemMessages.admin.institutions.invalidPayload, {
-        displayMessage: 'No se pudo leer el payload de edición del plan institucional.',
-      });
-    }
-
-    const normalizedPayload = parseInstitutionPlanUpdateInput(payload);
-    if (!dependencies.updateInstitutionPlan) {
-      throw new Error('updateInstitutionPlan dependency is not configured.');
-    }
-
-    const updated = await dependencies.updateInstitutionPlan({
-      rfc,
-      payload: normalizedPayload,
-      actor: verified,
-      originTraceId,
-    });
-
-    return context.json(apiOk(updated, { originTraceId }));
-  };
-}
+export { createAccountProfileUpdateHandler } from './handlers/accountHandlers.js';

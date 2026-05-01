@@ -9,13 +9,13 @@
  * - 0.0.2	(2026-04-23)	Tipa el rol activo con contrato derivado de `@shared` para evitar primitivas arbitrarias.	@codex
  * - 0.0.1	(2026-04-10)	Versión inicial del archivo.	@tirsomartinezreyes
  */
-import { computed, ref } from "vue";
-import { ROLE, DEFAULT_FUB, DEFAULT_RFC, roleValues } from "@shared";
-import { domainOptions } from "@/shared/constants/domains";
-import { buildNavigationLinks } from "@/shared/constants/navigationCatalog";
-import { useSessionInactivity } from "@/composables/useSessionInactivity";
-import { useRoute } from "vue-router";
-import { useBreakpoint } from "vuestic-ui";
+import { computed, ref } from 'vue';
+import { ROLE, DEFAULT_FUB, DEFAULT_RFC, roleValues } from '@shared';
+import { domainOptions } from '@/shared/constants/domains';
+import { buildNavigationLinks } from '@/shared/constants/navigationCatalog';
+import { useSessionInactivity } from '@/composables/useSessionInactivity';
+import { useRoute } from 'vue-router';
+import { useBreakpoint } from 'vuestic-ui';
 
 type Role = (typeof roleValues)[number];
 
@@ -31,7 +31,7 @@ const { secondsRemaining, isAlerting } = useSessionInactivity();
 const breakpoints = useBreakpoint();
 const currentBreakpoint = computed(() => breakpoints.current);
 
-const selectedDomain = ref<(typeof domainOptions)[number]["key"]>("site");
+const selectedDomain = ref<(typeof domainOptions)[number]['key']>('site');
 
 const isAuthenticated = computed(() => props.activeRole !== ROLE.ANONYMOUS);
 const isSystemRole = computed(() => props.activeRole === ROLE.SYSTEM_ADMINISTRATOR);
@@ -62,10 +62,10 @@ const contextualLinks = computed(() => {
         <strong>{{ activeRole }}</strong>
         <span class="mx-1">·</span>
         RFC activo:
-        <strong>{{ activeRfc || "N/A" }}</strong>
+        <strong>{{ activeRfc || 'N/A' }}</strong>
         <span class="mx-1">·</span>
         Security setup:
-        <strong>{{ requiresSecuritySetup ? "required" : "ok" }}</strong>
+        <strong>{{ requiresSecuritySetup }}</strong>
       </VaAlert>
       <div v-if="isAuthenticated" class="mt-2">
         <VaChip :color="isAlerting ? 'danger' : 'info'" size="small">Session ends in: {{ secondsRemaining }}s</VaChip>

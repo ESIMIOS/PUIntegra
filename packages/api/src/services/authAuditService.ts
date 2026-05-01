@@ -17,6 +17,14 @@ import { z } from "zod";
 
 export const AuthEventNameSchema = z.enum(["login", "logout"]);
 export type AuthEventName = z.infer<typeof AuthEventNameSchema>;
+export const AuthLifecycleEventNameSchema = z.enum([
+  "password-recovery-request",
+  "password-update",
+  "email-verification",
+  "mfa-enroll",
+  "mfa-unenroll",
+]);
+export type AuthLifecycleEventName = z.infer<typeof AuthLifecycleEventNameSchema>;
 
 type AuthUserProfileInput = {
   uid: string;
@@ -40,6 +48,19 @@ type UserCreatedLogInput = {
   email: string;
 };
 
+type UserAccountLifecycleLogInput = {
+  id: string;
+  category:
+    | typeof LOG_CATEGORIES.USER_ACCOUNT_PASSWORD_RECOVERY_REQUEST
+    | typeof LOG_CATEGORIES.USER_ACCOUNT_PASSWORD_UPDATE
+    | typeof LOG_CATEGORIES.USER_ACCOUNT_EMAIL_VERIFICATION
+    | typeof LOG_CATEGORIES.USER_ACCOUNT_MFA_ENROLL
+    | typeof LOG_CATEGORIES.USER_ACCOUNT_MFA_UNENROLL;
+  originTraceId: string;
+  userId?: string | null;
+  email?: string | null;
+};
+
 const AUTH_EVENT_CATEGORY = {
   login: LOG_CATEGORIES.USER_ACCOUNT_LOGIN,
   logout: LOG_CATEGORIES.USER_ACCOUNT_LOGOUT,
@@ -47,6 +68,14 @@ const AUTH_EVENT_CATEGORY = {
   AuthEventName,
   typeof LOG_CATEGORIES.USER_ACCOUNT_LOGIN | typeof LOG_CATEGORIES.USER_ACCOUNT_LOGOUT
 >;
+
+export const AUTH_LIFECYCLE_EVENT_CATEGORY = {
+  "password-recovery-request": LOG_CATEGORIES.USER_ACCOUNT_PASSWORD_RECOVERY_REQUEST,
+  "password-update": LOG_CATEGORIES.USER_ACCOUNT_PASSWORD_UPDATE,
+  "email-verification": LOG_CATEGORIES.USER_ACCOUNT_EMAIL_VERIFICATION,
+  "mfa-enroll": LOG_CATEGORIES.USER_ACCOUNT_MFA_ENROLL,
+  "mfa-unenroll": LOG_CATEGORIES.USER_ACCOUNT_MFA_UNENROLL,
+} as const satisfies Record<AuthLifecycleEventName, UserAccountLifecycleLogInput["category"]>;
 
 /**
  * @description Construye el perfil de dominio a partir del usuario creado en Firebase Auth.
@@ -112,6 +141,27 @@ export function buildUserCreatedLog(input: UserCreatedLogInput, now: number): Lo
     impact: {
       impactedUserId: input.userId,
       impactedUserEmail: input.email,
+    },
+    searchRequest: {},
+    createdAt: now,
+  });
+}
+
+/**
+ * @description Construye bitácora sanitizada de eventos del ciclo de vida de cuenta.
+ */
+export function buildUserAccountLifecycleLog(input: UserAccountLifecycleLogInput, now: number): Log {
+  return LogSchema.parse({
+    id: input.id,
+    category: input.category,
+    RFC: null,
+    origin: LOG_ORIGIN.SYSTEM_HTTP_API_CALL,
+    originTraceId: input.originTraceId,
+    userId: input.userId ?? null,
+    execution: {},
+    impact: {
+      impactedUserId: input.userId ?? null,
+      impactedUserEmail: input.email ?? null,
     },
     searchRequest: {},
     createdAt: now,

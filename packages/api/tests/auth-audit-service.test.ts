@@ -7,6 +7,7 @@ import {
 import { describe, expect, it } from 'vitest';
 import {
   buildAuthEventLog,
+  buildUserAccountLifecycleLog,
   buildUserCreatedLog,
   buildUserProfileFromAuthUser
 } from '../src/services/authAuditService';
@@ -107,5 +108,34 @@ describe('auth audit service', () => {
     });
     expect(Object.hasOwn(log.execution, 'executedByUserId')).toBe(false);
     expect(Object.hasOwn(log.execution, 'executedByUserEmail')).toBe(false);
+  });
+
+  it('builds sanitized auth lifecycle logs without secret-bearing fields', () => {
+    const log = buildUserAccountLifecycleLog({
+      id: 'server-log-id-reset',
+      category: LOG_CATEGORIES.USER_ACCOUNT_PASSWORD_UPDATE,
+      originTraceId: 'reset-trace-id',
+      userId: 'dev-user-001',
+      email: 'owner@example.test'
+    }, 1710000000000);
+
+    expect(LogSchema.parse(log)).toMatchObject({
+      id: 'server-log-id-reset',
+      category: LOG_CATEGORIES.USER_ACCOUNT_PASSWORD_UPDATE,
+      origin: LOG_ORIGIN.SYSTEM_HTTP_API_CALL,
+      originTraceId: 'reset-trace-id',
+      RFC: null,
+      userId: 'dev-user-001',
+      execution: {},
+      impact: {
+        impactedUserId: 'dev-user-001',
+        impactedUserEmail: 'owner@example.test'
+      },
+      searchRequest: {}
+    });
+    expect(JSON.stringify(log)).not.toContain('oobCode');
+    expect(JSON.stringify(log)).not.toContain('password');
+    expect(JSON.stringify(log)).not.toContain('totp');
+    expect(JSON.stringify(log)).not.toContain('secret');
   });
 });

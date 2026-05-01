@@ -70,6 +70,10 @@ function resolveAuthEntryRedirect(to: GuardRoute, authStore: AuthStore, institut
     return null;
   }
 
+  if (!authStore.emailVerified && to.path === routePaths.authVerifyEmail) {
+    return null;
+  }
+
   const preferredPath = resolvePreferredAuthenticatedPath({
     activeRole: authStore.activeRole,
     requiresSecuritySetup: authStore.requiresSecuritySetup,
@@ -78,6 +82,22 @@ function resolveAuthEntryRedirect(to: GuardRoute, authStore: AuthStore, institut
   });
 
   return preferredPath === to.path ? null : preferredPath;
+}
+
+/**
+ * @description Envía usuarios autenticados sin correo verificado a standby de verificación.
+ */
+function resolveEmailVerificationRedirect(to: GuardRoute, meta: MergedMeta, authStore: AuthStore) {
+  if (
+    !meta.requiresAuth ||
+    !authStore.isAuthenticated ||
+    authStore.emailVerified ||
+    to.path === routePaths.authVerifyEmail
+  ) {
+    return null;
+  }
+
+  return routePaths.authVerifyEmail;
 }
 
 /**
@@ -197,6 +217,11 @@ function resolveGuardRedirect(to: GuardRoute, meta: MergedMeta, authStore: AuthS
   const authRequiredRedirect = resolveAuthRequiredRedirect(to, meta, authStore);
   if (authRequiredRedirect) {
     return authRequiredRedirect;
+  }
+
+  const emailVerificationRedirect = resolveEmailVerificationRedirect(to, meta, authStore);
+  if (emailVerificationRedirect) {
+    return emailVerificationRedirect;
   }
 
   const systemContextRedirect = resolveSystemContextRedirect(to, authStore, hasSystemContext, currentRole);

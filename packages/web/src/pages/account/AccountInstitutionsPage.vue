@@ -55,7 +55,9 @@ async function loadInstitutions() {
 
   try {
     permissions.value = await controller.loadPermissionsByEmail(authStore.email);
-    institutions.value = await controller.loadInstitutions();
+    institutions.value = await Promise.all(
+      tenantPermissions.value.map((permission) => controller.loadInstitutionByRfc(permission.RFC)),
+    );
   } catch {
     permissions.value = [];
     institutions.value = [];

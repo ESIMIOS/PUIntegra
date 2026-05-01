@@ -1,10 +1,11 @@
 /**
  * @package web
  * @name bom.ts
- * @version 0.0.1
+ * @version 0.0.2
  * @description Centraliza las dependencias compartidas del frontend mediante el patrón BoM.
  * @author @tirsomartinezreyes
  * @changelog
+ * - 0.0.2	(2026-05-01)	Exporta controlador de configuración de cuenta autenticada.	@codex
  * - 0.0.1	(2026-04-10)	Versión inicial del archivo.	@tirsomartinezreyes
  */
 
@@ -44,6 +45,7 @@ export {
   useAdminInstitutionsController,
   useDashboardController,
   useFindingsController,
+  useAccountSettingsController,
   useInstitutionSelectionController,
   useLogsController,
   useRequestsController,

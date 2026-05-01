@@ -20,8 +20,8 @@ const userId = computed(() => authStore.uid);
 <template>
   <LogsExplorer
     scope="account"
-    title="Logs de cuenta"
-    description="Actividad readonly asociada a la cuenta autenticada."
+    title="Logs"
+    description="Registros de actividad asociada a la cuenta de usuario."
     :fixed-rfc="null"
     :user-id="userId"
   />

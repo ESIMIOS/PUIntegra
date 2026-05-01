@@ -13,7 +13,7 @@ import {
 } from '@shared';
 import AccountInstitutionsPage from '@/pages/account/AccountInstitutionsPage.vue';
 import { useAuthStore } from '@/stores/authStore';
-import { listInstitutions, listPermissionsByEmail } from '@/gateways/firebaseDataGateway';
+import { getInstitutionByRfc, listInstitutions, listPermissionsByEmail } from '@/gateways/firebaseDataGateway';
 import { mountWithVuestic } from './utils/mount';
 
 vi.mock('@/gateways/firebaseDataGateway', () => ({
@@ -29,6 +29,7 @@ vi.mock('@/gateways/firebaseDataGateway', () => ({
 }));
 
 const mockedListInstitutions = vi.mocked(listInstitutions);
+const mockedGetInstitutionByRfc = vi.mocked(getInstitutionByRfc);
 const mockedListPermissionsByEmail = vi.mocked(listPermissionsByEmail);
 
 function institution(RFC: string, name = `Institucion ${RFC}`) {
@@ -86,6 +87,7 @@ describe('account institutions page', () => {
     pinia = createPinia();
     setActivePinia(pinia);
     mockedListInstitutions.mockReset();
+    mockedGetInstitutionByRfc.mockReset();
     mockedListPermissionsByEmail.mockReset();
 
     const authStore = useAuthStore();
@@ -114,13 +116,13 @@ describe('account institutions page', () => {
         status: PERMISSION_STATUS.GRANTED,
       }),
     ]);
-    mockedListInstitutions.mockResolvedValue([
-      institution(DEFAULT_RFC, 'Institucion Demo'),
-    ]);
+    mockedGetInstitutionByRfc.mockResolvedValue(institution(DEFAULT_RFC, 'Institucion Demo'));
 
     const wrapper = mountPage(pinia);
     await flushPromises();
 
+    expect(mockedListInstitutions).not.toHaveBeenCalled();
+    expect(mockedGetInstitutionByRfc).toHaveBeenCalledWith(DEFAULT_RFC);
     expect(wrapper.find('[data-testid="account-institutions-table"]').exists()).toBe(true);
     expect(wrapper.text()).toContain(DEFAULT_RFC);
     expect(wrapper.text()).toContain('Institucion Demo');
@@ -144,21 +146,19 @@ describe('account institutions page', () => {
         status: PERMISSION_STATUS.DENIED,
       }),
     ]);
-    mockedListInstitutions.mockResolvedValue([
-      institution(DEFAULT_RFC, 'Institucion Demo'),
-      institution(SYSTEM_RFC, 'Sistema'),
-    ]);
+    mockedGetInstitutionByRfc.mockResolvedValue(institution(DEFAULT_RFC, 'Institucion Demo'));
 
     const wrapper = mountPage(pinia);
     await flushPromises();
 
     expect(wrapper.text()).toContain(DEFAULT_RFC);
     expect(wrapper.text()).not.toContain(SYSTEM_RFC);
+    expect(mockedGetInstitutionByRfc).toHaveBeenCalledTimes(1);
+    expect(mockedGetInstitutionByRfc).toHaveBeenCalledWith(DEFAULT_RFC);
   });
 
   it('renders empty state when there are no permissions', async () => {
     mockedListPermissionsByEmail.mockResolvedValue([]);
-    mockedListInstitutions.mockResolvedValue([institution(DEFAULT_RFC)]);
 
     const wrapper = mountPage(pinia);
     await flushPromises();
@@ -170,7 +170,6 @@ describe('account institutions page', () => {
     mockedListPermissionsByEmail.mockRejectedValue(
       new SystemError(sharedSystemMessages.data.operation.unknownFailure),
     );
-    mockedListInstitutions.mockResolvedValue([]);
 
     const wrapper = mountPage(pinia);
     await flushPromises();

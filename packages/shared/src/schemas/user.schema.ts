@@ -1,10 +1,11 @@
 /**
  * @package shared
  * @name user.schema.ts
- * @version 0.0.1
+ * @version 0.0.2
  * @description Define el contrato base de usuario y su historial de actualización.
  * @author @tirsomartinezreyes
  * @changelog
+ * - 0.0.2	(2026-05-01)	Agrega trazabilidad de teléfono en historial de actualizaciones de usuario.	@codex
  * - 0.0.1	(2026-04-14)	Versión inicial del archivo.	@tirsomartinezreyes
  */
 
@@ -15,7 +16,9 @@ export const UserUpdateSchema = UpdateActorSchema.extend({
   previousName: z.string().min(1).nullable().optional(),
   updatedName: z.string().min(1).nullable().optional(),
   previousEmojiIcon: z.string().min(1).nullable().optional(),
-  updatedEmojiIcon: z.string().min(1).nullable().optional()
+  updatedEmojiIcon: z.string().min(1).nullable().optional(),
+  previousPhone: z.string().min(1).nullable().optional(),
+  updatedPhone: z.string().min(1).nullable().optional()
 });
 
 export const UserSchema = z.object({
