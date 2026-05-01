@@ -11,7 +11,13 @@
 import { computed, onMounted, ref } from 'vue';
 import { SYSTEM_RFC, type Institution, type Permission } from '@shared';
 import StatusBadge from '@/components/shared/StatusBadge.vue';
+import UpdateHistoryPanel from '@/components/shared/UpdateHistoryPanel.vue';
 import { useInstitutionSelectionController } from '@/composables/useDataControllers';
+import {
+  asHistoryRecord,
+  institutionUpdateFieldDefinitions,
+  permissionUpdateFieldDefinitions,
+} from '@/shared/updateHistory/updateHistoryFieldDefinitions';
 import { useAuthStore } from '@/stores/authStore';
 
 type AccountInstitutionRow = {
@@ -20,6 +26,9 @@ type AccountInstitutionRow = {
   role: Permission['role'];
   email: string;
   status: Permission['status'];
+  permissionId: string;
+  institutionUpdates: Record<string, unknown>[];
+  permissionUpdates: Record<string, unknown>[];
 };
 
 const authStore = useAuthStore();
@@ -36,13 +45,19 @@ const tenantPermissions = computed(() =>
 );
 const rows = computed<AccountInstitutionRow[]>(() =>
   tenantPermissions.value
-    .map((permission) => ({
-      RFC: permission.RFC,
-      institutionName: institutionNameByRfc.value.get(permission.RFC) ?? 'Institucion sin registro',
-      role: permission.role,
-      email: permission.email,
-      status: permission.status,
-    }))
+    .map((permission) => {
+      const sourceInstitution = institutions.value.find((institution) => institution.RFC === permission.RFC);
+      return {
+        RFC: permission.RFC,
+        institutionName: institutionNameByRfc.value.get(permission.RFC) ?? 'Institucion sin registro',
+        role: permission.role,
+        email: permission.email,
+        status: permission.status,
+        permissionId: permission.permissionId,
+        institutionUpdates: asHistoryRecord(sourceInstitution?.updates ?? []),
+        permissionUpdates: asHistoryRecord(permission.updates),
+      };
+    })
     .sort((left, right) => left.RFC.localeCompare(right.RFC)),
 );
 
@@ -119,16 +134,34 @@ onMounted(() => {
                 <th>Rol</th>
                 <th>Correo</th>
                 <th>Estado</th>
+                <th>Historial institución</th>
+                <th>Historial permiso</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="row in rows" :key="`${row.RFC}-${row.email}-${row.role}`">
+              <tr v-for="row in rows" :key="`${row.RFC}-${row.email}-${row.permissionId}`">
                 <td class="bold">{{ row.RFC }}</td>
                 <td>{{ row.institutionName }}</td>
                 <td>{{ row.role }}</td>
                 <td>{{ row.email }}</td>
                 <td>
                   <StatusBadge :status="row.status" />
+                </td>
+                <td>
+                  <UpdateHistoryPanel
+                    :updates="row.institutionUpdates"
+                    :field-definitions="institutionUpdateFieldDefinitions"
+                    mode="icon"
+                    :test-id="`account-institution-history-${row.RFC}`"
+                  />
+                </td>
+                <td>
+                  <UpdateHistoryPanel
+                    :updates="row.permissionUpdates"
+                    :field-definitions="permissionUpdateFieldDefinitions"
+                    mode="icon"
+                    :test-id="`account-permission-history-${row.permissionId}`"
+                  />
                 </td>
               </tr>
             </tbody>

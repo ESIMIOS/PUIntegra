@@ -1,7 +1,7 @@
 import { flushPromises } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { DEFAULT_RFC, INSTITUTION_CONTACT_TYPE } from '@shared';
+import { DEFAULT_RFC, INSTITUTION_CONTACT_TYPE, UPDATE_ORIGIN } from '@shared';
 import AdminInstitutionContactsPage from '@/pages/admin/AdminInstitutionContactsPage.vue';
 import { listContactsByRfc } from '@/gateways/firebaseDataGateway';
 import { mountWithVuestic } from './utils/mount';
@@ -53,7 +53,14 @@ describe('admin institution contacts page', () => {
         phone: '+525500000000',
         contactCURP: 'AAAA000000HDFXXX00',
         contactRFC: 'AAA010101AAA',
-        updates: [],
+        updates: [
+          {
+            previousPhone: '+525500000000',
+            updatedPhone: '+525500000001',
+            updateOrigin: UPDATE_ORIGIN.USER,
+            updatedAt: 1767225601000,
+          },
+        ],
         createdAt: 1767225600000,
         updatedAt: 1767225600000,
       },
@@ -66,5 +73,6 @@ describe('admin institution contacts page', () => {
     expect(wrapper.find('[data-testid="admin-contacts-table"]').exists()).toBe(true);
     expect(wrapper.text()).toContain('Contacto Técnico');
     expect(wrapper.text()).toContain(INSTITUTION_CONTACT_TYPE.TECHNICAL);
+    expect(wrapper.find('[data-testid="admin-contact-history-contact-001"]').exists()).toBe(true);
   });
 });

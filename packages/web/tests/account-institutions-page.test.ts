@@ -9,6 +9,7 @@ import {
   ROLE,
   SYSTEM_RFC,
   SystemError,
+  UPDATE_ORIGIN,
   sharedSystemMessages,
 } from '@shared';
 import AccountInstitutionsPage from '@/pages/account/AccountInstitutionsPage.vue';
@@ -40,7 +41,14 @@ function institution(RFC: string, name = `Institucion ${RFC}`) {
     planStatus: COMMERCIAL_PLAN_STATUS.ACTIVE,
     planStartAt: 1767225600000,
     planFinishAt: 1798675200000,
-    updates: [],
+    updates: [
+      {
+        previousPlanStatus: COMMERCIAL_PLAN_STATUS.WARNING,
+        updatedPlanStatus: COMMERCIAL_PLAN_STATUS.ACTIVE,
+        updateOrigin: UPDATE_ORIGIN.SYSTEM,
+        updatedAt: 1767225601000,
+      },
+    ],
     createdAt: 1767225600000,
     updatedAt: 1767225600000,
   };
@@ -66,7 +74,14 @@ function permission({
     userId: 'dev-user-001',
     role,
     status,
-    updates: [],
+    updates: [
+      {
+        previousStatus: PERMISSION_STATUS.DENIED,
+        updatedStatus: status,
+        updateOrigin: UPDATE_ORIGIN.USER,
+        updatedAt: 1767225601000,
+      },
+    ],
     createdAt: 1767225600000,
     updatedAt: 1767225600000,
   };
@@ -129,6 +144,8 @@ describe('account institutions page', () => {
     expect(wrapper.text()).toContain(ROLE.INSTITUTION_ADMIN);
     expect(wrapper.text()).toContain('admin@example.test');
     expect(wrapper.text()).toContain(PERMISSION_STATUS.GRANTED);
+    expect(wrapper.find(`[data-testid="account-institution-history-${DEFAULT_RFC}"]`).exists()).toBe(true);
+    expect(wrapper.find('[data-testid="account-permission-history-perm-001"]').exists()).toBe(true);
   });
 
   it('filters out reserved SYSTEM_RFC permissions from rows', async () => {
