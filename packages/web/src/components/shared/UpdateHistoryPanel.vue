@@ -10,6 +10,7 @@
  */
 import { computed, ref } from 'vue';
 import type { UpdateOrigin } from '@shared';
+import { UPDATE_ORIGIN } from '@shared';
 import {
   buildUpdateHistoryEvents,
   formatAbsoluteTimeEsMx,
@@ -52,10 +53,10 @@ function openModal() {
 }
 
 function updateOriginLabel(value: UpdateOrigin) {
-  if (value === 'USER') {
+  if (value === UPDATE_ORIGIN.USER) {
     return 'Usuario';
   }
-  if (value === 'PUI') {
+  if (value === UPDATE_ORIGIN.PUI) {
     return 'PUI';
   }
   return 'Sistema';
@@ -98,19 +99,28 @@ const hasEvents = computed(() => events.value.length > 0);
 
         <p v-if="!hasEvents" class="text--secondary" data-testid="update-history-empty">{{ props.emptyText }}</p>
 
-        <div v-else-if="activeView === 'timeline'" class="update-history__timeline" data-testid="update-history-timeline">
-          <article v-for="(event, index) in events" :key="`${event.metadata.updatedAt}-${index}`" class="update-history__event">
+        <div
+          v-else-if="activeView === 'timeline'"
+          class="update-history__timeline"
+          data-testid="update-history-timeline"
+        >
+          <article
+            v-for="(event, index) in events"
+            :key="`${event.metadata.updatedAt}-${index}`"
+            class="update-history__event"
+          >
             <header class="update-history__event-header">
               <p class="bold">{{ formatRelativeTimeEsMx(event.metadata.updatedAt) }}</p>
               <p class="text--secondary">{{ formatAbsoluteTimeEsMx(event.metadata.updatedAt) }}</p>
             </header>
             <p class="text--secondary">
               {{ updateOriginLabel(event.metadata.updateOrigin) }}
-              <span v-if="event.metadata.updatedByUserEmail"> · {{ event.metadata.updatedByUserEmail }}</span>
+              <span v-if="event.metadata.updatedByUserEmail">· {{ event.metadata.updatedByUserEmail }}</span>
             </p>
             <ul>
               <li v-for="change in event.changes" :key="change.key">
-                <span class="bold">{{ change.label }}</span>:
+                <span class="bold">{{ change.label }}</span>
+                :
                 {{ formatHistoryValue(change.previousValue) }}
                 →
                 {{ formatHistoryValue(change.updatedValue) }}
@@ -159,12 +169,7 @@ const hasEvents = computed(() => events.value.length > 0);
       >
         Timeline
       </VaButton>
-      <VaButton
-        size="small"
-        preset="secondary"
-        data-testid="update-history-view-table"
-        @click="activeView = 'table'"
-      >
+      <VaButton size="small" preset="secondary" data-testid="update-history-view-table" @click="activeView = 'table'">
         Tabla
       </VaButton>
     </div>
@@ -172,18 +177,23 @@ const hasEvents = computed(() => events.value.length > 0);
     <p v-if="!hasEvents" class="text--secondary" data-testid="update-history-empty">{{ props.emptyText }}</p>
 
     <div v-else-if="activeView === 'timeline'" class="update-history__timeline" data-testid="update-history-timeline">
-      <article v-for="(event, index) in events" :key="`${event.metadata.updatedAt}-${index}`" class="update-history__event">
+      <article
+        v-for="(event, index) in events"
+        :key="`${event.metadata.updatedAt}-${index}`"
+        class="update-history__event"
+      >
         <header class="update-history__event-header">
           <p class="bold">{{ formatRelativeTimeEsMx(event.metadata.updatedAt) }}</p>
           <p class="text--secondary">{{ formatAbsoluteTimeEsMx(event.metadata.updatedAt) }}</p>
         </header>
         <p class="text--secondary">
           {{ updateOriginLabel(event.metadata.updateOrigin) }}
-          <span v-if="event.metadata.updatedByUserEmail"> · {{ event.metadata.updatedByUserEmail }}</span>
+          <span v-if="event.metadata.updatedByUserEmail">· {{ event.metadata.updatedByUserEmail }}</span>
         </p>
         <ul>
           <li v-for="change in event.changes" :key="change.key">
-            <span class="bold">{{ change.label }}</span>:
+            <span class="bold">{{ change.label }}</span>
+            :
             {{ formatHistoryValue(change.previousValue) }}
             →
             {{ formatHistoryValue(change.updatedValue) }}

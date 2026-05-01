@@ -23,7 +23,7 @@ function mountInline() {
   return mountWithVuestic(UpdateHistoryPanel, {
     props: {
       updates,
-      fieldDefinitions: [{ key: 'planStatus', label: 'Estado del plan' }],
+      fieldDefinitions: [{ key: 'planStatus', dataKey: 'PlanStatus', label: 'Estado del plan' }],
       mode: 'inline',
     },
   });
@@ -51,7 +51,7 @@ describe('UpdateHistoryPanel', () => {
     const wrapper = mountWithVuestic(UpdateHistoryPanel, {
       props: {
         updates,
-        fieldDefinitions: [{ key: 'planStatus', label: 'Estado del plan' }],
+        fieldDefinitions: [{ key: 'planStatus', dataKey: 'PlanStatus', label: 'Estado del plan' }],
         mode: 'icon',
       },
     });
@@ -65,7 +65,7 @@ describe('UpdateHistoryPanel', () => {
     const wrapper = mountWithVuestic(UpdateHistoryPanel, {
       props: {
         updates: [],
-        fieldDefinitions: [{ key: 'planStatus', label: 'Estado del plan' }],
+        fieldDefinitions: [{ key: 'planStatus', dataKey: 'PlanStatus', label: 'Estado del plan' }],
       },
     });
 

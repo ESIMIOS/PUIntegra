@@ -9,10 +9,12 @@ import {
 const fieldDefinitions: UpdateHistoryFieldDefinition[] = [
   {
     key: 'planStatus',
+    dataKey: 'PlanStatus',
     label: 'Estado del plan',
   },
   {
     key: 'phone',
+    dataKey: 'Phone',
     label: 'Telefono',
   },
 ];
@@ -81,5 +83,19 @@ describe('update history utils', () => {
     const twentyFiveMinutesAgo = now - 25 * 60 * 1000;
 
     expect(formatRelativeTimeEsMx(twentyFiveMinutesAgo, now)).toBe('hace 25 min');
+  });
+
+  it('ignores fields that are not part of DATA_KEYS', () => {
+    const events = buildUpdateHistoryEvents([
+      {
+        previousUnknownField: 'A',
+        updatedUnknownField: 'B',
+        updateOrigin: UPDATE_ORIGIN.USER,
+        updatedAt: 1000,
+      },
+    ], fieldDefinitions);
+
+    expect(events).toHaveLength(1);
+    expect(events[0]?.changes).toHaveLength(0);
   });
 });

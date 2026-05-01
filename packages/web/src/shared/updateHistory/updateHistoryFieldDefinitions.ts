@@ -18,41 +18,41 @@ import {
 import type { UpdateHistoryFieldDefinition } from './updateHistoryUtils';
 
 export const institutionUpdateFieldDefinitions: UpdateHistoryFieldDefinition[] = [
-  { key: 'name', label: 'Nombre' },
-  { key: 'plan', label: 'Plan' },
-  { key: 'planStatus', label: 'Estado del plan' },
-  { key: 'planStartAt', label: 'Inicio del plan' },
-  { key: 'planFinishAt', label: 'Fin del plan' },
-  { key: 'sHA256SharedSecret', label: 'SHA256 del secreto compartido' },
+  { key: 'name', dataKey: 'Name', label: 'Nombre' },
+  { key: 'plan', dataKey: 'Plan', label: 'Plan' },
+  { key: 'planStatus', dataKey: 'PlanStatus', label: 'Estado del plan' },
+  { key: 'planStartAt', dataKey: 'PlanStartAt', label: 'Inicio del plan' },
+  { key: 'planFinishAt', dataKey: 'PlanFinishAt', label: 'Fin del plan' },
+  { key: 'SHA256SharedSecret', dataKey: 'SHA256SharedSecret', label: 'SHA256 del secreto compartido' },
 ];
 
 export const permissionUpdateFieldDefinitions: UpdateHistoryFieldDefinition[] = [
-  { key: 'userId', label: 'Usuario' },
-  { key: 'role', label: 'Rol' },
-  { key: 'status', label: 'Estado' },
+  { key: 'userId', dataKey: 'UserId', label: 'Usuario' },
+  { key: 'role', dataKey: 'Role', label: 'Rol' },
+  { key: 'status', dataKey: 'Status', label: 'Estado' },
 ];
 
 export const contactUpdateFieldDefinitions: UpdateHistoryFieldDefinition[] = [
-  { key: 'rFC', label: 'RFC' },
-  { key: 'type', label: 'Tipo' },
-  { key: 'name', label: 'Nombre' },
-  { key: 'phone', label: 'Telefono' },
-  { key: 'contactCURP', label: 'CURP del contacto' },
-  { key: 'efirmaCertificate', label: 'Certificado e.firma' },
-  { key: 'contactRFC', label: 'RFC del contacto' },
+  { key: 'RFC', dataKey: 'RFC', label: 'RFC' },
+  { key: 'type', dataKey: 'Type', label: 'Tipo' },
+  { key: 'name', dataKey: 'Name', label: 'Nombre' },
+  { key: 'phone', dataKey: 'Phone', label: 'Teléfono' },
+  { key: 'contactCURP', dataKey: 'ContactCURP', label: 'CURP del contacto' },
+  { key: 'efirmaCertificate', dataKey: 'EfirmaCertificate', label: 'Certificado e.firma' },
+  { key: 'contactRFC', dataKey: 'ContactRFC', label: 'RFC del contacto' },
 ];
 
 export const requestUpdateFieldDefinitions: UpdateHistoryFieldDefinition[] = [
-  { key: 'searchRequestStatus', label: 'Estatus de solicitud' },
-  { key: 'searchRequestBasicDataPhaseStatus', label: 'Estatus fase datos basicos' },
-  { key: 'searchRequestHistoricalPhaseStatus', label: 'Estatus fase historica' },
-  { key: 'searchRequestContinuousPhaseStatus', label: 'Estatus fase continua' },
+  { key: 'searchRequestStatus', dataKey: 'SearchRequestStatus', label: 'Estatus de solicitud' },
+  { key: 'searchRequestBasicDataPhaseStatus', dataKey: 'SearchRequestBasicDataPhaseStatus', label: 'Estatus fase datos básicos' },
+  { key: 'searchRequestHistoricalPhaseStatus', dataKey: 'SearchRequestHistoricalPhaseStatus', label: 'Estatus fase histórica' },
+  { key: 'searchRequestContinuousPhaseStatus', dataKey: 'SearchRequestContinuousPhaseStatus', label: 'Estatus fase contínua' },
 ];
 
 export const userUpdateFieldDefinitions: UpdateHistoryFieldDefinition[] = [
-  { key: 'name', label: 'Nombre' },
-  { key: 'emojiIcon', label: 'Emoji' },
-  { key: 'phone', label: 'Telefono' },
+  { key: 'name', dataKey: 'Name', label: 'Nombre' },
+  { key: 'emojiIcon', dataKey: 'EmojiIcon', label: 'Emoji' },
+  { key: 'phone', dataKey: 'Phone', label: 'Teléfono' },
 ];
 
 /**

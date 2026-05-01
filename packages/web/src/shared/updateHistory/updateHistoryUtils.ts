@@ -5,13 +5,14 @@
  * @description Transforma y formatea historiales de actualizacion basados en pares previousX y updatedX.
  * @author @codex
  * @changelog
- * - 0.0.1	(2026-05-01)	Version inicial del archivo.	@codex
+ * - 0.0.1	(2026-05-01)	Versión inicial del archivo.	@codex
  */
 
 import type { UpdateActor, UpdateOrigin } from '@shared';
 
 export type UpdateHistoryFieldDefinition = {
   key: string;
+  dataKey: string;
   label: string;
 };
 
@@ -27,46 +28,28 @@ export type UpdateHistoryEvent = {
   changes: UpdateHistoryChange[];
 };
 
-const METADATA_KEYS = new Set([
-  'updatedAt',
-  'updateOrigin',
-  'updatedByUserId',
-  'updatedByUserRole',
-  'updatedByUserEmail',
-]);
-
 /**
- * @description Convierte el primer caracter a minuscula para derivar nombres de campo.
+ * @description Resuelve cambios usando solo DATA_KEYS permitidos por fieldDefinitions.
  */
-function lowerFirst(value: string) {
-  return value.charAt(0).toLowerCase() + value.slice(1);
-}
-
-/**
- * @description Crea un mapa por key de definiciones de campos para busquedas O(1).
- */
-function buildFieldDefinitionMap(fieldDefinitions: UpdateHistoryFieldDefinition[]) {
-  return new Map(fieldDefinitions.map((item) => [item.key, item]));
-}
-
-/**
- * @description Descubre los sufijos de campo presentes en claves previousX y updatedX.
- */
-function discoverFieldKeys(update: Record<string, unknown>) {
-  const keys = new Set<string>();
-  for (const key of Object.keys(update)) {
-    if (METADATA_KEYS.has(key)) {
+function resolveAllowedChanges(
+  update: Record<string, unknown>,
+  fieldDefinitions: UpdateHistoryFieldDefinition[],
+) {
+  const changes: UpdateHistoryChange[] = [];
+  for (const fieldDefinition of fieldDefinitions) {
+    const previousKey = `previous${fieldDefinition.dataKey}`;
+    const updatedKey = `updated${fieldDefinition.dataKey}`;
+    if (!(previousKey in update) && !(updatedKey in update)) {
       continue;
     }
-    if (key.startsWith('previous') && key.length > 'previous'.length) {
-      keys.add(lowerFirst(key.slice('previous'.length)));
-      continue;
-    }
-    if (key.startsWith('updated') && key.length > 'updated'.length) {
-      keys.add(lowerFirst(key.slice('updated'.length)));
-    }
+    changes.push({
+      key: fieldDefinition.key,
+      label: fieldDefinition.label,
+      previousValue: update[previousKey],
+      updatedValue: update[updatedKey],
+    });
   }
-  return [...keys];
+  return changes;
 }
 
 /**
@@ -126,21 +109,8 @@ export function buildUpdateHistoryEvents(
   updates: Record<string, unknown>[],
   fieldDefinitions: UpdateHistoryFieldDefinition[],
 ) {
-  const definitionMap = buildFieldDefinitionMap(fieldDefinitions);
   const events: UpdateHistoryEvent[] = updates.map((update) => {
-    const discoveredKeys = discoverFieldKeys(update);
-    const changes: UpdateHistoryChange[] = discoveredKeys.map((fieldKey) => {
-      const definition = definitionMap.get(fieldKey);
-      const fieldSuffix = fieldKey.charAt(0).toUpperCase() + fieldKey.slice(1);
-      const previousKey = `previous${fieldSuffix}`;
-      const updatedKey = `updated${fieldSuffix}`;
-      return {
-        key: fieldKey,
-        label: definition?.label ?? fieldKey,
-        previousValue: update[previousKey],
-        updatedValue: update[updatedKey],
-      };
-    });
+    const changes = resolveAllowedChanges(update, fieldDefinitions);
 
     const metadata = {
       updatedAt: Number(update.updatedAt ?? 0),
