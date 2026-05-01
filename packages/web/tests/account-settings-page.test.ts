@@ -1,7 +1,7 @@
 import { flushPromises } from '@vue/test-utils';
 import { createPinia, setActivePinia, type Pinia } from 'pinia';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { ROLE } from '@shared';
+import { ROLE, UPDATE_ORIGIN } from '@shared';
 import AccountSettingsPage from '@/pages/account/AccountSettingsPage.vue';
 import { useAuthStore } from '@/stores/authStore';
 import { getUserById } from '@/gateways/firebaseDataGateway';
@@ -65,7 +65,14 @@ describe('account settings page', () => {
       email: 'owner@example.test',
       phone: '+525500000000',
       emojiIcon: '😀',
-      updates: [],
+      updates: [
+        {
+          previousName: 'Nombre Viejo',
+          updatedName: 'Nombre Inicial',
+          updateOrigin: UPDATE_ORIGIN.USER,
+          updatedAt: 1710000000000,
+        },
+      ],
       createdAt: 1710000000000,
       updatedAt: 1710000000000,
     });
@@ -87,6 +94,7 @@ describe('account settings page', () => {
     expect(wrapper.find('[data-testid="account-settings-email"]').exists()).toBe(true);
     expect((wrapper.find('[data-testid="account-settings-name"] input').element as HTMLInputElement).value).toBe('Nombre Inicial');
     expect((wrapper.find('[data-testid="account-settings-phone"] input').element as HTMLInputElement).value).toBe('+525500000000');
+    expect(wrapper.find('[data-testid="account-settings-update-history"]').exists()).toBe(true);
   });
 
   it('updates profile values and refreshes visible auth identity', async () => {

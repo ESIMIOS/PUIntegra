@@ -1,7 +1,14 @@
 import { flushPromises } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { DEFAULT_FUB, DEFAULT_RFC, PUI_LUGAR_NACIMIENTO, SEARCH_REQUEST_PHASE_STATUS, SEARCH_REQUEST_STATUS } from '@shared';
+import {
+  DEFAULT_FUB,
+  DEFAULT_RFC,
+  PUI_LUGAR_NACIMIENTO,
+  SEARCH_REQUEST_PHASE_STATUS,
+  SEARCH_REQUEST_STATUS,
+  UPDATE_ORIGIN,
+} from '@shared';
 import AdminInstitutionRequestsPage from '@/pages/admin/AdminInstitutionRequestsPage.vue';
 import { listRequestsByRfc } from '@/gateways/firebaseDataGateway';
 import { mountWithVuestic } from './utils/mount';
@@ -64,7 +71,14 @@ describe('admin institution requests page', () => {
           fecha_desaparicion: '2026-04-15',
           lugar_nacimiento: PUI_LUGAR_NACIMIENTO.DF,
         },
-        updates: [],
+        updates: [
+          {
+            previousSearchRequestStatus: SEARCH_REQUEST_STATUS.REVOKED,
+            updatedSearchRequestStatus: SEARCH_REQUEST_STATUS.ACTIVE,
+            updateOrigin: UPDATE_ORIGIN.USER,
+            updatedAt: 1767225601000,
+          },
+        ],
         createdAt: 1767225600000,
         updatedAt: 1767225600000,
       },
@@ -77,5 +91,6 @@ describe('admin institution requests page', () => {
     expect(wrapper.find('[data-testid="admin-requests-table"]').exists()).toBe(true);
     expect(wrapper.text()).toContain(DEFAULT_FUB);
     expect(wrapper.text()).toContain('AAAA000000HDFXXX00');
+    expect(wrapper.find('[data-testid="admin-request-history-request-001"]').exists()).toBe(true);
   });
 });

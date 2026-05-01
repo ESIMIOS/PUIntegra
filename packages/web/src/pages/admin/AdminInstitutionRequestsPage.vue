@@ -12,8 +12,13 @@
 import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import type { Request } from '@shared';
+import UpdateHistoryPanel from '@/components/shared/UpdateHistoryPanel.vue';
 import { useAdminTenantInspectionController } from '@/composables/useDataControllers';
 import { routePaths } from '@/shared/constants/routePaths';
+import {
+  asHistoryRecord,
+  requestUpdateFieldDefinitions,
+} from '@/shared/updateHistory/updateHistoryFieldDefinitions';
 
 const route = useRoute();
 const router = useRouter();
@@ -81,6 +86,7 @@ onMounted(loadRequests);
                 <th>Histórica</th>
                 <th>Continua</th>
                 <th>Fecha desaparición</th>
+                <th>Historial</th>
               </tr>
             </thead>
             <tbody>
@@ -92,6 +98,14 @@ onMounted(loadRequests);
                 <td>{{ request.searchRequestHistoricalPhaseStatus }}</td>
                 <td>{{ request.searchRequestContinuousPhaseStatus }}</td>
                 <td>{{ formatDate(request.missingDate) }}</td>
+                <td>
+                  <UpdateHistoryPanel
+                    :updates="asHistoryRecord(request.updates)"
+                    :field-definitions="requestUpdateFieldDefinitions"
+                    mode="icon"
+                    :test-id="`admin-request-history-${request.requestId}`"
+                  />
+                </td>
               </tr>
             </tbody>
           </table>

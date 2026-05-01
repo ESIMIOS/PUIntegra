@@ -12,8 +12,13 @@
 import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import type { Contact } from '@shared';
+import UpdateHistoryPanel from '@/components/shared/UpdateHistoryPanel.vue';
 import { useAdminTenantInspectionController } from '@/composables/useDataControllers';
 import { routePaths } from '@/shared/constants/routePaths';
+import {
+  asHistoryRecord,
+  contactUpdateFieldDefinitions,
+} from '@/shared/updateHistory/updateHistoryFieldDefinitions';
 
 const route = useRoute();
 const router = useRouter();
@@ -75,6 +80,7 @@ onMounted(loadContacts);
                 <th>Teléfono</th>
                 <th>CURP</th>
                 <th>RFC contacto</th>
+                <th>Historial</th>
               </tr>
             </thead>
             <tbody>
@@ -84,6 +90,14 @@ onMounted(loadContacts);
                 <td>{{ contact.phone }}</td>
                 <td>{{ contact.contactCURP }}</td>
                 <td>{{ contact.contactRFC ?? 'Sin RFC' }}</td>
+                <td>
+                  <UpdateHistoryPanel
+                    :updates="asHistoryRecord(contact.updates)"
+                    :field-definitions="contactUpdateFieldDefinitions"
+                    mode="icon"
+                    :test-id="`admin-contact-history-${contact.contactId}`"
+                  />
+                </td>
               </tr>
             </tbody>
           </table>

@@ -80,6 +80,18 @@ Define the baseline webapp architecture for local development and navigable skel
 - `/auth/security-setup` provides TOTP setup guidance and a controlled unavailable state unless Firebase TOTP MFA is enabled.
 
 ## Shared state and testing patterns
+### Update history component contract
+- A shared update-history UI component exists for non-log entities that expose an `updates` array using shared Zod-inferred contracts.
+- The component supports two rendering modes:
+  - inline content on the page
+  - icon trigger that opens a modal with details
+- The component supports two views:
+  - timeline for chronological friendly review (default)
+  - table for analytical traceability
+- The component derives changed fields from `previousX` and `updatedX` pairs and treats `updatedAt`, `updateOrigin`, `updatedByUserId`, `updatedByUserRole`, and `updatedByUserEmail` as event metadata.
+- Admin and account pages SHOULD reuse this component instead of duplicating update-history parsing or rendering logic.
+- Log inspection pages are excluded from this contract and remain covered by the logs explorer components.
+
 ### Spanish UI copy quality
 - User-facing copy in Spanish must preserve correct accents and orthography (for example: `sesión`, `acción`, `ocurrió`).
 - Shared message catalogs (`src/shared/constants/*Messages.ts`) are the source of truth and must be reviewed for orthographic consistency before merge.

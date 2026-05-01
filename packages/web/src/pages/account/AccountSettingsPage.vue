@@ -11,7 +11,12 @@
  */
 import { formatUiErrorString, SystemError, sharedSystemMessages } from '@shared';
 import { computed, onMounted, ref } from 'vue';
+import UpdateHistoryPanel from '@/components/shared/UpdateHistoryPanel.vue';
 import { useAccountSettingsController } from '@/composables/useDataControllers';
+import {
+  asHistoryRecord,
+  userUpdateFieldDefinitions,
+} from '@/shared/updateHistory/updateHistoryFieldDefinitions';
 import { useAuthStore } from '@/stores/authStore';
 
 const EMOJI_OPTIONS = [
@@ -69,6 +74,7 @@ const showEmojiModal = ref(false);
 const showCancelConfirmModal = ref(false);
 const successMessage = ref<string | null>(null);
 const localError = ref<string | null>(null);
+const userUpdates = ref<Record<string, unknown>[]>([]);
 const initialFormState = ref({
   name: '',
   emojiIcon: EMOJI_OPTIONS[0] as string,
@@ -127,6 +133,7 @@ async function loadProfile() {
       emojiIcon: emojiIcon.value,
       phone: phone.value,
     };
+    userUpdates.value = asHistoryRecord(profile.updates);
   } catch {
     // DataStore exposes normalized error state.
   }
@@ -267,6 +274,13 @@ onMounted(() => {
               </VaButton>
             </div>
           </VaForm>
+        </VaCardContent>
+      </VaCard>
+
+      <VaCard data-testid="account-settings-update-history">
+        <VaCardContent>
+          <VaCardTitle>Historial de cambios</VaCardTitle>
+          <UpdateHistoryPanel :updates="userUpdates" :field-definitions="userUpdateFieldDefinitions" mode="inline" />
         </VaCardContent>
       </VaCard>
     </section>

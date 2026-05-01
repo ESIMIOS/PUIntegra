@@ -1,7 +1,7 @@
 import { flushPromises } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { DEFAULT_RFC, PERMISSION_STATUS, ROLE, SystemError, sharedSystemMessages } from '@shared';
+import { DEFAULT_RFC, PERMISSION_STATUS, ROLE, SystemError, UPDATE_ORIGIN, sharedSystemMessages } from '@shared';
 import AdminInstitutionPermissionsPage from '@/pages/admin/AdminInstitutionPermissionsPage.vue';
 import { getInstitutionByRfc, listPermissionsByRfc } from '@/gateways/firebaseDataGateway';
 import { routePaths } from '@/shared/constants/routePaths';
@@ -87,7 +87,14 @@ describe('admin institution permissions page', () => {
         email: 'admin@example.test',
         role: ROLE.INSTITUTION_ADMIN,
         status: PERMISSION_STATUS.GRANTED,
-        updates: [],
+        updates: [
+          {
+            previousStatus: PERMISSION_STATUS.DENIED,
+            updatedStatus: PERMISSION_STATUS.GRANTED,
+            updateOrigin: UPDATE_ORIGIN.USER,
+            updatedAt: 1767225601000,
+          },
+        ],
         createdAt: 1767225600000,
         updatedAt: 1767225600000,
       },
@@ -102,6 +109,7 @@ describe('admin institution permissions page', () => {
     expect(wrapper.text()).toContain('admin@example.test');
     expect(wrapper.text()).toContain(ROLE.INSTITUTION_ADMIN);
     expect(wrapper.text()).toContain(PERMISSION_STATUS.GRANTED);
+    expect(wrapper.find('[data-testid="admin-permission-history-perm-001"]').exists()).toBe(true);
   });
 
   it('renders load errors with back action', async () => {

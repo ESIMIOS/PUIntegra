@@ -13,8 +13,13 @@ import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import type { Institution } from '@shared';
 import StatusBadge from '@/components/shared/StatusBadge.vue';
+import UpdateHistoryPanel from '@/components/shared/UpdateHistoryPanel.vue';
 import { useAdminInstitutionsController } from '@/composables/useDataControllers';
 import { routePaths } from '@/shared/constants/routePaths';
+import {
+  asHistoryRecord,
+  institutionUpdateFieldDefinitions,
+} from '@/shared/updateHistory/updateHistoryFieldDefinitions';
 
 const route = useRoute();
 const router = useRouter();
@@ -159,6 +164,13 @@ onMounted(() => {
               </tr>
             </tbody>
           </table>
+          <div class="mt-3" data-testid="admin-institution-update-history">
+            <UpdateHistoryPanel
+              :updates="asHistoryRecord(institution.updates)"
+              :field-definitions="institutionUpdateFieldDefinitions"
+              mode="inline"
+            />
+          </div>
         </VaCardContent>
       </VaCard>
 
