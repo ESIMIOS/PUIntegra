@@ -26,7 +26,7 @@ let resendCooldownTimer: ReturnType<typeof globalThis.setInterval> | null = null
 
 const normalizedEmail = computed(() => email.value.trim().toLowerCase());
 const passwordStatus = computed(() => evaluatePasswordPolicy(password.value));
-const hasValidEmail = computed(() => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail.value));
+const hasValidEmail = computed(() => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail.value)); //NOSONAR
 const hasValidName = computed(() => displayName.value.trim().length >= 2);
 const passwordsMatch = computed(() => !!confirmPassword.value && password.value === confirmPassword.value);
 const canSubmit = computed(

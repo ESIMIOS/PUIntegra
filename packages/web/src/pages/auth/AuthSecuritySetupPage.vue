@@ -30,7 +30,7 @@ onMounted(async () => {
       <VaCardTitle>Configura tu autenticador</VaCardTitle>
       <div class="grid gap-3 text-left mt-4">
         <p class="text-sm opacity-80">
-          PUIntegra usa MFA(Múltiple factor de autenticación), por o que es necesario contar con un app de autenticación
+          PUIntegra usa MFA(Múltiple factor de autenticación), por lo que es necesario contar con una app de autenticación
           en tu dispositivo móvil para proteger el acceso operativo.
           <br>
           <br>

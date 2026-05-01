@@ -72,7 +72,7 @@ async function handleSubmit() {
   }
   loading.value = true;
   try {
-    await confirmPasswordResetWithCode(actionCode.value!, password.value);
+    await confirmPasswordResetWithCode(actionCode.value!, password.value, accountEmail.value ?? undefined);
     successMessage.value = 'Tu contraseña fue actualizada correctamente. Ya puedes iniciar sesión con la nueva contraseña.';
     accountEmail.value = null;
     actionCode.value = null;

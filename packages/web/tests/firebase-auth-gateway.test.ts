@@ -257,7 +257,7 @@ describe('firebase auth gateway', () => {
     mocks.verifyPasswordResetCode.mockResolvedValue('owner@example.test');
 
     await expect(verifyPasswordResetCodeForEmail('reset-code')).resolves.toBe('owner@example.test');
-    await confirmPasswordResetWithCode('reset-code', 'StrongPass1');
+    await confirmPasswordResetWithCode('reset-code', 'StrongPass1', 'owner@example.test');
 
     expect(mocks.verifyPasswordResetCode).toHaveBeenCalledWith(mocks.auth, 'reset-code');
     expect(mocks.confirmPasswordReset).toHaveBeenCalledWith(mocks.auth, 'reset-code', 'StrongPass1');

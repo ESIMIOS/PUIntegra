@@ -108,8 +108,6 @@ export type AccountCreationInput = z.infer<typeof AccountCreationInputSchema>;
 export type PasswordRecoveryResult = z.infer<typeof PasswordRecoveryResultSchema>;
 export type TotpSetupState = z.infer<typeof TotpSetupStateSchema>;
 
-let lastVerifiedResetEmail: string | null = null;
-
 /**
  * @description Resuelve almacenamiento local disponible para el contexto activo.
  */
@@ -377,23 +375,20 @@ export async function requestPasswordRecovery(email: string): Promise<PasswordRe
 }
 
 /**
- * @description Valida código de restablecimiento y conserva correo para auditoría posterior.
+ * @description Valida código de restablecimiento y retorna el correo asociado.
  */
 export async function verifyPasswordResetCodeForEmail(oobCode: string) {
-  const email = await verifyPasswordResetCode(getFirebaseRuntime().auth, oobCode);
-  lastVerifiedResetEmail = email;
-  return email;
+  return verifyPasswordResetCode(getFirebaseRuntime().auth, oobCode);
 }
 
 /**
  * @description Confirma nueva contraseña y registra finalización sanitizada.
  */
-export async function confirmPasswordResetWithCode(oobCode: string, newPassword: string) {
+export async function confirmPasswordResetWithCode(oobCode: string, newPassword: string, verifiedEmail?: string) {
   await confirmPasswordReset(getFirebaseRuntime().auth, oobCode, newPassword);
   await recordAuthLifecycleEvent('password-reset-completed', {
-    email: lastVerifiedResetEmail ?? undefined,
+    email: verifiedEmail,
   });
-  lastVerifiedResetEmail = null;
 }
 
 /**

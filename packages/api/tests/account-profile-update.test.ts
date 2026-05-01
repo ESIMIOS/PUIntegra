@@ -31,69 +31,88 @@ vi.mock('firebase-admin/auth', () => ({
   }),
 }));
 
+function createDocSnapshot(name: string) {
+  if (name === 'users') {
+    return {
+      exists: !!state.userDoc,
+      data: () => state.userDoc,
+    };
+  }
+  return {
+    exists: false,
+    data: () => null,
+  };
+}
+
+function persistDoc(name: string, payload: Record<string, unknown>) {
+  if (name === 'users') {
+    state.userDoc = payload;
+    return Promise.resolve();
+  }
+  if (name === 'logs') {
+    state.logs.push(payload);
+    return Promise.resolve();
+  }
+  return Promise.resolve();
+}
+
+function createFirestoreDoc(name: string, id?: string) {
+  const docId = id ?? `${name}-generated-id`;
+  return {
+    id: docId,
+    async get() {
+      return createDocSnapshot(name);
+    },
+    set(payload: Record<string, unknown>) {
+      return persistDoc(name, payload);
+    },
+  };
+}
+
+function createWhereChain() {
+  return {
+    where: () => ({
+      limit: () => ({
+        async get() {
+          return { empty: true, docs: [] };
+        },
+      }),
+    }),
+  };
+}
+
+function resolveBatchTargetName(refId: string) {
+  return refId.includes('logs') || refId === 'logs-generated-id' ? 'logs' : 'users';
+}
+
+function createBatchMock() {
+  const operations: Array<{ name: string; payload: Record<string, unknown> }> = [];
+  return {
+    set(ref: { id: string }, payload: Record<string, unknown>) {
+      operations.push({ name: resolveBatchTargetName(ref.id), payload });
+    },
+    async commit() {
+      if (state.batchCommitError) {
+        throw state.batchCommitError;
+      }
+      for (const operation of operations) {
+        if (operation.name === 'users') {
+          state.userDoc = operation.payload;
+        } else {
+          state.logs.push(operation.payload);
+        }
+      }
+    },
+  };
+}
+
 vi.mock('firebase-admin/firestore', () => ({
   getFirestore: () => ({
     collection: (name: string) => ({
-      doc: (id?: string) => {
-        const docId = id ?? `${name}-generated-id`;
-        return {
-          id: docId,
-          async get() {
-            if (name === 'users') {
-              return {
-                exists: !!state.userDoc,
-                data: () => state.userDoc,
-              };
-            }
-            return {
-              exists: false,
-              data: () => null,
-            };
-          },
-          set(payload: Record<string, unknown>) {
-            if (name === 'users') {
-              state.userDoc = payload;
-              return Promise.resolve();
-            }
-            if (name === 'logs') {
-              state.logs.push(payload);
-              return Promise.resolve();
-            }
-            return Promise.resolve();
-          },
-        };
-      },
-      where: () => ({
-        where: () => ({
-          limit: () => ({
-            async get() {
-              return { empty: true, docs: [] };
-            },
-          }),
-        }),
-      }),
+      doc: (id?: string) => createFirestoreDoc(name, id),
+      where: () => createWhereChain(),
     }),
-    batch: () => {
-      const operations: Array<{ name: string; payload: Record<string, unknown> }> = [];
-      return {
-        set(ref: { id: string }, payload: Record<string, unknown>) {
-          const name = ref.id.includes('logs') || ref.id === 'logs-generated-id' ? 'logs' : 'users';
-          operations.push({ name, payload });
-        },
-        async commit() {
-          if (state.batchCommitError) {
-            throw state.batchCommitError;
-          }
-          for (const operation of operations) {
-            if (operation.name === 'users') {
-              state.userDoc = operation.payload;
-            } else {
-              state.logs.push(operation.payload);
-            }
-          }
-        },
-      };
-    },
+    batch: () => createBatchMock(),
   }),
 }));
 

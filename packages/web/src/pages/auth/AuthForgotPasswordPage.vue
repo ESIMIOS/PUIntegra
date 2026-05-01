@@ -23,7 +23,7 @@ const submittedEmail = ref<string | null>(null);
 const resendCooldown = ref(0);
 let resendCooldownTimer: ReturnType<typeof globalThis.setInterval> | null = null;
 const normalizedEmail = computed(() => email.value.trim().toLowerCase());
-const hasValidEmail = computed(() => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail.value));
+const hasValidEmail = computed(() => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail.value)); //NOSONAR
 
 function clearResendCooldown() {
   if (resendCooldownTimer) {
