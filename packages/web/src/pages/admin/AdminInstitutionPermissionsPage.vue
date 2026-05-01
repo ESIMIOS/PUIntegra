@@ -12,8 +12,13 @@ import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import type { Institution, Permission } from '@shared';
 import StatusBadge from '@/components/shared/StatusBadge.vue';
+import UpdateHistoryPanel from '@/components/shared/UpdateHistoryPanel.vue';
 import { useAdminTenantPermissionsController } from '@/composables/useDataControllers';
 import { routePaths } from '@/shared/constants/routePaths';
+import {
+  asHistoryRecord,
+  permissionUpdateFieldDefinitions,
+} from '@/shared/updateHistory/updateHistoryFieldDefinitions';
 
 const route = useRoute();
 const router = useRouter();
@@ -88,6 +93,7 @@ onMounted(() => {
                 <th>Correo</th>
                 <th>Rol</th>
                 <th>Estado</th>
+                <th>Historial</th>
               </tr>
             </thead>
             <tbody>
@@ -98,6 +104,14 @@ onMounted(() => {
                 <td>{{ permission.role }}</td>
                 <td>
                   <StatusBadge :status="permission.status" />
+                </td>
+                <td>
+                  <UpdateHistoryPanel
+                    :updates="asHistoryRecord(permission.updates)"
+                    :field-definitions="permissionUpdateFieldDefinitions"
+                    mode="icon"
+                    :test-id="`admin-permission-history-${permission.permissionId}`"
+                  />
                 </td>
               </tr>
             </tbody>

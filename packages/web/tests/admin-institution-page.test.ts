@@ -88,6 +88,7 @@ describe('admin institution page', () => {
     expect(wrapper.text()).toContain(COMMERCIAL_PLAN_STATUS.WARNING);
     expect(wrapper.text()).toContain('Secreto pendiente');
     expect(wrapper.text()).toContain('1 actualización');
+    expect(wrapper.find('[data-testid="admin-institution-update-history"]').exists()).toBe(true);
   });
 
   it('renders recoverable error state when institution cannot be loaded', async () => {
