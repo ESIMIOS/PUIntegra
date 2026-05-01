@@ -236,6 +236,13 @@ describe('firebase auth gateway', () => {
     expect(mocks.applyActionCode).toHaveBeenCalledWith(mocks.auth, 'verification-code');
   });
 
+  it('does not fail email verification when lifecycle audit API is unavailable', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('api unavailable')));
+
+    await expect(applyEmailVerificationCode('verification-code')).resolves.toBeUndefined();
+    expect(mocks.applyActionCode).toHaveBeenCalledWith(mocks.auth, 'verification-code');
+  });
+
   it('requests password recovery through API policy and Firebase reset email with neutral handling', async () => {
     mocks.sendPasswordResetEmail.mockRejectedValue(new Error('account not found'));
 
@@ -268,6 +275,13 @@ describe('firebase auth gateway', () => {
         body: JSON.stringify({ email: 'owner@example.test' }),
       }),
     );
+  });
+
+  it('does not fail password reset when lifecycle audit API is unavailable', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('api unavailable')));
+
+    await expect(confirmPasswordResetWithCode('reset-code', 'StrongPass1', 'owner@example.test')).resolves.toBeUndefined();
+    expect(mocks.confirmPasswordReset).toHaveBeenCalledWith(mocks.auth, 'reset-code', 'StrongPass1');
   });
 
   it('reports one-factor TOTP state and admin-assisted recovery guidance', async () => {

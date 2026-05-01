@@ -21,6 +21,25 @@ import { apiSystemMessages } from '../../constants/systemMessages.js';
 import { getAdminAuth, getAdminFirestore } from './runtime.js';
 import type { AccountProfileUpdateInput } from './types.js';
 
+type AccountProfilePayload = {
+  name: string;
+  emojiIcon: string;
+  phone?: string | null;
+};
+
+type ValidActor = {
+  role: (typeof RoleSchema)['enum'][keyof (typeof RoleSchema)['enum']];
+  email: string;
+};
+
+type ProfileChanges = {
+  nextPhone: string | null;
+  hasPhoneInput: boolean;
+  hasNameChange: boolean;
+  hasEmojiChange: boolean;
+  hasPhoneChange: boolean;
+};
+
 function normalizePhone(value: unknown): string | null {
   if (typeof value !== 'string') {
     return null;
@@ -41,10 +60,7 @@ function normalizePhone(value: unknown): string | null {
   return sanitized;
 }
 
-/**
- * @description Actualiza perfil de cuenta propia y persiste trazabilidad de cambios de perfil.
- */
-export async function updateAccountProfile(input: AccountProfileUpdateInput) {
+function assertValidActor(input: AccountProfileUpdateInput): ValidActor {
   const actorRole = typeof input.actor.role === 'string' ? input.actor.role : null;
   const actorEmail = typeof input.actor.email === 'string' ? input.actor.email.toLowerCase() : null;
   const parsedRole = actorRole ? RoleSchema.safeParse(actorRole) : null;
@@ -55,18 +71,85 @@ export async function updateAccountProfile(input: AccountProfileUpdateInput) {
       },
     });
   }
+  return { role: parsedRole.data, email: actorEmail };
+}
 
-  const payload = input.payload as {
-    name: string;
-    emojiIcon: string;
-    phone?: string | null;
-  };
-  const normalizedName = payload.name.trim();
-  const normalizedEmojiIcon = payload.emojiIcon.trim();
+function parseProfilePayload(payload: unknown): {
+  normalizedName: string;
+  normalizedEmojiIcon: string;
+  normalizedPhone: string | null;
+  hasPhoneInput: boolean;
+} {
+  const parsedPayload = payload as AccountProfilePayload;
+  const normalizedName = parsedPayload.name.trim();
+  const normalizedEmojiIcon = parsedPayload.emojiIcon.trim();
   if (!normalizedName || !normalizedEmojiIcon) {
     throw new SystemError(apiSystemMessages.auth.lifecycle.invalidPayload);
   }
-  const normalizedPhone = normalizePhone(payload.phone);
+  return {
+    normalizedName,
+    normalizedEmojiIcon,
+    normalizedPhone: normalizePhone(parsedPayload.phone),
+    hasPhoneInput: typeof parsedPayload.phone === 'string' || parsedPayload.phone === null,
+  };
+}
+
+function detectProfileChanges(
+  currentUser: ReturnType<typeof UserSchema.parse>,
+  normalizedName: string,
+  normalizedEmojiIcon: string,
+  normalizedPhone: string | null,
+  hasPhoneInput: boolean,
+): ProfileChanges {
+  return {
+    nextPhone: normalizedPhone,
+    hasPhoneInput,
+    hasNameChange: currentUser.name !== normalizedName,
+    hasEmojiChange: (currentUser.emojiIcon ?? null) !== normalizedEmojiIcon,
+    hasPhoneChange: hasPhoneInput && (currentUser.phone ?? null) !== normalizedPhone,
+  };
+}
+
+function buildResponse(user: ReturnType<typeof UserSchema.parse>) {
+  return {
+    userId: user.userId,
+    name: user.name,
+    email: user.email,
+    emojiIcon: user.emojiIcon ?? null,
+    phone: user.phone ?? null,
+    updatedAt: user.updatedAt,
+  };
+}
+
+function buildUpdatedUser(
+  currentUser: ReturnType<typeof UserSchema.parse>,
+  changes: ProfileChanges,
+  normalizedName: string,
+  normalizedEmojiIcon: string,
+  now: number,
+  updateEntry: Record<string, unknown>,
+) {
+  const nextUser = UserSchema.parse({
+    ...currentUser,
+    name: normalizedName,
+    emojiIcon: normalizedEmojiIcon,
+    ...(changes.nextPhone ? { phone: changes.nextPhone } : {}),
+    updates: [...currentUser.updates, updateEntry],
+    updatedAt: now,
+  });
+
+  if (changes.hasPhoneChange && changes.nextPhone === null) {
+    delete (nextUser as { phone?: string }).phone;
+  }
+  return nextUser;
+}
+
+/**
+ * @description Actualiza perfil de cuenta propia y persiste trazabilidad de cambios de perfil.
+ */
+export async function updateAccountProfile(input: AccountProfileUpdateInput) {
+  const actor = assertValidActor(input);
+  const { normalizedName, normalizedEmojiIcon, normalizedPhone, hasPhoneInput } = parseProfilePayload(input.payload);
   const now = Date.now();
   const firestore = getAdminFirestore();
   const userRef = firestore.collection('users').doc(input.actor.userId);
@@ -78,51 +161,31 @@ export async function updateAccountProfile(input: AccountProfileUpdateInput) {
   }
   const currentUser = UserSchema.parse(userSnapshot.data());
   const previousDisplayName = currentUser.name;
-  const nextPhone = normalizedPhone;
-  const hasNameChange = currentUser.name !== normalizedName;
-  const hasEmojiChange = (currentUser.emojiIcon ?? null) !== normalizedEmojiIcon;
-  const hasPhoneInput = typeof payload.phone === 'string' || payload.phone === null;
-  const hasPhoneChange = hasPhoneInput && (currentUser.phone ?? null) !== nextPhone;
+  const changes = detectProfileChanges(currentUser, normalizedName, normalizedEmojiIcon, normalizedPhone, hasPhoneInput);
 
-  if (!hasNameChange && !hasEmojiChange && !hasPhoneChange) {
-    return {
-      userId: currentUser.userId,
-      name: currentUser.name,
-      email: currentUser.email,
-      emojiIcon: currentUser.emojiIcon ?? null,
-      phone: currentUser.phone ?? null,
-      updatedAt: currentUser.updatedAt,
-    };
+  if (!changes.hasNameChange && !changes.hasEmojiChange && !changes.hasPhoneChange) {
+    return buildResponse(currentUser);
   }
 
   const auth = getAdminAuth();
-  if (hasNameChange) {
+  if (changes.hasNameChange) {
     await auth.updateUser(input.actor.userId, { displayName: normalizedName });
   }
 
   const updateEntry = {
     updateOrigin: UPDATE_ORIGIN.USER,
     updatedByUserId: input.actor.userId,
-    updatedByUserRole: parsedRole.data,
-    updatedByUserEmail: actorEmail,
+    updatedByUserRole: actor.role,
+    updatedByUserEmail: actor.email,
     updatedAt: now,
-    ...(hasNameChange ? { previousName: currentUser.name, updatedName: normalizedName } : {}),
-    ...(hasEmojiChange ? { previousEmojiIcon: currentUser.emojiIcon ?? null, updatedEmojiIcon: normalizedEmojiIcon } : {}),
-    ...(hasPhoneChange ? { previousPhone: currentUser.phone ?? null, updatedPhone: nextPhone } : {}),
+    ...(changes.hasNameChange ? { previousName: currentUser.name, updatedName: normalizedName } : {}),
+    ...(changes.hasEmojiChange
+      ? { previousEmojiIcon: currentUser.emojiIcon ?? null, updatedEmojiIcon: normalizedEmojiIcon }
+      : {}),
+    ...(changes.hasPhoneChange ? { previousPhone: currentUser.phone ?? null, updatedPhone: changes.nextPhone } : {}),
   };
 
-  const nextUser = UserSchema.parse({
-    ...currentUser,
-    name: normalizedName,
-    emojiIcon: normalizedEmojiIcon,
-    ...(nextPhone ? { phone: nextPhone } : {}),
-    updates: [...currentUser.updates, updateEntry],
-    updatedAt: now,
-  });
-
-  if (!nextPhone) {
-    delete (nextUser as { phone?: string }).phone;
-  }
+  const nextUser = buildUpdatedUser(currentUser, changes, normalizedName, normalizedEmojiIcon, now, updateEntry);
 
   const logRef = firestore.collection('logs').doc();
   const log = LogSchema.parse({
@@ -134,12 +197,12 @@ export async function updateAccountProfile(input: AccountProfileUpdateInput) {
     userId: input.actor.userId,
     execution: {
       executedByUserId: input.actor.userId,
-      executedByUserRole: parsedRole.data,
-      executedByUserEmail: actorEmail,
+      executedByUserRole: actor.role,
+      executedByUserEmail: actor.email,
     },
     impact: {
       impactedUserId: input.actor.userId,
-      impactedUserEmail: actorEmail,
+      impactedUserEmail: actor.email,
     },
     searchRequest: {},
     createdAt: now,
@@ -151,7 +214,7 @@ export async function updateAccountProfile(input: AccountProfileUpdateInput) {
     batch.set(logRef, log);
     await batch.commit();
   } catch (error) {
-    if (hasNameChange) {
+    if (changes.hasNameChange) {
       try {
         await auth.updateUser(input.actor.userId, { displayName: previousDisplayName });
       } catch {
@@ -161,12 +224,5 @@ export async function updateAccountProfile(input: AccountProfileUpdateInput) {
     throw error;
   }
 
-  return {
-    userId: nextUser.userId,
-    name: nextUser.name,
-    email: nextUser.email,
-    emojiIcon: nextUser.emojiIcon ?? null,
-    phone: nextUser.phone ?? null,
-    updatedAt: nextUser.updatedAt,
-  };
+  return buildResponse(nextUser);
 }

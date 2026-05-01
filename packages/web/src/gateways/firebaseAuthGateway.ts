@@ -216,6 +216,17 @@ async function recordAuthLifecycleEvent(path: string, body: Record<string, unkno
 }
 
 /**
+ * @description Registra lifecycle audit como best-effort para no bloquear UX post-Firebase.
+ */
+async function recordAuthLifecycleEventBestEffort(path: string, body: Record<string, unknown>) {
+  try {
+    await recordAuthLifecycleEvent(path, body);
+  } catch {
+    // Lifecycle audit submission must not block completed Firebase actions.
+  }
+}
+
+/**
  * @description Reporta evento Auth al API sin romper el flujo si el emulador API no está disponible.
  */
 async function recordAuthEvent(event: 'login' | 'logout') {
@@ -345,7 +356,7 @@ export async function resendEmailVerification() {
  */
 export async function applyEmailVerificationCode(oobCode: string) {
   await applyActionCode(getFirebaseRuntime().auth, oobCode);
-  await recordAuthLifecycleEvent('email-verification-completed', {});
+  await recordAuthLifecycleEventBestEffort('email-verification-completed', {});
 }
 
 /**
@@ -386,7 +397,7 @@ export async function verifyPasswordResetCodeForEmail(oobCode: string) {
  */
 export async function confirmPasswordResetWithCode(oobCode: string, newPassword: string, verifiedEmail?: string) {
   await confirmPasswordReset(getFirebaseRuntime().auth, oobCode, newPassword);
-  await recordAuthLifecycleEvent('password-reset-completed', {
+  await recordAuthLifecycleEventBestEffort('password-reset-completed', {
     email: verifiedEmail,
   });
 }

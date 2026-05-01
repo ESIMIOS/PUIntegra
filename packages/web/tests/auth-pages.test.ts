@@ -463,7 +463,11 @@ describe('Auth Pages', () => {
     await wrapper.find('form').trigger('submit.prevent');
     await flushPromises();
 
-    expect(mockedConfirmPasswordResetWithCode).toHaveBeenCalledWith('manual-reset-code', 'StrongPass1');
+    expect(mockedConfirmPasswordResetWithCode).toHaveBeenCalledWith(
+      'manual-reset-code',
+      'StrongPass1',
+      'owner@example.test',
+    );
     expect(wrapper.text()).toContain('Tu contraseña fue actualizada correctamente');
     expect(wrapper.text()).toContain('Ir a iniciar sesión');
     expect(push).not.toHaveBeenCalledWith(routePaths.authLogin);
