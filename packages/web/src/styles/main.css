@@ -35,7 +35,7 @@ a {
   background-color: var(--va-background-element);
 }
 
-.bg.border {
+.bg-border {
   background-color: var(--va-background-border);
 }
 
@@ -179,6 +179,123 @@ a {
 
 .mr5 {
   margin-right: 1.25rem;
+}
+
+/*PADDING*/
+.p0 {
+  padding: 0 !important;
+}
+
+.p1 {
+  padding: 0.25rem;
+}
+
+.p2 {
+  padding: 0.5rem;
+}
+
+.p3 {
+  padding: 0.75rem;
+}
+
+.p4 {
+  padding: 1rem;
+}
+
+.p5 {
+  padding: 1.25rem;
+}
+
+.pt0 {
+  padding-top: 0 !important;
+}
+
+.pt1 {
+  padding-top: 0.25rem;
+}
+
+.pt2 {
+  padding-top: 0.5rem;
+}
+
+.pt3 {
+  padding-top: 0.75rem;
+}
+
+.pt4 {
+  padding-top: 1rem;
+}
+
+.pb0 {
+  padding-bottom: 0 !important;
+}
+
+.pb1 {
+  padding-bottom: 0.25rem;
+}
+
+.pb2 {
+  padding-bottom: 0.5rem;
+}
+
+.pb3 {
+  padding-bottom: 0.75rem;
+}
+
+.pb4 {
+  padding-bottom: 1rem;
+}
+
+.pb5 {
+  padding-bottom: 1.25rem;
+}
+
+.pl0 {
+  padding-left: 0 !important;
+}
+
+.pl1 {
+  padding-left: 0.25rem;
+}
+
+.pl2 {
+  padding-left: 0.5rem;
+}
+
+.pl3 {
+  padding-left: 0.75rem;
+}
+
+.pl4 {
+  padding-left: 1rem;
+}
+
+.pl5 {
+  padding-left: 1.25rem;
+}
+
+.pr0 {
+  padding-right: 0 !important;
+}
+
+.pr1 {
+  padding-right: 0.25rem;
+}
+
+.pr2 {
+  padding-right: 0.5rem;
+}
+
+.pr3 {
+  padding-right: 0.75rem;
+}
+
+.pr4 {
+  padding-right: 1rem;
+}
+
+.pr5 {
+  padding-right: 1.25rem;
 }
 
 .debug {

@@ -30,8 +30,13 @@ Define the local Cloud Functions + Hono foundation for PUIntegra API development
 - `GET /health` returns `{ "ok": true, "data": { "service": "puintegra-api" } }`.
 - `POST /api/auth/events/login` verifies a Firebase bearer token and writes a `USER_ACCOUNT_LOGIN` account-level log.
 - `POST /api/auth/events/logout` verifies a Firebase bearer token and writes a `USER_ACCOUNT_LOGOUT` account-level log.
+- `POST /api/auth/lifecycle/account-creation-policy` validates normalized email registration eligibility without creating Firebase Auth users.
+- `POST /api/auth/lifecycle/password-recovery` applies public recovery abuse controls and returns neutral recovery copy without exposing account existence.
+- `POST /api/auth/lifecycle/password-reset-completed`, `POST /api/auth/lifecycle/email-verification-completed`, and `POST /api/auth/lifecycle/mfa-enrollment-completed` record sanitized account-level lifecycle logs.
 - `POST /api/admin/institutions` verifies a Firebase bearer token, authorizes only `SYSTEM_ADMINISTRATOR`, validates onboarding payload, rejects reserved RFCs (`SYSTEM_RFC`, `DEFAULT_RFC`), and writes institution + bootstrap permission + `INSTITUTION_CREATION`, `INSTITUTION_PERMISSION_CREATION`, and `INSTITUTION_PLAN_CREATION` audit logs.
 - `PATCH /api/admin/institutions/:rfc/plan` verifies a Firebase bearer token, authorizes only `SYSTEM_ADMINISTRATOR`, validates plan update payload, rejects reserved RFCs (`SYSTEM_RFC`, `DEFAULT_RFC`), updates the tenant plan fields and institution update history, and writes an `INSTITUTION_PLAN_UPDATE` audit log.
+- `POST /api/admin/users/:userId/mfa-reset` verifies a Firebase bearer token, authorizes only `SYSTEM_ADMINISTRATOR`, clears the user's Firebase MFA enrollment through Admin SDK, and writes a sanitized `USER_ACCOUNT_MFA_UNENROLL` account-level log.
+- `PATCH /api/account/profile` verifies a Firebase bearer token, updates authenticated user profile fields (`name`, `emojiIcon`, `phone`), synchronizes Firebase Auth `displayName` when `name` changes, appends `users/{uid}.updates` history including phone deltas, and writes a `USER_ACCOUNT_SETTINGS_UPDATE` account-level log.
 
 ## Current trigger
 

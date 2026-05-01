@@ -1,10 +1,11 @@
 /**
  * @package web
  * @name useDataControllers.ts
- * @version 0.0.1
+ * @version 0.0.3
  * @description Provee controladores de datos respaldados por Firestore.
  * @author @codex
  * @changelog
+ * - 0.0.3	(2026-05-01)	Agrega controlador de configuración de cuenta autenticada.	@codex
  * - 0.0.2	(2026-04-27)	Expone filtros extendidos para consultas de logs.	@codex
  * - 0.0.1	(2026-04-18)	Agrega controladores neutrales respaldados por gateways de datos.	@codex
  */
@@ -22,6 +23,7 @@ export function useInstitutionSelectionController() {
     isLoading: computed(() => store.isLoading),
     errorMessage: computed(() => store.userErrorMessage),
     loadInstitutions: () => store.listInstitutions(),
+    loadInstitutionByRfc: (rfc: string) => store.getInstitutionByRfc(rfc),
     loadPermissionsByEmail: (email: string) => store.listPermissionsByEmail(email),
     retry: () => store.clearError(),
   };
@@ -134,6 +136,21 @@ export function useLogsController() {
     errorMessage: computed(() => store.userErrorMessage),
     load: (filters: ListLogsFilters = {}) => store.listLogs(filters),
     loadInstitutions: () => store.listInstitutions(),
+    retry: () => store.clearError(),
+  };
+}
+
+/**
+ * @description Expone lectura y escritura de perfil para configuración de cuenta autenticada.
+ */
+export function useAccountSettingsController() {
+  const store = useDataStore();
+  return {
+    isLoading: computed(() => store.isLoading),
+    isSaving: computed(() => store.isSaving),
+    errorMessage: computed(() => store.userErrorMessage),
+    loadUserById: (userId: string) => store.getUserById(userId),
+    updateAccountProfile: (input: Parameters<typeof store.updateAccountProfile>[0]) => store.updateAccountProfile(input),
     retry: () => store.clearError(),
   };
 }

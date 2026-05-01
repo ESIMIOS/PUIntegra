@@ -12,6 +12,16 @@ import {
 } from '@puintegra/shared';
 import { apiSystemMessages } from '../src/constants/systemMessages';
 
+function createDefaultDependencies(overrides: Partial<Parameters<typeof createApiApp>[0]> = {}) {
+  return {
+    verifyBearerToken: vi.fn(),
+    recordAuthEvent: vi.fn(),
+    createInstitutionOnboarding: vi.fn(),
+    createOriginTraceId: vi.fn().mockReturnValue('generated-trace-id'),
+    ...overrides,
+  } as Parameters<typeof createApiApp>[0];
+}
+
 describe('auth event API routes', () => {
   it('rejects auth event writes without a bearer token', async () => {
     const app = createApiApp({
@@ -420,6 +430,280 @@ describe('admin institution plan API route', () => {
       error: {
         code: 'API-ADMIN-009',
         uiMessageKey: 'api.admin.institutions.institution_not_found',
+      },
+    });
+  });
+});
+
+describe('auth lifecycle API routes', () => {
+  it('checks account creation eligibility with normalized email', async () => {
+    const checkAccountCreationPolicy = vi.fn().mockResolvedValue({ eligible: true });
+    const app = createApiApp(createDefaultDependencies({ checkAccountCreationPolicy }));
+
+    const response = await app.request('/api/auth/lifecycle/account-creation-policy', {
+      method: 'POST',
+      body: JSON.stringify({ email: ' Owner@Example.TEST ' }),
+    });
+
+    expect(response.status).toBe(HTTP_STATUS.OK);
+    expect(await response.json()).toMatchObject({
+      ok: true,
+      data: { eligible: true },
+    });
+    expect(checkAccountCreationPolicy).toHaveBeenCalledWith({
+      email: 'owner@example.test',
+      originTraceId: 'generated-trace-id',
+      requestKey: expect.any(String),
+    });
+  });
+
+  it('returns safe conflict responses for ineligible account creation', async () => {
+    const app = createApiApp(
+      createDefaultDependencies({
+        checkAccountCreationPolicy: vi
+          .fn()
+          .mockRejectedValue(new SystemError(apiSystemMessages.auth.lifecycle.accountCreationUnavailable)),
+      }),
+    );
+
+    const response = await app.request('/api/auth/lifecycle/account-creation-policy', {
+      method: 'POST',
+      body: JSON.stringify({ email: 'missing@example.test' }),
+    });
+
+    expect(response.status).toBe(HTTP_STATUS.CONFLICT);
+    expect(await response.json()).toMatchObject({
+      ok: false,
+      error: {
+        code: 'API-AUTH-010',
+        uiMessageKey: 'api.auth.lifecycle.account_creation_unavailable',
+      },
+    });
+  });
+
+  it('accepts password recovery with neutral copy and sanitized payload', async () => {
+    const requestPasswordRecovery = vi.fn().mockResolvedValue({ accepted: true });
+    const app = createApiApp(createDefaultDependencies({ requestPasswordRecovery }));
+
+    const response = await app.request('/api/auth/lifecycle/password-recovery', {
+      method: 'POST',
+      body: JSON.stringify({
+        email: 'Owner@Example.TEST',
+        password: 'Never log this',
+        oobCode: 'secret-code',
+      }),
+    });
+
+    expect(response.status).toBe(HTTP_STATUS.OK);
+    expect(await response.json()).toEqual({
+      ok: true,
+      data: {
+        accepted: true,
+        message: 'Si la cuenta existe, enviaremos instrucciones al correo indicado.',
+      },
+      meta: {
+        originTraceId: 'generated-trace-id',
+      },
+    });
+    expect(requestPasswordRecovery).toHaveBeenCalledWith({
+      email: 'owner@example.test',
+      originTraceId: 'generated-trace-id',
+      requestKey: expect.any(String),
+    });
+    expect(JSON.stringify(requestPasswordRecovery.mock.calls)).not.toContain('Never log this');
+    expect(JSON.stringify(requestPasswordRecovery.mock.calls)).not.toContain('secret-code');
+  });
+
+  it('rate-limits password recovery safely', async () => {
+    const app = createApiApp(
+      createDefaultDependencies({
+        requestPasswordRecovery: vi
+          .fn()
+          .mockRejectedValue(new SystemError(apiSystemMessages.auth.lifecycle.rateLimited)),
+      }),
+    );
+
+    const response = await app.request('/api/auth/lifecycle/password-recovery', {
+      method: 'POST',
+      body: JSON.stringify({ email: 'owner@example.test' }),
+    });
+
+    expect(response.status).toBe(HTTP_STATUS.UNPROCESSABLE_CONTENT);
+    expect(await response.json()).toMatchObject({
+      ok: false,
+      error: {
+        code: 'API-AUTH-011',
+        displayMessage: 'Recibimos demasiados intentos. Espera unos minutos antes de volver a intentar.',
+      },
+    });
+  });
+
+  it('records completed password, email, and MFA lifecycle events without secrets', async () => {
+    const recordAuthLifecycleEvent = vi.fn().mockResolvedValue({ recorded: true });
+    const app = createApiApp(createDefaultDependencies({ recordAuthLifecycleEvent }));
+
+    const response = await app.request('/api/auth/lifecycle/password-reset-completed', {
+      method: 'POST',
+      body: JSON.stringify({
+        userId: 'dev-user-001',
+        email: 'owner@example.test',
+        password: 'Do not log',
+        actionUrl: 'https://example.test/action?oobCode=secret',
+      }),
+    });
+
+    expect(response.status).toBe(HTTP_STATUS.OK);
+    expect(recordAuthLifecycleEvent).toHaveBeenCalledWith({
+      event: 'password-update',
+      originTraceId: 'generated-trace-id',
+      userId: 'dev-user-001',
+      email: 'owner@example.test',
+    });
+    expect(JSON.stringify(recordAuthLifecycleEvent.mock.calls)).not.toContain('Do not log');
+    expect(JSON.stringify(recordAuthLifecycleEvent.mock.calls)).not.toContain('oobCode');
+  });
+
+  it('allows only system administrators to reset lost MFA access', async () => {
+    const resetUserMfa = vi.fn().mockResolvedValue({ reset: true });
+
+    for (const role of roleValues) {
+      const app = createApiApp(
+        createDefaultDependencies({
+          verifyBearerToken: vi.fn().mockResolvedValue({
+            userId: 'admin-user-001',
+            email: 'admin@example.test',
+            role,
+          }),
+          resetUserMfa,
+        }),
+      );
+
+      const response = await app.request('/api/admin/users/dev-user-001/mfa-reset', {
+        method: 'POST',
+        headers: { authorization: 'Bearer token' },
+        body: JSON.stringify({
+          verificationNote: 'Identidad verificada por mesa de ayuda.',
+        }),
+      });
+
+      if (role === ROLE.SYSTEM_ADMINISTRATOR) {
+        expect(response.status).toBe(HTTP_STATUS.OK);
+      } else {
+        expect(response.status).toBe(HTTP_STATUS.FORBIDDEN);
+      }
+    }
+    expect(resetUserMfa).toHaveBeenCalledWith({
+      userId: 'dev-user-001',
+      verificationNote: 'Identidad verificada por mesa de ayuda.',
+      actor: {
+        userId: 'admin-user-001',
+        email: 'admin@example.test',
+        role: ROLE.SYSTEM_ADMINISTRATOR,
+      },
+      originTraceId: 'generated-trace-id',
+    });
+  });
+});
+
+describe('account profile API route', () => {
+  it('requires bearer token for self profile updates', async () => {
+    const app = createApiApp(createDefaultDependencies());
+
+    const response = await app.request('/api/account/profile', {
+      method: 'PATCH',
+      body: JSON.stringify({
+        name: 'Nombre Nuevo',
+        emojiIcon: '😀',
+      }),
+    });
+
+    expect(response.status).toBe(HTTP_STATUS.UNAUTHORIZED);
+    expect(await response.json()).toMatchObject({
+      ok: false,
+      error: {
+        code: 'API-AUTH-001',
+      },
+    });
+  });
+
+  it('validates payload before calling account profile update dependency', async () => {
+    const updateAccountProfile = vi.fn();
+    const app = createApiApp(
+      createDefaultDependencies({
+        verifyBearerToken: vi.fn().mockResolvedValue({
+          userId: 'dev-user-001',
+          email: 'owner@example.test',
+          role: ROLE.INSTITUTION_ADMIN,
+        }),
+        updateAccountProfile,
+      }),
+    );
+
+    const response = await app.request('/api/account/profile', {
+      method: 'PATCH',
+      headers: {
+        authorization: 'Bearer token',
+      },
+      body: JSON.stringify({
+        name: ' ',
+        emojiIcon: '',
+      }),
+    });
+
+    expect(response.status).toBe(HTTP_STATUS.BAD_REQUEST);
+    expect(updateAccountProfile).not.toHaveBeenCalled();
+  });
+
+  it('passes normalized actor and payload to account profile update dependency', async () => {
+    const updateAccountProfile = vi.fn().mockResolvedValue({
+      userId: 'dev-user-001',
+      email: 'owner@example.test',
+      name: 'Nombre Nuevo',
+      emojiIcon: '😎',
+      phone: '+525500000001',
+      updatedAt: 1710000000000,
+    });
+    const app = createApiApp(
+      createDefaultDependencies({
+        verifyBearerToken: vi.fn().mockResolvedValue({
+          userId: 'dev-user-001',
+          email: 'owner@example.test',
+          role: ROLE.INSTITUTION_OPERATOR,
+        }),
+        updateAccountProfile,
+      }),
+    );
+
+    const response = await app.request('/api/account/profile', {
+      method: 'PATCH',
+      headers: {
+        authorization: 'Bearer token',
+      },
+      body: JSON.stringify({
+        name: '  Nombre Nuevo  ',
+        emojiIcon: '😎',
+        phone: ' +52 55 0000 0001 ',
+      }),
+    });
+
+    expect(response.status).toBe(HTTP_STATUS.OK);
+    expect(updateAccountProfile).toHaveBeenCalledWith({
+      actor: {
+        userId: 'dev-user-001',
+        email: 'owner@example.test',
+        role: ROLE.INSTITUTION_OPERATOR,
+      },
+      originTraceId: 'generated-trace-id',
+      payload: {
+        name: 'Nombre Nuevo',
+        emojiIcon: '😎',
+        phone: '+52 55 0000 0001',
+      },
+    });
+    expect(await response.json()).toMatchObject({
+      ok: true,
+      data: {
+        name: 'Nombre Nuevo',
       },
     });
   });

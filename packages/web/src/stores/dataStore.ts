@@ -1,10 +1,11 @@
 /**
  * @package web
  * @name dataStore.ts
- * @version 0.0.1
+ * @version 0.0.3
  * @description Gestiona estado reactivo de datos respaldados por Firestore.
  * @author @codex
  * @changelog
+ * - 0.0.3	(2026-05-01)	Agrega guardado de perfil de cuenta autenticada mediante API HTTP.	@codex
  * - 0.0.2	(2026-04-27)	Expone filtros extendidos para bitácora de dominios.	@codex
  * - 0.0.1	(2026-04-18)	Agrega store de datos respaldado por gateway Firestore.	@codex
  */
@@ -26,6 +27,7 @@ import {
 } from '@/gateways/firebaseDataGateway';
 import { createInstitutionOnboarding } from '@/gateways/institutionOnboardingGateway';
 import { updateInstitutionPlan } from '@/gateways/institutionPlanGateway';
+import { updateAccountProfile } from '@/gateways/accountProfileGateway';
 import { systemMessageTree } from '@/shared/constants/systemMessages';
 
 /**
@@ -125,6 +127,9 @@ export const useDataStore = defineStore('data', {
     },
     updateInstitutionPlan(rfc: string, input: UpdateInstitutionPlan) {
       return this.withSaving(() => updateInstitutionPlan(rfc, input), 'Failed to update institution plan.');
+    },
+    updateAccountProfile(input: { name: string; emojiIcon: string; phone?: string | null }) {
+      return this.withSaving(() => updateAccountProfile(input), 'Failed to update account profile.');
     },
   },
 });

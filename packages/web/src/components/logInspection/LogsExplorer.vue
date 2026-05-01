@@ -427,7 +427,7 @@ onMounted(async () => {
             :checked="selectedColumns.includes(column.key)"
             :disabled="requiredLogColumnKeys.includes(column.key)"
             @change="toggleColumn(column.key, ($event.target as HTMLInputElement).checked)"
-          />
+          >
           <span>{{ column.label }}</span>
         </label>
       </div>

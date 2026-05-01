@@ -46,3 +46,51 @@ The system SHALL keep institution reads on the Firebase SDK path where current p
 - **WHEN** the UI loads institution listings or institution detail after successful onboarding
 - **THEN** those reads may continue through the existing authorized Firebase SDK read path
 - **AND** the onboarding change does not require new client write permissions
+
+### Requirement: Auth lifecycle policy operations use the API boundary
+
+The system SHALL route auth lifecycle operations that require PUIntegra policy, abuse controls, or audit logging through HTTP services in `packages/api`.
+
+#### Scenario: Browser requests account creation policy
+
+- **WHEN** the account creation page needs to validate PUIntegra registration eligibility
+- **THEN** the browser sends the policy request to a public auth lifecycle API endpoint
+- **AND** the API validates normalized email eligibility against existing shared contracts before account creation proceeds
+
+#### Scenario: Browser requests password recovery
+
+- **WHEN** the forgot password page submits a recovery request
+- **THEN** the browser sends the request to a public auth lifecycle API endpoint
+- **AND** the API applies abuse controls before the browser requests Firebase reset email delivery
+- **AND** the response uses the shared API response envelope with neutral user-facing copy
+
+#### Scenario: Browser records lifecycle events
+
+- **WHEN** password reset, email verification, MFA enrollment, or throttling events require durable audit or policy tracking
+- **THEN** the browser sends only sanitized metadata to the auth lifecycle API
+- **AND** the API writes logs server-side with `RFC: null`
+
+#### Scenario: Administrator resets lost MFA access
+
+- **WHEN** an authorized administrator submits an approved MFA reset for a user who lost authenticator access
+- **THEN** the browser sends the request to an authenticated admin API endpoint
+- **AND** the API removes or resets the Firebase TOTP enrollment through a server-owned path
+- **AND** the API writes a sanitized `USER_ACCOUNT_MFA_UNENROLL` account-level audit log
+
+### Requirement: Account settings profile writes use the API boundary
+
+The system SHALL route authenticated self-profile settings writes through HTTP services in `packages/api`.
+
+#### Scenario: Browser updates account settings
+
+- **WHEN** an authenticated user submits `/account/settings` changes
+- **THEN** the browser sends the payload to an authenticated account profile API endpoint
+- **AND** the browser does not write `users/{uid}` profile fields directly through the Firebase SDK
+
+#### Scenario: Server synchronizes and audits account profile updates
+
+- **WHEN** the API receives a valid authenticated self-profile update request
+- **THEN** the API validates and normalizes `name`, `emojiIcon`, and `phone` before persistence
+- **AND** the API synchronizes Firebase Auth `displayName` when `name` changes
+- **AND** the API appends user update history deltas in `users/{uid}.updates`
+- **AND** the API records a `USER_ACCOUNT_SETTINGS_UPDATE` account-level log with `RFC: null`

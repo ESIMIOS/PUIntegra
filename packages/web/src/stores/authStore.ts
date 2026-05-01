@@ -20,6 +20,7 @@ import {
   hydrateSession,
   logout,
   switchContext,
+  validateCurrentFirebaseUser,
   validateCredentials
 } from '@/gateways/firebaseAuthGateway';
 
@@ -39,6 +40,7 @@ function anonymousState() {
     allowedInstitutionRfcs: [] as string[],
     uid: null as string | null,
     email: null as string | null,
+    emailVerified: true,
     name: null as string | null,
     emojiIcon: null as string | null,
     availableContexts: [] as SessionContext[],
@@ -72,6 +74,9 @@ export const useAuthStore = defineStore('auth', {
       this.name = identity.name ?? this.name;
       this.emojiIcon = identity.emojiIcon ?? this.emojiIcon;
     },
+    setEmailVerified(value: boolean) {
+      this.emailVerified = value;
+    },
     setRequiresSecuritySetup(value: boolean) {
       this.requiresSecuritySetup = value;
     },
@@ -94,10 +99,17 @@ export const useAuthStore = defineStore('auth', {
       this.pendingLogin = validated;
       return validated;
     },
+    async validateCurrentFirebaseUser() {
+      const login = await validateCurrentFirebaseUser();
+      const validated = LoginResultSchema.parse(login);
+      this.pendingLogin = validated;
+      return validated;
+    },
     applyEstablishedSession(session: {
       userId: string;
       name: string;
       email: string;
+      emailVerified?: boolean;
       emojiIcon: string | null;
       activeRole: Role;
       activeRfc: string;
@@ -107,6 +119,7 @@ export const useAuthStore = defineStore('auth', {
       this.uid = session.userId;
       this.name = session.name;
       this.email = session.email;
+      this.emailVerified = session.emailVerified ?? true;
       this.emojiIcon = session.emojiIcon;
       this.activeRole = session.activeRole;
       this.allowedInstitutionRfcs = session.allowedInstitutionRfcs;

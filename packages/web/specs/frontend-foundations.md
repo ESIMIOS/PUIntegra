@@ -76,6 +76,8 @@ Define the baseline webapp architecture for local development and navigable skel
 - The detailed emulator behavior contract lives in [`firebase-emulator-mode.md`](./firebase-emulator-mode.md).
 - Data gateway behavior lives in [`firebase-data-gateway.md`](./firebase-data-gateway.md).
 - Guards and routes depend on Firebase auth state plus selected app session context.
+- Public auth routes `/auth/create-account`, `/auth/verify-email`, `/auth/forgot-password`, and `/auth/reset-password` provide operational Firebase Auth lifecycle UX with professional Spanish guidance.
+- `/auth/security-setup` provides TOTP setup guidance and a controlled unavailable state unless Firebase TOTP MFA is enabled.
 
 ## Shared state and testing patterns
 ### Spanish UI copy quality
