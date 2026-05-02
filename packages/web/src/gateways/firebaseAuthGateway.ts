@@ -44,6 +44,7 @@ import { getUserById, listPermissionsByEmail } from '@/gateways/firebaseDataGate
 const ACTIVE_CONTEXT_STORAGE_KEY = 'puintegra:web:active-session-context:v1';
 const AUTH_EVENT_API_PATH = '/api/auth/events';
 const AUTH_LIFECYCLE_API_PATH = '/api/auth/lifecycle';
+const DEFAULT_ACCOUNT_EMOJI_ICON = '😎';
 
 const EMAIL_NOT_VERIFIED_MESSAGE = {
   code: 'AUTH-LOGIN-006',
@@ -208,6 +209,25 @@ function buildVerificationActionUrl() {
 }
 
 /**
+ * @description Sincroniza el perfil inicial capturado en UI hacia el documento de usuario autenticado.
+ */
+async function syncCreatedAccountProfile(token: string, displayName: string) {
+  await executeHttpApi({
+    url: resolveApiUrl('/api/account/profile'),
+    method: 'PATCH',
+    headers: {
+      authorization: `Bearer ${token}`,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({
+      name: displayName,
+      emojiIcon: DEFAULT_ACCOUNT_EMOJI_ICON,
+    }),
+    transportMessage: 'Account profile bootstrap request failed.',
+  });
+}
+
+/**
  * @description Envía evento HTTP del ciclo de vida Auth con datos sanitizados.
  */
 async function recordAuthLifecycleEvent(path: string, body: Record<string, unknown>) {
@@ -331,6 +351,8 @@ export async function createAccount(input: AccountCreationInput): Promise<Accoun
   await updateProfile(credential.user, {
     displayName: parsedInput.displayName,
   });
+  const token = await credential.user.getIdToken();
+  await syncCreatedAccountProfile(token, parsedInput.displayName);
   await sendEmailVerification(credential.user, {
     url: buildVerificationActionUrl(),
   });

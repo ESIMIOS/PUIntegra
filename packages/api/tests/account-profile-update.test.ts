@@ -203,4 +203,39 @@ describe('account profile update dependency', () => {
       displayName: 'Nombre Inicial',
     });
   });
+
+  it('creates the user profile when the auth trigger has not persisted it yet', async () => {
+    state.userDoc = null as unknown as Record<string, unknown>;
+    const dependencies = createApiDependencies();
+
+    const result = await dependencies.updateAccountProfile({
+      actor: {
+        userId: 'dev-user-001',
+        email: 'owner@example.test',
+        role: ROLE.INSTITUTION_OPERATOR,
+      },
+      originTraceId: 'trace-create-missing',
+      payload: {
+        name: 'Nombre Capturado',
+        emojiIcon: '😎',
+      },
+    });
+
+    expect(result).toMatchObject({
+      userId: 'dev-user-001',
+      name: 'Nombre Capturado',
+      email: 'owner@example.test',
+      emojiIcon: '😎',
+      phone: null,
+    });
+    expect(state.updateUser).toHaveBeenCalledWith('dev-user-001', {
+      displayName: 'Nombre Capturado',
+    });
+    expect(state.userDoc).toMatchObject({
+      userId: 'dev-user-001',
+      name: 'Nombre Capturado',
+      email: 'owner@example.test',
+      emojiIcon: '😎',
+    });
+  });
 });
