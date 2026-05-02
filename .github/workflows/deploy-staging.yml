@@ -56,6 +56,9 @@ jobs:
       - name: Prepare Firebase Functions runtime bundle
         run: node packages/api/scripts/prepare-firebase-runtime.mjs
 
+      - name: Install Firebase Functions runtime bundle dependencies
+        run: pnpm install --dir packages/api/.firebase-runtime --prod --no-frozen-lockfile
+
       - name: Build (staging mode)
         run: pnpm --filter @puintegra/web build -- --mode staging
         env:
