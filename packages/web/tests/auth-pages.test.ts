@@ -44,8 +44,9 @@ import { mountWithVuestic } from './utils/mount';
 
 const push = vi.fn();
 const replace = vi.fn();
+const routeQuery: Record<string, unknown> = {};
 vi.mock('vue-router', () => ({
-  useRoute: () => ({ fullPath: '/auth/login', query: {} }),
+  useRoute: () => ({ fullPath: '/auth/login', query: routeQuery }),
   useRouter: () => ({ push, replace }),
 }));
 
@@ -118,6 +119,9 @@ describe('Auth Pages', () => {
   beforeEach(() => {
     setActivePinia(createPinia());
     globalThis.localStorage.clear();
+    Object.keys(routeQuery).forEach((key) => {
+      delete routeQuery[key];
+    });
     push.mockClear();
     replace.mockClear();
     mockedEstablishSession.mockReset();
@@ -403,6 +407,17 @@ describe('Auth Pages', () => {
 
     expect(mockedValidateCurrentFirebaseUser).toHaveBeenCalledOnce();
     expect(push).toHaveBeenCalledWith(routePaths.appDashboard(DEFAULT_RFC));
+  });
+
+  it('treats verified email redirect landings as success without asking for a manual code', async () => {
+    routeQuery.verified = '1';
+    const wrapper = mountWithContext(AuthVerifyEmailPage);
+    await flushPromises();
+
+    expect(mockedValidateCurrentFirebaseUser).toHaveBeenCalledOnce();
+    expect(wrapper.text()).toContain('Tu correo fue verificado');
+    expect(wrapper.find('[data-testid="auth-verify-code"]').exists()).toBe(false);
+    expect(wrapper.text()).toContain('Continuar');
   });
 
   it('shows explicit verify-email code errors for invalid Firebase action codes', async () => {

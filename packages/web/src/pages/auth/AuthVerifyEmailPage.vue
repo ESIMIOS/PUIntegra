@@ -29,6 +29,11 @@ const canResend = ref(false);
 const showContextModal = ref(false);
 const showLogoutConfirmation = ref(false);
 const verificationCompleted = computed(() => !!successMessage.value && !errorMessage.value);
+const arrivedFromVerifiedLink = computed(() => {
+  const value = route.query.verified;
+  return (Array.isArray(value) ? value[0] : value) === '1';
+});
+const hasPendingLogin = computed(() => !!authStore.pendingLogin);
 
 function readActionCode() {
   const value = route.query.oobCode;
@@ -61,7 +66,13 @@ async function handleContinue() {
   errorMessage.value = null;
   submitting.value = true;
   try {
-    const login = await authStore.validateCurrentFirebaseUser();
+    const login = hasPendingLogin.value
+      ? authStore.pendingLogin
+      : await authStore.validateCurrentFirebaseUser();
+    if (!login) {
+      await router.push(routePaths.authLogin);
+      return;
+    }
     if (login.contexts.length === 1) {
       await establishAndRedirect(login.contexts[0]);
       return;
@@ -118,15 +129,29 @@ async function handleManualCode() {
 
 async function applyCodeIfPresent() {
   const code = readActionCode();
-  if (!code) {
+  if (code) {
+    submitting.value = true;
+    try {
+      await applyEmailVerificationCode(code);
+      successMessage.value = 'Tu correo fue verificado. Puedes continuar con tu sesión.';
+    } catch (error) {
+      errorMessage.value = formatVerificationError(error);
+    } finally {
+      submitting.value = false;
+    }
     return;
   }
+
+  if (!arrivedFromVerifiedLink.value) {
+    return;
+  }
+
   submitting.value = true;
   try {
-    await applyEmailVerificationCode(code);
+    await authStore.validateCurrentFirebaseUser();
     successMessage.value = 'Tu correo fue verificado. Puedes continuar con tu sesión.';
-  } catch (error) {
-    errorMessage.value = formatVerificationError(error);
+  } catch {
+    successMessage.value = 'Tu correo fue verificado. Inicia sesión para continuar en PUIntegra.';
   } finally {
     submitting.value = false;
   }
@@ -161,7 +186,7 @@ onMounted(() => {
           Necesitamos confirmar que el correo te pertenece antes de habilitar el acceso a PUIntegra y a la
           configuración de seguridad.
         </p>
-        <form v-if="!verificationCompleted" class="grid gap-2" @submit.prevent="handleManualCode">
+        <form v-if="!verificationCompleted && !arrivedFromVerifiedLink" class="grid gap-2" @submit.prevent="handleManualCode">
           <VaInput
             v-model="manualCode"
             label="Código de verificación"
@@ -178,12 +203,12 @@ onMounted(() => {
         <VaAlert v-if="errorMessage" color="danger" icon="warning" dense>
           {{ errorMessage }}
         </VaAlert>
-        <VaAlert v-if="!verificationCompleted && !canResend" color="info" icon="info" dense>
+        <VaAlert v-if="!verificationCompleted && !arrivedFromVerifiedLink && !canResend" color="info" icon="info" dense>
           Para reenviar el correo necesitas haber iniciado sesión con la cuenta pendiente de verificación. Si abriste
           esta página directamente, usa el enlace recibido por correo o vuelve a iniciar sesión.
         </VaAlert>
         <div class="flex flex-wrap gap-2">
-          <VaButton v-if="!verificationCompleted" :loading="submitting" :disabled="submitting || !canResend" @click="handleResend">
+          <VaButton v-if="!verificationCompleted && !arrivedFromVerifiedLink" :loading="submitting" :disabled="submitting || !canResend" @click="handleResend">
             Reenviar correo
           </VaButton>
           <VaButton v-if="verificationCompleted" :loading="submitting" :disabled="submitting" @click="handleContinue">

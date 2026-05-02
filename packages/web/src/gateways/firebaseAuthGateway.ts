@@ -200,6 +200,10 @@ function buildActionUrl(path: string) {
   return `${origin}${path}`;
 }
 
+function buildVerificationActionUrl() {
+  return buildActionUrl('/auth/verify-email?verified=1');
+}
+
 /**
  * @description Envía evento HTTP del ciclo de vida Auth con datos sanitizados.
  */
@@ -325,7 +329,7 @@ export async function createAccount(input: AccountCreationInput): Promise<Accoun
     displayName: parsedInput.displayName,
   });
   await sendEmailVerification(credential.user, {
-    url: buildActionUrl('/auth/verify-email'),
+    url: buildVerificationActionUrl(),
   });
   return AccountCreationResultSchema.parse({ email: normalizedEmail });
 }
@@ -347,7 +351,7 @@ export async function resendEmailVerification() {
     return;
   }
   await sendEmailVerification(firebaseUser, {
-    url: buildActionUrl('/auth/verify-email'),
+    url: buildVerificationActionUrl(),
   });
 }
 
