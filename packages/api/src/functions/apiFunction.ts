@@ -35,7 +35,7 @@ function toFetchRequest(request: Parameters<Parameters<typeof onRequest>[0]>[0])
   });
 }
 
-export const api = onRequest(async (request, response) => {
+export const api = onRequest({ invoker: 'public' }, async (request, response) => {
   const honoResponse = await app.fetch(toFetchRequest(request));
 
   honoResponse.headers.forEach((value, key) => {
