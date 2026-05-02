@@ -60,9 +60,10 @@ jobs:
         run: pnpm install --dir packages/api/.firebase-runtime --prod --no-frozen-lockfile
 
       - name: Build (production mode)
+        working-directory: packages/web
         run: |
-          pnpm --dir packages/web exec vue-tsc --noEmit
-          pnpm --dir packages/web exec vite build --mode production
+          pnpm exec vue-tsc --noEmit
+          pnpm exec vite build --mode production
         env:
           VITE_SENTRY_RELEASE: ${{ github.sha }}
 
