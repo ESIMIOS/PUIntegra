@@ -200,6 +200,9 @@ function buildActionUrl(path: string) {
   return `${origin}${path}`;
 }
 
+/**
+ * @description Construye la URL de retorno del flujo estándar de verificación de correo.
+ */
 function buildVerificationActionUrl() {
   return buildActionUrl('/auth/verify-email?verified=1');
 }
