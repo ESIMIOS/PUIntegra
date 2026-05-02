@@ -5,7 +5,7 @@
   },
   "functions": {
     "source": "packages/api",
-    "runtime": "nodejs24"
+    "runtime": "nodejs22"
   },
   "hosting": {
     "public": "packages/web/dist",

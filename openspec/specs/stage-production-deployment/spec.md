@@ -16,12 +16,26 @@ The system SHALL deploy Firebase Hosting, Firebase Functions, Cloud Firestore ru
 
 ### Requirement: Deploys run repository quality gates
 
-The system SHALL run dependency installation, typecheck, lint, tests, web build, and API build before deploying an environment.
+The system SHALL run dependency installation, typecheck, lint, tests, web build, API build, and functions runtime bundle preparation before deploying an environment.
 
 #### Scenario: Quality gate fails
 
 - **WHEN** any required validation or build step fails
 - **THEN** CI MUST stop before deploying to Firebase
+
+### Requirement: Functions deploy from a runtime-compatible bundle
+
+The system SHALL deploy Firebase Functions from a generated runtime bundle that vendors the local shared package and uses a runtime compatible with the deployed function generation.
+
+#### Scenario: Functions include workspace-local shared code
+
+- **WHEN** CI prepares the functions deployment artifact
+- **THEN** it vendors `@puintegra/shared` into the generated functions source so Cloud Build does not need to resolve `workspace:*` dependencies
+
+#### Scenario: Mixed function generations exist
+
+- **WHEN** the deployed functions codebase still contains a Gen1 Auth trigger
+- **THEN** the configured Firebase Functions runtime MUST remain on a Gen1-supported Node.js version
 
 ### Requirement: Public runtime configuration comes from mode files
 

@@ -53,10 +53,17 @@ jobs:
       - name: Build API
         run: pnpm --filter @puintegra/api build
 
+      - name: Prepare Firebase Functions runtime bundle
+        run: node packages/api/scripts/prepare-firebase-runtime.mjs
+
       - name: Build (production mode)
         run: pnpm --filter @puintegra/web build -- --mode production
         env:
           VITE_SENTRY_RELEASE: ${{ github.sha }}
+
+      - name: Prepare Firebase deploy config (production)
+        run: |
+          node -e "const fs=require('fs'); const config=JSON.parse(fs.readFileSync('firebase.json','utf8')); config.functions={...config.functions, source:'packages/api/.firebase-runtime'}; fs.writeFileSync('firebase.deploy.json', JSON.stringify(config, null, 2) + '\n');"
 
       - name: Resolve Firebase project (production)
         run: |
@@ -76,7 +83,7 @@ jobs:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_PRODUCTION }}
 
       - name: Deploy to Firebase (production)
-        run: pnpm exec firebase deploy --project "$FIREBASE_PROJECT_ID" --only hosting,functions,firestore,storage --non-interactive
+        run: pnpm exec firebase deploy --config firebase.deploy.json --project "$FIREBASE_PROJECT_ID" --only hosting,functions,firestore,storage --non-interactive
 
       - name: Bootstrap system administrator permission (production)
         run: pnpm --filter @puintegra/api run bootstrap:system-admin
