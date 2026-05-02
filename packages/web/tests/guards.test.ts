@@ -22,6 +22,13 @@ import { routePaths } from '@/shared/constants/routePaths';
 import { hydrateSession } from '@/gateways/firebaseAuthGateway';
 import { beforeEach, vi } from 'vitest';
 
+vi.mock('@/shared/logging/systemLogger', () => ({
+  logSystemMessage: vi.fn(),
+  logSystemMessageVerbose: vi.fn(),
+  logSystemMessageWarning: vi.fn(),
+  logSystemMessageError: vi.fn(),
+}));
+
 vi.mock('@/gateways/firebaseAuthGateway', async () => {
   const actual = await vi.importActual<typeof import('@/gateways/firebaseAuthGateway')>(
     '@/gateways/firebaseAuthGateway',
