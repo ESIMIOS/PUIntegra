@@ -13,7 +13,6 @@ import { useRoute, useRouter } from 'vue-router';
 import { RoleSchema, formatUiErrorString } from '@shared';
 import { z } from 'zod';
 import { applyEmailVerificationCode, canResendEmailVerification, resendEmailVerification } from '@/gateways/firebaseAuthGateway';
-import SessionContextModal from '@/components/shared/SessionContextModal.vue';
 import { useAuthSession } from '@/composables/useAuthSession';
 import { resolvePreferredAuthenticatedPath } from '@/router/authLanding';
 import { routePaths } from '@/shared/constants/routePaths';
@@ -26,14 +25,12 @@ const errorMessage = ref<string | null>(null);
 const successMessage = ref<string | null>(null);
 const manualCode = ref('');
 const canResend = ref(false);
-const showContextModal = ref(false);
 const showLogoutConfirmation = ref(false);
 const verificationCompleted = computed(() => !!successMessage.value && !errorMessage.value);
 const arrivedFromVerifiedLink = computed(() => {
   const value = route.query.verified;
   return (Array.isArray(value) ? value[0] : value) === '1';
 });
-const hasPendingLogin = computed(() => !!authStore.pendingLogin);
 
 function readActionCode() {
   const value = route.query.oobCode;
@@ -58,40 +55,21 @@ async function establishAndRedirect(context: { role: z.infer<typeof RoleSchema>;
     activeRfc: context.rfc || activeRfc.value,
     redirectTarget: route.query.redirect,
   });
-  showContextModal.value = false;
   await router.push(redirectPath || defaultPath);
+}
+
+async function continueWithDefaultRoute() {
+  const login = await authStore.validateCurrentFirebaseUser();
+  await establishAndRedirect(login.contexts[0]);
 }
 
 async function handleContinue() {
   errorMessage.value = null;
   submitting.value = true;
   try {
-    const login = hasPendingLogin.value
-      ? authStore.pendingLogin
-      : await authStore.validateCurrentFirebaseUser();
-    if (!login) {
-      await router.push(routePaths.authLogin);
-      return;
-    }
-    if (login.contexts.length === 1) {
-      await establishAndRedirect(login.contexts[0]);
-      return;
-    }
-    showContextModal.value = true;
-  } catch (error) {
-    errorMessage.value = formatUiErrorString(error);
-  } finally {
-    submitting.value = false;
-  }
-}
-
-async function handleContextContinue(context: { role: z.infer<typeof RoleSchema>; rfc: string }) {
-  errorMessage.value = null;
-  submitting.value = true;
-  try {
-    await establishAndRedirect(context);
-  } catch (error) {
-    errorMessage.value = formatUiErrorString(error);
+    await continueWithDefaultRoute();
+  } catch {
+    await router.push(routePaths.authLogin);
   } finally {
     submitting.value = false;
   }
@@ -119,7 +97,7 @@ async function handleManualCode() {
   submitting.value = true;
   try {
     await applyEmailVerificationCode(code);
-    successMessage.value = 'Tu correo fue verificado. Puedes continuar con tu sesión.';
+    await continueWithDefaultRoute();
   } catch (error) {
     errorMessage.value = formatVerificationError(error);
   } finally {
@@ -148,8 +126,7 @@ async function applyCodeIfPresent() {
 
   submitting.value = true;
   try {
-    await authStore.validateCurrentFirebaseUser();
-    successMessage.value = 'Tu correo fue verificado. Puedes continuar con tu sesión.';
+    await continueWithDefaultRoute();
   } catch {
     successMessage.value = 'Tu correo fue verificado. Inicia sesión para continuar en PUIntegra.';
   } finally {
@@ -221,18 +198,6 @@ onMounted(() => {
       </div>
     </VaCardContent>
   </VaCard>
-
-  <SessionContextModal
-    v-model="showContextModal"
-    :contexts="authStore.pendingLogin?.contexts ?? []"
-    :loading="submitting"
-    :allow-cancel="false"
-    confirm-text="Continuar"
-    no-outside-dismiss
-    no-esc-dismiss
-    select-test-id="auth-verify-context"
-    @confirm="handleContextContinue"
-  />
 
   <VaModal
     v-model="showLogoutConfirmation"

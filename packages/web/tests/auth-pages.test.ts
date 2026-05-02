@@ -391,20 +391,6 @@ describe('Auth Pages', () => {
     await flushPromises();
 
     expect(mockedApplyEmailVerificationCode).toHaveBeenCalledWith('manual-oob-code');
-    expect(wrapper.text()).toContain('Tu correo fue verificado');
-    expect(wrapper.find('[data-testid="auth-verify-code"]').exists()).toBe(false);
-    expect(wrapper.text()).not.toContain('Reenviar correo');
-    expect(wrapper.text()).not.toContain('Ir a iniciar sesión');
-    expect(wrapper.text()).toContain('Continuar');
-    expect(wrapper.text()).toContain('Cerrar sesión');
-
-    const continueButton = wrapper.findAll('button').find((button) => button.text().includes('Continuar'));
-    if (!continueButton) {
-      throw new Error('Continue button not found.');
-    }
-    await continueButton.trigger('click');
-    await flushPromises();
-
     expect(mockedValidateCurrentFirebaseUser).toHaveBeenCalledOnce();
     expect(push).toHaveBeenCalledWith(routePaths.appDashboard(DEFAULT_RFC));
   });
@@ -415,9 +401,8 @@ describe('Auth Pages', () => {
     await flushPromises();
 
     expect(mockedValidateCurrentFirebaseUser).toHaveBeenCalledOnce();
-    expect(wrapper.text()).toContain('Tu correo fue verificado');
+    expect(push).toHaveBeenCalledWith(routePaths.appDashboard(DEFAULT_RFC));
     expect(wrapper.find('[data-testid="auth-verify-code"]').exists()).toBe(false);
-    expect(wrapper.text()).toContain('Continuar');
   });
 
   it('shows explicit verify-email code errors for invalid Firebase action codes', async () => {
