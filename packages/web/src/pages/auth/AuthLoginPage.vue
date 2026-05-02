@@ -2,10 +2,11 @@
 /**
  * @package web
  * @name AuthLoginPage.vue
- * @version 0.0.5
+ * @version 0.0.6
  * @description Implementa login Firebase con validación de credenciales y selección explícita de contexto.
  * @author @tirsomartinezreyes
  * @changelog
+ * - 0.0.6	(2026-05-02)	Limita credenciales precargadas al entorno local de desarrollo.	@codex
  * - 0.0.5	(2026-04-20)	Autoaplica el único contexto disponible y omite el modal de selección.	@codex
  * - 0.0.4	(2026-04-19)	Extrae selección de contexto a modal compartido y mantiene cierre de sesión confirmado.	@codex
  * - 0.0.3	(2026-04-19)	Mueve la redirección de sesión existente a una verificación no bloqueante.	@codex
@@ -28,8 +29,8 @@ const router = useRouter();
 const route = useRoute();
 const { authStore, activeRfc, ensureHydratedSession, establishLoginContext } = useAuthSession();
 
-const email = ref('admin@example.test');
-const password = ref('local-password');
+const email = ref(import.meta.env.DEV ? import.meta.env.VITE_AUTH_DEFAULT_EMAIL || '' : '');
+const password = ref(import.meta.env.DEV ? import.meta.env.VITE_AUTH_DEFAULT_PASSWORD || '' : '');
 const submitting = ref(false);
 const errorMessage = ref<string | null>(null);
 const errorDisplayMode = ref<'alert' | 'field'>('alert');
@@ -187,7 +188,7 @@ onMounted(() => {
         <VaInput
           v-model="email"
           label="Correo electrónico"
-          placeholder="admin@puintegra.app"
+          placeholder="user@domain.com"
           type="email"
           required
           :error="!!errorMessage && errorDisplayMode === 'field'"
