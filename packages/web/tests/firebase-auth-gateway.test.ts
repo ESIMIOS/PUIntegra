@@ -86,11 +86,11 @@ describe('firebase auth gateway', () => {
     mocks.auth.currentUser = null;
     vi.stubGlobal(
       'fetch',
-      vi.fn().mockResolvedValue(
-        Response.json({
+      vi.fn().mockImplementation(() =>
+        Promise.resolve(Response.json({
           ok: true,
           data: { accepted: true },
-        }),
+        })),
       ),
     );
   });
@@ -196,6 +196,7 @@ describe('firebase auth gateway', () => {
     const firebaseUser = {
       uid: 'new-user-001',
       email: 'owner@example.test',
+      getIdToken: vi.fn().mockResolvedValue('new-user-token'),
     };
     mocks.createUserWithEmailAndPassword.mockResolvedValue({ user: firebaseUser });
 
@@ -214,6 +215,20 @@ describe('firebase auth gateway', () => {
     );
     expect(mocks.createUserWithEmailAndPassword).toHaveBeenCalledWith(mocks.auth, 'owner@example.test', 'StrongPass1');
     expect(mocks.updateProfile).toHaveBeenCalledWith(firebaseUser, { displayName: 'María Operadora' });
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      '/api/account/profile',
+      expect.objectContaining({
+        method: 'PATCH',
+        headers: expect.objectContaining({
+          authorization: 'Bearer new-user-token',
+          'content-type': 'application/json',
+        }),
+        body: JSON.stringify({
+          name: 'María Operadora',
+          emojiIcon: '😎',
+        }),
+      }),
+    );
     expect(mocks.sendEmailVerification).toHaveBeenCalledWith(firebaseUser, expect.objectContaining({
       url: expect.stringContaining('/auth/verify-email'),
     }));
