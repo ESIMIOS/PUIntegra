@@ -61,8 +61,8 @@ jobs:
 
       - name: Build (staging mode)
         run: |
-          pnpm --filter @puintegra/web exec vue-tsc --noEmit
-          pnpm --filter @puintegra/web exec vite build --mode staging
+          pnpm --dir packages/web exec vue-tsc --noEmit
+          pnpm --dir packages/web exec vite build --mode staging
         env:
           VITE_SENTRY_RELEASE: ${{ github.sha }}
 

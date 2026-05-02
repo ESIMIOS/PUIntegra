@@ -61,8 +61,8 @@ jobs:
 
       - name: Build (production mode)
         run: |
-          pnpm --filter @puintegra/web exec vue-tsc --noEmit
-          pnpm --filter @puintegra/web exec vite build --mode production
+          pnpm --dir packages/web exec vue-tsc --noEmit
+          pnpm --dir packages/web exec vite build --mode production
         env:
           VITE_SENTRY_RELEASE: ${{ github.sha }}
 
