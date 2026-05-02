@@ -60,7 +60,9 @@ jobs:
         run: pnpm install --dir packages/api/.firebase-runtime --prod --no-frozen-lockfile
 
       - name: Build (staging mode)
-        run: pnpm --filter @puintegra/web build -- --mode staging
+        run: |
+          pnpm --filter @puintegra/web exec vue-tsc --noEmit
+          pnpm --filter @puintegra/web exec vite build --mode staging
         env:
           VITE_SENTRY_RELEASE: ${{ github.sha }}
 
