@@ -8,7 +8,6 @@ const repoRoot = resolve(apiDir, '..', '..');
 const sharedDir = resolve(repoRoot, 'packages', 'shared');
 const runtimeDir = resolve(apiDir, '.firebase-runtime');
 const vendorSharedDir = resolve(runtimeDir, 'vendor', 'shared');
-
 function assertExists(path, label) {
   if (!existsSync(path)) {
     throw new Error(`${label} not found at ${path}`);
