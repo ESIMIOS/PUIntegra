@@ -53,12 +53,6 @@ jobs:
       - name: Build API
         run: pnpm --filter @puintegra/api build
 
-      - name: Prepare Firebase Functions runtime bundle
-        run: node packages/api/scripts/prepare-firebase-runtime.mjs
-
-      - name: Install Firebase Functions runtime bundle dependencies
-        run: pnpm install --dir packages/api/.firebase-runtime --prod --no-frozen-lockfile
-
       - name: Build (production mode)
         working-directory: packages/web
         run: |
@@ -66,6 +60,13 @@ jobs:
           pnpm exec vite build --mode production
         env:
           VITE_SENTRY_RELEASE: ${{ github.sha }}
+
+      - name: Prepare Firebase Functions runtime bundle
+        run: node packages/api/scripts/prepare-firebase-runtime.mjs
+
+      - name: Install Firebase Functions runtime bundle dependencies
+        working-directory: packages/api/.firebase-runtime
+        run: npm install --omit=dev --no-package-lock
 
       - name: Prepare Firebase deploy config (production)
         run: |
