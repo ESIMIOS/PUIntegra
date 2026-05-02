@@ -76,7 +76,7 @@ jobs:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_STAGING }}
 
       - name: Deploy to Firebase (staging)
-        run: pnpm exec firebase deploy --project "$FIREBASE_PROJECT_ID" --only hosting,functions --non-interactive
+        run: pnpm exec firebase deploy --project "$FIREBASE_PROJECT_ID" --only hosting,functions,firestore,storage --non-interactive
 
       - name: Bootstrap system administrator permission (staging)
         run: pnpm --filter @puintegra/api run bootstrap:system-admin

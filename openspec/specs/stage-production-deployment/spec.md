@@ -1,18 +1,18 @@
 ## Requirements
 
-### Requirement: Environment deploys publish web and API together
+### Requirement: Environment deploys publish web, backend, and Firebase policy assets together
 
-The system SHALL deploy Firebase Hosting and Firebase Functions together for the stage and production environments.
+The system SHALL deploy Firebase Hosting, Firebase Functions, Cloud Firestore rules and indexes, and Cloud Storage rules together for the stage and production environments.
 
 #### Scenario: Staging branch deploys staging project
 
 - **WHEN** a qualifying commit is pushed to `stage`
-- **THEN** CI deploys Hosting and Functions to Firebase project `puintegra-staging`
+- **THEN** CI deploys Hosting, Functions, Firestore rules and indexes, and Storage rules to Firebase project `puintegra-staging`
 
 #### Scenario: Main branch deploys production project
 
 - **WHEN** a qualifying commit is pushed to `main`
-- **THEN** CI deploys Hosting and Functions to Firebase project `puintegra-production`
+- **THEN** CI deploys Hosting, Functions, Firestore rules and indexes, and Storage rules to Firebase project `puintegra-production`
 
 ### Requirement: Deploys run repository quality gates
 
