@@ -13,6 +13,10 @@ jobs:
   deploy-staging:
     name: Build & Deploy to Staging
     runs-on: ubuntu-latest
+    environment: staging
+    concurrency:
+      group: deploy-staging
+      cancel-in-progress: false
 
     steps:
       - uses: actions/checkout@v6
@@ -25,19 +29,56 @@ jobs:
           node-version: 24
           cache: pnpm
 
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+
       - name: Install dependencies
         # SONARQUBE: --ignore-scripts should not be used here because we need to run the postinstall scripts to build native dependencies like esbuild, there are white-listed in the root package.json using onlyBuiltDependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Typecheck
+        run: pnpm -r typecheck
+
+      - name: Lint
+        run: pnpm -r lint
+
+      - name: Test
+        run: pnpm -r test
+
+      - name: Test Firestore rules
+        run: pnpm --filter @puintegra/api run test:firestore-rules
+
+      - name: Build API
+        run: pnpm --filter @puintegra/api build
+
       - name: Build (staging mode)
-        run: pnpm --filter web build -- --mode staging
+        run: pnpm --filter @puintegra/web build -- --mode staging
         env:
           VITE_SENTRY_RELEASE: ${{ github.sha }}
 
+      - name: Resolve Firebase project (staging)
+        run: |
+          FIREBASE_PROJECT_ID="$(sed -n 's/^VITE_FIREBASE_PROJECT_ID=//p' .env.staging | tail -n 1)"
+          if [ -z "$FIREBASE_PROJECT_ID" ]; then
+            echo "VITE_FIREBASE_PROJECT_ID is missing in .env.staging" >&2
+            exit 1
+          fi
+          echo "FIREBASE_PROJECT_ID=$FIREBASE_PROJECT_ID" >> "$GITHUB_ENV"
+          echo "GCLOUD_PROJECT=$FIREBASE_PROJECT_ID" >> "$GITHUB_ENV"
+
+      - name: Authenticate Firebase
+        run: |
+          printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/firebase-service-account.json"
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/firebase-service-account.json" >> "$GITHUB_ENV"
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_STAGING }}
+
       - name: Deploy to Firebase (staging)
-        uses: FirebaseExtended/action-hosting-deploy@500ac625ca2dd40cbd15f7659af953801858032a # v0.10.0 Node 24
-        with:
-          repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_STAGING }}
-          projectId: puintegra-staging
-          channelId: live
+        run: pnpm exec firebase deploy --project "$FIREBASE_PROJECT_ID" --only hosting,functions --non-interactive
+
+      - name: Bootstrap system administrator permission (staging)
+        run: pnpm --filter @puintegra/api run bootstrap:system-admin
+        env:
+          PUINTEGRA_BOOTSTRAP_SYSTEM_ADMIN_EMAIL: ${{ vars.PUINTEGRA_BOOTSTRAP_SYSTEM_ADMIN_EMAIL }}
