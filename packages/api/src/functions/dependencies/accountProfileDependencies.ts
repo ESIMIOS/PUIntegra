@@ -121,6 +121,26 @@ function buildResponse(user: ReturnType<typeof UserSchema.parse>) {
   };
 }
 
+function buildMissingUser(
+  actor: ValidActor,
+  userId: string,
+  normalizedName: string,
+  normalizedEmojiIcon: string,
+  normalizedPhone: string | null,
+  now: number,
+) {
+  return UserSchema.parse({
+    userId,
+    name: normalizedName,
+    email: actor.email,
+    ...(normalizedPhone ? { phone: normalizedPhone } : {}),
+    emojiIcon: normalizedEmojiIcon,
+    updates: [],
+    createdAt: now,
+    updatedAt: now,
+  });
+}
+
 function buildUpdatedUser(
   currentUser: ReturnType<typeof UserSchema.parse>,
   changes: ProfileChanges,
@@ -154,14 +174,20 @@ export async function updateAccountProfile(input: AccountProfileUpdateInput) {
   const firestore = getAdminFirestore();
   const userRef = firestore.collection('users').doc(input.actor.userId);
   const userSnapshot = await userRef.get();
-  if (!userSnapshot.exists) {
-    throw new SystemError(apiSystemMessages.auth.lifecycle.invalidPayload, {
-      details: { userId: input.actor.userId, reason: 'user_profile_not_found' },
-    });
-  }
-  const currentUser = UserSchema.parse(userSnapshot.data());
-  const previousDisplayName = currentUser.name;
-  const changes = detectProfileChanges(currentUser, normalizedName, normalizedEmojiIcon, normalizedPhone, hasPhoneInput);
+  const userExists = userSnapshot.exists;
+  const currentUser = userExists
+    ? UserSchema.parse(userSnapshot.data())
+    : buildMissingUser(actor, input.actor.userId, normalizedName, normalizedEmojiIcon, normalizedPhone, now);
+  const previousDisplayName = userExists ? currentUser.name : null;
+  const changes = userExists
+    ? detectProfileChanges(currentUser, normalizedName, normalizedEmojiIcon, normalizedPhone, hasPhoneInput)
+    : {
+        nextPhone: normalizedPhone,
+        hasPhoneInput,
+        hasNameChange: true,
+        hasEmojiChange: true,
+        hasPhoneChange: hasPhoneInput,
+      };
 
   if (!changes.hasNameChange && !changes.hasEmojiChange && !changes.hasPhoneChange) {
     return buildResponse(currentUser);
@@ -216,7 +242,7 @@ export async function updateAccountProfile(input: AccountProfileUpdateInput) {
   } catch (error) {
     if (changes.hasNameChange) {
       try {
-        await auth.updateUser(input.actor.userId, { displayName: previousDisplayName });
+        await auth.updateUser(input.actor.userId, { displayName: previousDisplayName ?? undefined });
       } catch {
         // Keep the original persistence failure as the response error.
       }

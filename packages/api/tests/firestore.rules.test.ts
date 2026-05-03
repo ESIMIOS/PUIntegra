@@ -3,7 +3,7 @@
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { afterAll, beforeAll, beforeEach, describe, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, it, vi } from "vitest";
 import {
   assertFails,
   assertSucceeds,
@@ -27,6 +27,8 @@ const TENANT_OTHER_RFC = "ABCD010203EF4";
 let testEnv: RulesTestEnvironment;
 type PermissionStatus = (typeof PERMISSION_STATUS)[keyof typeof PERMISSION_STATUS];
 type Role = (typeof ROLE)[keyof typeof ROLE];
+const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
 
 function resolveEmulatorHost() {
   const [host = "127.0.0.1", portValue = "8081"] = (process.env.FIRESTORE_EMULATOR_HOST ?? "127.0.0.1:8081").split(":");
@@ -167,6 +169,8 @@ describe("firestore security rules", () => {
 
   afterAll(async () => {
     await testEnv.cleanup();
+    consoleWarnSpy.mockRestore();
+    consoleErrorSpy.mockRestore();
   });
 
   describe("users collection", () => {

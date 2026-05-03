@@ -1,10 +1,11 @@
 /**
  * @component firestore
  * @name firestore.rules
- * @version 0.0.7
+ * @version 0.0.8
  * @description Restricts client reads to own identity or granted tenant scope (`users`, `permissions`, tenant collections) and denies all writes.
  * @author @codex
  * @changelog
+ * - 0.0.8	(2026-05-02)	Unifica helpers de correo y RFC para evitar advertencias de tipos mixtos en compilación.	@codex
  * - 0.0.7	(2026-04-27)	Autoriza lecturas de logs globales, tenant y cuenta propia con mínimo alcance.	@codex
  * - 0.0.6	(2026-04-27)	Permite list reads de instituciones para SYSTEM_ADMINISTRATOR sin depender de campos del documento.	@codex
  * - 0.0.5	(2026-04-20)	Permite lectura de permissions por correo propio o por alcance tenant concedido.	@codex
@@ -28,13 +29,13 @@ service cloud.firestore {
     function signedEmail() {
       return isSignedIn() && request.auth.token.email is string
         ? request.auth.token.email.lower()
-        : null;
+        : "";
     }
 
     function normalizedRfc(value) {
       return value is string
         ? value.lower()
-        : null;
+        : "";
     }
 
     function permissionDocumentId(email, rfc) {
@@ -60,8 +61,8 @@ service cloud.firestore {
 
     function hasTenantReadGrant(rfc) {
       return isSignedIn() &&
-        signedEmail() != null &&
-        normalizedRfc(rfc) != null &&
+        signedEmail() != "" &&
+        normalizedRfc(rfc) != "" &&
         (
           hasSystemAdministratorGrantForEmail(signedEmail()) ||
           hasGrantedPermission(signedEmail(), normalizedRfc(rfc))
@@ -77,7 +78,7 @@ service cloud.firestore {
         (
           (
             permission.email is string &&
-            signedEmail() != null &&
+            signedEmail() != "" &&
             permission.email.lower() == signedEmail()
           ) ||
           (
@@ -100,7 +101,7 @@ service cloud.firestore {
 
     function canReadLog(data) {
       return isSignedIn() &&
-        signedEmail() != null &&
+        signedEmail() != "" &&
         (
           hasSystemAdministratorGrantForEmail(signedEmail()) ||
           canReadTenantByRfcField(data) ||
@@ -110,7 +111,7 @@ service cloud.firestore {
 
     function canReadInstitution(documentId, data) {
       return isSignedIn() &&
-        signedEmail() != null &&
+        signedEmail() != "" &&
         (
           hasSystemAdministratorGrantForEmail(signedEmail()) ||
           (

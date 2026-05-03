@@ -41,6 +41,7 @@ function readFirebaseConfig() {
     storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET ?? `${projectId}.appspot.com`,
     messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID ?? "000000000000",
     appId: import.meta.env.VITE_FIREBASE_APP_ID ?? `1:000000000000:web:${projectId}`,
+    measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID ?? `G-0000000000`,
   };
 }
 

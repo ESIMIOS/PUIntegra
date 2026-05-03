@@ -12,6 +12,15 @@ import {
 } from '@puintegra/shared';
 import { apiSystemMessages } from '../src/constants/systemMessages';
 
+vi.mock('firebase-functions/v2', () => ({
+  logger: {
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  },
+}));
+
 function createDefaultDependencies(overrides: Partial<Parameters<typeof createApiApp>[0]> = {}) {
   return {
     verifyBearerToken: vi.fn(),

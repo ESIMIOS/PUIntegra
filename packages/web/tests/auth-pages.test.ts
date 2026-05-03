@@ -44,8 +44,9 @@ import { mountWithVuestic } from './utils/mount';
 
 const push = vi.fn();
 const replace = vi.fn();
+const routeQuery: Record<string, unknown> = {};
 vi.mock('vue-router', () => ({
-  useRoute: () => ({ fullPath: '/auth/login', query: {} }),
+  useRoute: () => ({ fullPath: '/auth/login', query: routeQuery }),
   useRouter: () => ({ push, replace }),
 }));
 
@@ -118,6 +119,9 @@ describe('Auth Pages', () => {
   beforeEach(() => {
     setActivePinia(createPinia());
     globalThis.localStorage.clear();
+    Object.keys(routeQuery).forEach((key) => {
+      delete routeQuery[key];
+    });
     push.mockClear();
     replace.mockClear();
     mockedEstablishSession.mockReset();
@@ -387,22 +391,18 @@ describe('Auth Pages', () => {
     await flushPromises();
 
     expect(mockedApplyEmailVerificationCode).toHaveBeenCalledWith('manual-oob-code');
-    expect(wrapper.text()).toContain('Tu correo fue verificado');
-    expect(wrapper.find('[data-testid="auth-verify-code"]').exists()).toBe(false);
-    expect(wrapper.text()).not.toContain('Reenviar correo');
-    expect(wrapper.text()).not.toContain('Ir a iniciar sesión');
-    expect(wrapper.text()).toContain('Continuar');
-    expect(wrapper.text()).toContain('Cerrar sesión');
+    expect(mockedValidateCurrentFirebaseUser).toHaveBeenCalledOnce();
+    expect(push).toHaveBeenCalledWith(routePaths.appDashboard(DEFAULT_RFC));
+  });
 
-    const continueButton = wrapper.findAll('button').find((button) => button.text().includes('Continuar'));
-    if (!continueButton) {
-      throw new Error('Continue button not found.');
-    }
-    await continueButton.trigger('click');
+  it('treats verified email redirect landings as success without asking for a manual code', async () => {
+    routeQuery.verified = '1';
+    const wrapper = mountWithContext(AuthVerifyEmailPage);
     await flushPromises();
 
     expect(mockedValidateCurrentFirebaseUser).toHaveBeenCalledOnce();
     expect(push).toHaveBeenCalledWith(routePaths.appDashboard(DEFAULT_RFC));
+    expect(wrapper.find('[data-testid="auth-verify-code"]').exists()).toBe(false);
   });
 
   it('shows explicit verify-email code errors for invalid Firebase action codes', async () => {

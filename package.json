@@ -21,7 +21,9 @@
       "farmhash",
       "protobufjs",
       "vue-demi",
-      "@firebase/util"
+      "@firebase/util",
+      "firebase-tools",
+      "re2"
     ],
     "overrides": {
       "protobufjs": "7.5.5",

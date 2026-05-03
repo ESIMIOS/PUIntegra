@@ -13,7 +13,6 @@ import { useRoute, useRouter } from 'vue-router';
 import { RoleSchema, formatUiErrorString } from '@shared';
 import { z } from 'zod';
 import { applyEmailVerificationCode, canResendEmailVerification, resendEmailVerification } from '@/gateways/firebaseAuthGateway';
-import SessionContextModal from '@/components/shared/SessionContextModal.vue';
 import { useAuthSession } from '@/composables/useAuthSession';
 import { resolvePreferredAuthenticatedPath } from '@/router/authLanding';
 import { routePaths } from '@/shared/constants/routePaths';
@@ -26,9 +25,12 @@ const errorMessage = ref<string | null>(null);
 const successMessage = ref<string | null>(null);
 const manualCode = ref('');
 const canResend = ref(false);
-const showContextModal = ref(false);
 const showLogoutConfirmation = ref(false);
 const verificationCompleted = computed(() => !!successMessage.value && !errorMessage.value);
+const arrivedFromVerifiedLink = computed(() => {
+  const value = route.query.verified;
+  return (Array.isArray(value) ? value[0] : value) === '1';
+});
 
 function readActionCode() {
   const value = route.query.oobCode;
@@ -53,34 +55,21 @@ async function establishAndRedirect(context: { role: z.infer<typeof RoleSchema>;
     activeRfc: context.rfc || activeRfc.value,
     redirectTarget: route.query.redirect,
   });
-  showContextModal.value = false;
   await router.push(redirectPath || defaultPath);
+}
+
+async function continueWithDefaultRoute() {
+  const login = await authStore.validateCurrentFirebaseUser();
+  await establishAndRedirect(login.contexts[0]);
 }
 
 async function handleContinue() {
   errorMessage.value = null;
   submitting.value = true;
   try {
-    const login = await authStore.validateCurrentFirebaseUser();
-    if (login.contexts.length === 1) {
-      await establishAndRedirect(login.contexts[0]);
-      return;
-    }
-    showContextModal.value = true;
-  } catch (error) {
-    errorMessage.value = formatUiErrorString(error);
-  } finally {
-    submitting.value = false;
-  }
-}
-
-async function handleContextContinue(context: { role: z.infer<typeof RoleSchema>; rfc: string }) {
-  errorMessage.value = null;
-  submitting.value = true;
-  try {
-    await establishAndRedirect(context);
-  } catch (error) {
-    errorMessage.value = formatUiErrorString(error);
+    await continueWithDefaultRoute();
+  } catch {
+    await router.push(routePaths.authLogin);
   } finally {
     submitting.value = false;
   }
@@ -108,7 +97,7 @@ async function handleManualCode() {
   submitting.value = true;
   try {
     await applyEmailVerificationCode(code);
-    successMessage.value = 'Tu correo fue verificado. Puedes continuar con tu sesión.';
+    await continueWithDefaultRoute();
   } catch (error) {
     errorMessage.value = formatVerificationError(error);
   } finally {
@@ -118,15 +107,28 @@ async function handleManualCode() {
 
 async function applyCodeIfPresent() {
   const code = readActionCode();
-  if (!code) {
+  if (code) {
+    submitting.value = true;
+    try {
+      await applyEmailVerificationCode(code);
+      successMessage.value = 'Tu correo fue verificado. Puedes continuar con tu sesión.';
+    } catch (error) {
+      errorMessage.value = formatVerificationError(error);
+    } finally {
+      submitting.value = false;
+    }
     return;
   }
+
+  if (!arrivedFromVerifiedLink.value) {
+    return;
+  }
+
   submitting.value = true;
   try {
-    await applyEmailVerificationCode(code);
-    successMessage.value = 'Tu correo fue verificado. Puedes continuar con tu sesión.';
-  } catch (error) {
-    errorMessage.value = formatVerificationError(error);
+    await continueWithDefaultRoute();
+  } catch {
+    successMessage.value = 'Tu correo fue verificado. Inicia sesión para continuar en PUIntegra.';
   } finally {
     submitting.value = false;
   }
@@ -161,7 +163,7 @@ onMounted(() => {
           Necesitamos confirmar que el correo te pertenece antes de habilitar el acceso a PUIntegra y a la
           configuración de seguridad.
         </p>
-        <form v-if="!verificationCompleted" class="grid gap-2" @submit.prevent="handleManualCode">
+        <form v-if="!verificationCompleted && !arrivedFromVerifiedLink" class="grid gap-2" @submit.prevent="handleManualCode">
           <VaInput
             v-model="manualCode"
             label="Código de verificación"
@@ -178,12 +180,12 @@ onMounted(() => {
         <VaAlert v-if="errorMessage" color="danger" icon="warning" dense>
           {{ errorMessage }}
         </VaAlert>
-        <VaAlert v-if="!verificationCompleted && !canResend" color="info" icon="info" dense>
+        <VaAlert v-if="!verificationCompleted && !arrivedFromVerifiedLink && !canResend" color="info" icon="info" dense>
           Para reenviar el correo necesitas haber iniciado sesión con la cuenta pendiente de verificación. Si abriste
           esta página directamente, usa el enlace recibido por correo o vuelve a iniciar sesión.
         </VaAlert>
         <div class="flex flex-wrap gap-2">
-          <VaButton v-if="!verificationCompleted" :loading="submitting" :disabled="submitting || !canResend" @click="handleResend">
+          <VaButton v-if="!verificationCompleted && !arrivedFromVerifiedLink" :loading="submitting" :disabled="submitting || !canResend" @click="handleResend">
             Reenviar correo
           </VaButton>
           <VaButton v-if="verificationCompleted" :loading="submitting" :disabled="submitting" @click="handleContinue">
@@ -196,18 +198,6 @@ onMounted(() => {
       </div>
     </VaCardContent>
   </VaCard>
-
-  <SessionContextModal
-    v-model="showContextModal"
-    :contexts="authStore.pendingLogin?.contexts ?? []"
-    :loading="submitting"
-    :allow-cancel="false"
-    confirm-text="Continuar"
-    no-outside-dismiss
-    no-esc-dismiss
-    select-test-id="auth-verify-context"
-    @confirm="handleContextContinue"
-  />
 
   <VaModal
     v-model="showLogoutConfirmation"
