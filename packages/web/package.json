@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@puintegra/shared": "workspace:*",
-    "@sentry/vue": "10.50.0",
+    "@sentry/vue": "10.51.0",
     "firebase": "12.12.1",
     "vue": "3.5.33",
     "vuestic-ui": "1.10.3"
