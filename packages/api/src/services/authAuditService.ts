@@ -39,7 +39,7 @@ type AuthEventLogInput = {
   originTraceId: string;
   userId: string;
   email?: string | null;
-  role?: (typeof RoleSchema)['enum'][keyof (typeof RoleSchema)['enum']] | null;
+  role?: string | null;
 };
 
 type UserCreatedLogInput = {
@@ -110,6 +110,7 @@ export function buildUserProfileFromAuthUser(authUser: AuthUserProfileInput, now
  * @description Construye bitácora de login/logout reportada por la API HTTP autenticada.
  */
 export function buildAuthEventLog(input: AuthEventLogInput, now: number): Log {
+  const parsedRole = RoleSchema.safeParse(input.role);
   return LogSchema.parse({
     id: input.id,
     category: AUTH_EVENT_CATEGORY[input.event],
@@ -119,7 +120,7 @@ export function buildAuthEventLog(input: AuthEventLogInput, now: number): Log {
     userId: input.userId,
     execution: {
       executedByUserId: input.userId,
-      executedByRole: input.role ?? null,
+      executedByRole: parsedRole.success ? parsedRole.data : null,
       executedByUserEmail: input.email ?? null,
     },
     impact: {},
