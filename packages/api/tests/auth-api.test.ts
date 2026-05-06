@@ -95,6 +95,7 @@ describe('auth event API routes', () => {
       originTraceId: 'execution-id-login',
       userId: 'dev-user-001',
       email: 'admin@example.test',
+      role: ROLE.SYSTEM_ADMINISTRATOR,
     });
   });
 
@@ -124,6 +125,7 @@ describe('auth event API routes', () => {
         event: 'logout',
         originTraceId: 'generated-trace-id',
         userId: 'dev-user-001',
+        role: ROLE.SYSTEM_ADMINISTRATOR,
       }),
     );
   });

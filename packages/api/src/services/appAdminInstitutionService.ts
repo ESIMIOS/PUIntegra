@@ -87,7 +87,7 @@ function buildAuditLog(input: {
     userId: input.actor.userId,
     execution: {
       executedByUserId: input.actor.userId,
-      executedByUserRole: input.actor.role,
+      executedByRole: input.actor.role,
       executedByUserEmail: input.actor.email,
     },
     impact: input.impact ?? {},

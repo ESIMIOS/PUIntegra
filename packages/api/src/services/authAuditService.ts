@@ -12,7 +12,7 @@
  * - 0.0.1	(2026-04-19)	Agrega builders para perfil Auth, alta de cuenta, login y logout.	@codex
  */
 
-import { LOG_CATEGORIES, LOG_ORIGIN, LogSchema, UserSchema, type Log, type User } from "@puintegra/shared";
+import { LOG_CATEGORIES, LOG_ORIGIN, LogSchema, RoleSchema, UserSchema, type Log, type User } from "@puintegra/shared";
 import { z } from "zod";
 
 export const AuthEventNameSchema = z.enum(["login", "logout"]);
@@ -39,6 +39,7 @@ type AuthEventLogInput = {
   originTraceId: string;
   userId: string;
   email?: string | null;
+  role?: (typeof RoleSchema)['enum'][keyof (typeof RoleSchema)['enum']] | null;
 };
 
 type UserCreatedLogInput = {
@@ -118,6 +119,7 @@ export function buildAuthEventLog(input: AuthEventLogInput, now: number): Log {
     userId: input.userId,
     execution: {
       executedByUserId: input.userId,
+      executedByRole: input.role ?? null,
       executedByUserEmail: input.email ?? null,
     },
     impact: {},

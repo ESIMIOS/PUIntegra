@@ -48,6 +48,7 @@ export function createAuthEventHandler(dependencies: CreateApiAppDependencies, e
       originTraceId,
       userId: verified.userId,
       email: verified.email ?? null,
+      role: verified.role ?? null,
     });
 
     return context.json(

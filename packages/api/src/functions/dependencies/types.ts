@@ -21,6 +21,7 @@ export type AuthEventWriteInput = {
   originTraceId: string;
   userId: string;
   email?: string | null;
+  role?: string | null;
 };
 
 export type AuthLifecyclePolicyInput = {

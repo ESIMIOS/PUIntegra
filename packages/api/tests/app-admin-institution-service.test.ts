@@ -1,6 +1,23 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { COMMERCIAL_PLAN, COMMERCIAL_PLAN_STATUS, HTTP_STATUS, ROLE, SystemError, type Institution } from '@puintegra/shared';
-import { AppAdminInstitutionService, buildSharedSecretUpdateResult } from '../src/services/appAdminInstitutionService';
+import {
+  COMMERCIAL_PLAN,
+  COMMERCIAL_PLAN_STATUS,
+  HTTP_STATUS,
+  INSTITUTION_CONTACT_TYPE,
+  PERMISSION_STATUS,
+  ROLE,
+  SystemError,
+  type Contact,
+  type Institution,
+  type Permission,
+} from '@puintegra/shared';
+import {
+  AppAdminInstitutionService,
+  buildContactUpsertResult,
+  buildPermissionCreateResult,
+  buildPermissionUpdateResult,
+  buildSharedSecretUpdateResult,
+} from '../src/services/appAdminInstitutionService';
 
 const ORIGINAL_MASTER_KEY = process.env.PUINTEGRA_SHARED_SECRET_MASTER_KEY;
 
@@ -14,6 +31,35 @@ function createInstitutionFixture(): Institution {
     SHA256SharedSecret: null,
     planStartAt: 1710000000000,
     planFinishAt: 1720000000000,
+    updates: [],
+    createdAt: 1710000000000,
+    updatedAt: 1710000000000,
+  };
+}
+
+function createContactFixture(type: Contact['type']): Contact {
+  return {
+    contactId: 'contact-001',
+    type,
+    RFC: 'AAA010101AAA',
+    name: 'Contacto Inicial',
+    phone: '+525500000000',
+    contactCURP: 'MART810609HDFRYR03',
+    contactRFC: 'AAA010101AAA',
+    efirmaCertificate: 'CERT-OLD',
+    updates: [],
+    createdAt: 1710000000000,
+    updatedAt: 1710000000000,
+  };
+}
+
+function createPermissionFixture(): Permission {
+  return {
+    permissionId: 'owner@example.test__aaa010101aaa',
+    RFC: 'AAA010101AAA',
+    email: 'owner@example.test',
+    role: ROLE.INSTITUTION_OPERATOR,
+    status: PERMISSION_STATUS.GRANTED,
     updates: [],
     createdAt: 1710000000000,
     updatedAt: 1710000000000,
@@ -105,6 +151,103 @@ describe('buildSharedSecretUpdateResult', () => {
     expect(result.institution.SHA256SharedSecret).toBeTruthy();
     expect(result.institution.sharedSecret).toContain('"alg":"aes-256-gcm"');
     expect(result.response.sharedSecretConfigured).toBe(true);
+    expect(result.log.execution.executedByRole).toBe(ROLE.INSTITUTION_ADMIN);
+  });
+});
+
+describe('app-admin audit log execution role', () => {
+  it('sets executedByRole for contact creation', () => {
+    const result = buildContactUpsertResult({
+      existingContact: null,
+      contactType: INSTITUTION_CONTACT_TYPE.LEGAL,
+      rfc: 'AAA010101AAA',
+      payload: {
+        type: INSTITUTION_CONTACT_TYPE.LEGAL,
+        name: 'Contacto Legal',
+        phone: '+525533748806',
+        contactCURP: 'MART810609HDFRYR03',
+        contactRFC: 'AAA010101AAA',
+        efirmaCertificate: 'CERT',
+      },
+      actor: {
+        userId: 'user-001',
+        email: 'admin@example.com',
+        role: ROLE.INSTITUTION_ADMIN,
+      },
+      originTraceId: 'trace-contact-create',
+      now: 1710000000100,
+      contactId: 'contact-new',
+      logId: 'log-contact-create',
+    });
+
+    expect(result.log.execution.executedByRole).toBe(ROLE.INSTITUTION_ADMIN);
+  });
+
+  it('sets executedByRole for contact update', () => {
+    const result = buildContactUpsertResult({
+      existingContact: createContactFixture(INSTITUTION_CONTACT_TYPE.TECHNICAL),
+      contactType: INSTITUTION_CONTACT_TYPE.TECHNICAL,
+      rfc: 'AAA010101AAA',
+      payload: {
+        type: INSTITUTION_CONTACT_TYPE.TECHNICAL,
+        name: 'Contacto Técnico',
+        phone: '+525533748807',
+        contactCURP: 'MART810609HDFRYR03',
+      },
+      actor: {
+        userId: 'user-001',
+        email: 'admin@example.com',
+        role: ROLE.INSTITUTION_ADMIN,
+      },
+      originTraceId: 'trace-contact-update',
+      now: 1710000000101,
+      contactId: 'contact-tech',
+      logId: 'log-contact-update',
+    });
+
+    expect(result.log.execution.executedByRole).toBe(ROLE.INSTITUTION_ADMIN);
+  });
+
+  it('sets executedByRole for permission creation', () => {
+    const result = buildPermissionCreateResult({
+      rfc: 'AAA010101AAA',
+      payload: {
+        email: 'new.user@example.com',
+        role: ROLE.INSTITUTION_OPERATOR,
+        status: PERMISSION_STATUS.GRANTED,
+      },
+      actor: {
+        userId: 'user-001',
+        email: 'admin@example.com',
+        role: ROLE.INSTITUTION_ADMIN,
+      },
+      originTraceId: 'trace-permission-create',
+      now: 1710000000102,
+      permissionId: 'new.user@example.com__aaa010101aaa',
+      logId: 'log-permission-create',
+    });
+
+    expect(result.log.execution.executedByRole).toBe(ROLE.INSTITUTION_ADMIN);
+  });
+
+  it('sets executedByRole for permission update', () => {
+    const result = buildPermissionUpdateResult({
+      permission: createPermissionFixture(),
+      payload: {
+        role: ROLE.INSTITUTION_ADMIN,
+        status: PERMISSION_STATUS.DENIED,
+      },
+      actor: {
+        userId: 'user-001',
+        email: 'admin@example.com',
+        role: ROLE.INSTITUTION_ADMIN,
+      },
+      originTraceId: 'trace-permission-update',
+      now: 1710000000103,
+      logId: 'log-permission-update',
+    });
+
+    expect(result.log.execution.executedByRole).toBe(ROLE.INSTITUTION_ADMIN);
   });
 });
 
