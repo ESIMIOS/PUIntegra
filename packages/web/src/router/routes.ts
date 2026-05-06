@@ -218,7 +218,7 @@ export const appRoutes = [
           requiresAuth: true,
           requiresInstitutionContext: true,
           requiresSecuritySetup: true,
-          allowedRoles: [ROLE.INSTITUTION_ADMIN]
+          allowedRoles: institutionRoles
         })
       },
       {
@@ -231,7 +231,7 @@ export const appRoutes = [
           requiresAuth: true,
           requiresInstitutionContext: true,
           requiresSecuritySetup: true,
-          allowedRoles: [ROLE.INSTITUTION_ADMIN]
+          allowedRoles: institutionRoles
         })
       },
       {
@@ -244,7 +244,7 @@ export const appRoutes = [
           requiresAuth: true,
           requiresInstitutionContext: true,
           requiresSecuritySetup: true,
-          allowedRoles: [ROLE.INSTITUTION_ADMIN]
+          allowedRoles: institutionRoles
         })
       },
       {
@@ -257,7 +257,7 @@ export const appRoutes = [
           requiresAuth: true,
           requiresInstitutionContext: true,
           requiresSecuritySetup: true,
-          allowedRoles: [ROLE.INSTITUTION_ADMIN]
+          allowedRoles: institutionRoles
         })
       },
       {

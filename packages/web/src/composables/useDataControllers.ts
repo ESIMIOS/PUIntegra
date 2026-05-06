@@ -76,6 +76,36 @@ export function useAdminTenantInspectionController() {
 }
 
 /**
+ * @description Expone lectura y mutaciones administrativas para la institucion activa del dominio app.
+ */
+export function useAppAdminInstitutionController() {
+  const store = useDataStore();
+  return {
+    isLoading: computed(() => store.isLoading),
+    isSaving: computed(() => store.isSaving),
+    errorMessage: computed(() => store.userErrorMessage),
+    loadInstitutionByRfc: (rfc: string) => store.getInstitutionByRfc(rfc),
+    loadContactsByRfc: (rfc: string) => store.listContactsByRfc(rfc),
+    loadPermissionsByRfc: (rfc: string) => store.listPermissionsByRfc(rfc),
+    upsertInstitutionContact: (
+      rfc: string,
+      contactType: string,
+      input: Parameters<typeof store.upsertInstitutionContact>[2],
+    ) => store.upsertInstitutionContact(rfc, contactType, input),
+    updateInstitutionSharedSecret: (rfc: string, input: { sharedSecret: string }) =>
+      store.updateInstitutionSharedSecret(rfc, input),
+    createInstitutionPermission: (rfc: string, input: Parameters<typeof store.createInstitutionPermission>[1]) =>
+      store.createInstitutionPermission(rfc, input),
+    updateInstitutionPermission: (
+      rfc: string,
+      permissionId: string,
+      input: Parameters<typeof store.updateInstitutionPermission>[2],
+    ) => store.updateInstitutionPermission(rfc, permissionId, input),
+    retry: () => store.clearError(),
+  };
+}
+
+/**
  * @description Expone alta institucional de backoffice mediante API HTTP.
  */
 export function useInstitutionOnboardingController() {

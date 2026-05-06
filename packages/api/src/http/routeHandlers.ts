@@ -34,4 +34,11 @@ export {
   createInstitutionPlanUpdateHandler,
 } from './handlers/adminHandlers.js';
 
+export {
+  createInstitutionContactUpsertHandler,
+  createInstitutionPermissionCreateHandler,
+  createInstitutionPermissionUpdateHandler,
+  createInstitutionSharedSecretUpdateHandler,
+} from './handlers/appAdminHandlers.js';
+
 export { createAccountProfileUpdateHandler } from './handlers/accountHandlers.js';

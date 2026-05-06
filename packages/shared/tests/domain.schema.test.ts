@@ -171,6 +171,34 @@ describe('stage1 schemas', () => {
     }).success).toBe(true);
   });
 
+  it('accepts encrypted shared secret payload with SHA256 fingerprint and rejects empty SHA value', () => {
+    expect(InstitutionSchema.safeParse({
+      RFC: 'CCC010101CCC',
+      name: 'Institucion Cifrada',
+      plan: COMMERCIAL_PLAN.ENTERPRISE,
+      planStatus: COMMERCIAL_PLAN_STATUS.ACTIVE,
+      sharedSecret: '{"alg":"aes-256-gcm","keyVersion":"v1","context":"puintegra/shared-secret/v1","iv":"abc","tag":"def","ciphertext":"ghi"}',
+      SHA256SharedSecret: '0123456789abcdef',
+      planStartAt: NOW,
+      planFinishAt: NOW,
+      createdAt: NOW,
+      updatedAt: NOW
+    }).success).toBe(true);
+
+    expect(InstitutionSchema.safeParse({
+      RFC: 'DDD010101DDD',
+      name: 'Institucion Invalida',
+      plan: COMMERCIAL_PLAN.PORTAL,
+      planStatus: COMMERCIAL_PLAN_STATUS.WARNING,
+      sharedSecret: '{"ciphertext":"ok"}',
+      SHA256SharedSecret: '',
+      planStartAt: NOW,
+      planFinishAt: NOW,
+      createdAt: NOW,
+      updatedAt: NOW
+    }).success).toBe(false);
+  });
+
   it('validates institution plan update payloads', () => {
     expect(UpdateInstitutionPlanSchema.safeParse({
       plan: COMMERCIAL_PLAN.CLOUD,

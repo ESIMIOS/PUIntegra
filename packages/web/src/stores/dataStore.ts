@@ -28,6 +28,12 @@ import {
 import { createInstitutionOnboarding } from '@/gateways/institutionOnboardingGateway';
 import { updateInstitutionPlan } from '@/gateways/institutionPlanGateway';
 import { updateAccountProfile } from '@/gateways/accountProfileGateway';
+import {
+  createInstitutionPermission,
+  updateInstitutionPermission,
+  updateInstitutionSharedSecret,
+  upsertInstitutionContact,
+} from '@/gateways/appAdminInstitutionGateway';
 import { systemMessageTree } from '@/shared/constants/systemMessages';
 
 /**
@@ -130,6 +136,34 @@ export const useDataStore = defineStore('data', {
     },
     updateAccountProfile(input: { name: string; emojiIcon: string; phone?: string | null }) {
       return this.withSaving(() => updateAccountProfile(input), 'Failed to update account profile.');
+    },
+    upsertInstitutionContact(rfc: string, contactType: string, input: Parameters<typeof upsertInstitutionContact>[2]) {
+      return this.withSaving(
+        () => upsertInstitutionContact(rfc, contactType, input),
+        'Failed to upsert institution contact.',
+      );
+    },
+    updateInstitutionSharedSecret(rfc: string, input: { sharedSecret: string }) {
+      return this.withSaving(
+        () => updateInstitutionSharedSecret(rfc, input),
+        'Failed to update institution shared secret.',
+      );
+    },
+    createInstitutionPermission(rfc: string, input: Parameters<typeof createInstitutionPermission>[1]) {
+      return this.withSaving(
+        () => createInstitutionPermission(rfc, input),
+        'Failed to create institution permission.',
+      );
+    },
+    updateInstitutionPermission(
+      rfc: string,
+      permissionId: string,
+      input: Parameters<typeof updateInstitutionPermission>[2],
+    ) {
+      return this.withSaving(
+        () => updateInstitutionPermission(rfc, permissionId, input),
+        'Failed to update institution permission.',
+      );
     },
   },
 });

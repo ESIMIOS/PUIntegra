@@ -62,6 +62,7 @@ export const InstitutionSchema = z.object({
   plan: CommercialPlanSchema,
   planStatus: CommercialPlanStatusSchema,
   sharedSecret: z.string().min(1).nullable().optional(),
+  SHA256SharedSecret: z.string().min(1).nullable().optional(),
   planStartAt: TimestampMillisecondsUtcSchema,
   planFinishAt: TimestampMillisecondsUtcSchema,
   updates: z.array(InstitutionUpdateSchema).default([]),

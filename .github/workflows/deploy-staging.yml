@@ -60,6 +60,7 @@ jobs:
           pnpm exec vite build --mode staging
         env:
           VITE_SENTRY_RELEASE: ${{ github.sha }}
+          PUINTEGRA_SHARED_SECRET_MASTER_KEY: ${{ secrets.PUINTEGRA_SHARED_SECRET_MASTER_KEY_STAGING }}
 
       - name: Prepare Firebase Functions runtime bundle
         run: node packages/api/scripts/prepare-firebase-runtime.mjs
