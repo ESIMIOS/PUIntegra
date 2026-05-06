@@ -6,12 +6,13 @@
  * @description Gestiona el secreto compartido institucional sin exponer su valor en claro.
  * @author @codex
  * @changelog
- * - 0.0.2	(2026-05-04)	Reemplaza placeholder por gestion de secreto compartido con confirmacion critica.	@codex
+ * - 0.0.2	(2026-05-04)	Reemplaza placeholder por gestión de secreto compartido con confirmación crítica.	@codex
  * - 0.0.1	(2026-04-10)	Version inicial del archivo.	@tirsomartinezreyes
  */
 import { computed, onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import type { Institution } from '@shared';
+import { ROLE } from '@shared';
 import { useAppAdminInstitutionController } from '@/composables/useDataControllers';
 import { useAuthStore } from '@/stores/authStore';
 
@@ -23,7 +24,7 @@ const sharedSecret = ref('');
 const showEditModal = ref(false);
 const showConfirmModal = ref(false);
 const routeRfc = computed(() => String(route.params.rfc ?? '').trim().toUpperCase());
-const isReadOnly = computed(() => authStore.activeRole !== 'INSTITUTION_ADMIN');
+const isReadOnly = computed(() => authStore.activeRole !== ROLE.INSTITUTION_ADMIN);
 
 const hasSharedSecretConfigured = computed(() => !!institution.value?.sharedSecret);
 

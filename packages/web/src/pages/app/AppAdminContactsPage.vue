@@ -51,9 +51,10 @@ const canSubmit = computed(() => {
   const normalizedPhone = normalizePhone(phone.value);
   const required = name.value.trim() && normalizedPhone && contactCURP.value.trim();
   const validPhone = phoneRegex.test(normalizedPhone);
+  const validCurp = curpRegex.test(contactCURP.value.trim().toUpperCase());
   const hasLegalCert = !isLegalSlot.value || efirmaCertificate.value.trim().length > 0;
   const validContactRfc = !contactRFC.value.trim() || rfcRegex.test(contactRFC.value.trim().toUpperCase());
-  return !!required && validPhone && hasLegalCert && validContactRfc;
+  return !!required && validPhone && validCurp && hasLegalCert && validContactRfc;
 });
 
 function byType(type: ContactType) {
@@ -96,12 +97,14 @@ async function submit() {
   if (!canSubmit.value) {
     return;
   }
+  const normalizedPhone = normalizePhone(phone.value);
+  const normalizedContactRfc = contactRFC.value.trim().toUpperCase();
   await controller.upsertInstitutionContact(routeRfc.value, activeType.value, {
     type: activeType.value,
-    name: name.value,
-    phone: phone.value,
-    contactCURP: contactCURP.value,
-    contactRFC: contactRFC.value || null,
+    name: name.value.trim(),
+    phone: normalizedPhone,
+    contactCURP: contactCURP.value.trim().toUpperCase(),
+    contactRFC: normalizedContactRfc || null,
     efirmaCertificate: efirmaCertificate.value || null,
   });
   showModal.value = false;

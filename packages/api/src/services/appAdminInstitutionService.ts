@@ -76,6 +76,7 @@ function buildAuditLog(input: {
   rfc: string;
   originTraceId: string;
   actor: ValidActor;
+  now: number;
   impact?: Record<string, unknown>;
 }) {
   return LogSchema.parse({
@@ -92,7 +93,7 @@ function buildAuditLog(input: {
     },
     impact: input.impact ?? {},
     searchRequest: {},
-    createdAt: Date.now(),
+    createdAt: input.now,
   });
 }
 
@@ -219,6 +220,7 @@ export function buildContactUpsertResult(input: {
     rfc: next.RFC,
     originTraceId: input.originTraceId,
     actor,
+    now: input.now,
   });
   return { contact: next, log, response: { contact: next } };
 }
@@ -263,6 +265,7 @@ export function buildSharedSecretUpdateResult(input: {
     rfc: normalizedRfc,
     originTraceId: input.originTraceId,
     actor,
+    now: input.now,
   });
   return {
     institution: nextInstitution,
@@ -302,6 +305,7 @@ export function buildPermissionCreateResult(input: {
     rfc: permission.RFC,
     originTraceId: input.originTraceId,
     actor,
+    now: input.now,
     impact: {
       impactedUserEmail: permission.email,
       impactedUserRole: permission.role,
@@ -347,6 +351,7 @@ export function buildPermissionUpdateResult(input: {
     rfc: nextPermission.RFC,
     originTraceId: input.originTraceId,
     actor,
+    now: input.now,
     impact: {
       impactedUserEmail: nextPermission.email,
       impactedUserRole: nextPermission.role,

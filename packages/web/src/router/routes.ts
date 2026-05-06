@@ -50,7 +50,6 @@ import Error500Page from '@/pages/error/Error500Page.vue';
 import { getPageContent } from '@/shared/constants/navigationCatalog';
 import type { PageId } from '@/shared/constants/navigationCatalog';
 import {
-  ROLE,
   institutionRoleValues,
   systemRoleValues,
   authenticatedRoleValues
@@ -204,7 +203,7 @@ export const appRoutes = [
           requiresAuth: true,
           requiresInstitutionContext: true,
           requiresSecuritySetup: true,
-          allowedRoles: [ROLE.INSTITUTION_ADMIN],
+          allowedRoles: institutionRoles,
           defaultChildRedirect: '/app/:rfc/admin/plan'
         })
       },

@@ -74,7 +74,7 @@ async function loadPermissions() {
 }
 
 async function createPermission() {
-  if (isReadOnly.value) {
+  if (isReadOnly.value || !canCreatePermission.value || controller.isSaving.value) {
     return;
   }
   await controller.createInstitutionPermission(routeRfc.value, {
@@ -88,7 +88,7 @@ async function createPermission() {
 }
 
 async function updatePermission() {
-  if (isReadOnly.value) {
+  if (isReadOnly.value || controller.isSaving.value) {
     return;
   }
   await controller.updateInstitutionPermission(routeRfc.value, editPermissionId.value, {
