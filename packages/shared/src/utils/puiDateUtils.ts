@@ -79,3 +79,67 @@ export function utcMillisecondsToPuiDate(timestamp: number): string {
 
   return new Date(timestamp).toISOString().slice(0, 10);
 }
+
+function pluralize(value: number, singular: string, plural: string) {
+  return value === 1 ? singular : plural;
+}
+
+function monthPhrase(months: number, hasHalf: boolean) {
+  if (months === 0 && hasHalf) {
+    return 'medio mes';
+  }
+  if (months === 1 && hasHalf) {
+    return 'un mes y medio';
+  }
+  if (months === 1) {
+    return 'un mes';
+  }
+  if (hasHalf) {
+    return `${months} meses y medio`;
+  }
+  return `${months} meses`;
+}
+
+function yearPhrase(years: number, hasHalf: boolean) {
+  if (years === 1 && hasHalf) {
+    return 'un año y medio';
+  }
+  if (years === 1) {
+    return 'un año';
+  }
+  if (hasHalf) {
+    return `${years} años y medio`;
+  }
+  return `${years} años`;
+}
+
+/**
+ * @description Devuelve tiempo relativo amigable en español para conversaciones de interfaz.
+ */
+export function friendlyRelativeTimeEs(timestamp: number, now = Date.now()): string {
+  assertSafeTimestamp(timestamp);
+  assertSafeTimestamp(now);
+
+  const diff = timestamp - now;
+  const isFuture = diff > 0;
+  const absDays = Math.round(Math.abs(diff) / 86_400_000);
+
+  if (absDays === 0) {
+    return 'hoy';
+  }
+
+  let phrase = '';
+  if (absDays < 30) {
+    phrase = `${absDays} ${pluralize(absDays, 'día', 'días')}`;
+  } else if (absDays < 365) {
+    const months = Math.floor(absDays / 30);
+    const remainingDays = absDays - months * 30;
+    phrase = monthPhrase(months, remainingDays >= 15);
+  } else {
+    const years = Math.floor(absDays / 365);
+    const remainingDays = absDays - years * 365;
+    phrase = yearPhrase(years, remainingDays >= 182);
+  }
+
+  return isFuture ? `En ${phrase}` : `Hace ${phrase}`;
+}

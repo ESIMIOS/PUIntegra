@@ -56,6 +56,36 @@ export type UpdateInstitutionPlanInput = {
   originTraceId: string;
 };
 
+export type UpsertInstitutionContactInput = {
+  rfc: string;
+  contactType: string;
+  payload: unknown;
+  actor: ActorIdentity;
+  originTraceId: string;
+};
+
+export type UpdateInstitutionSharedSecretInput = {
+  rfc: string;
+  payload: unknown;
+  actor: ActorIdentity;
+  originTraceId: string;
+};
+
+export type CreateInstitutionPermissionInput = {
+  rfc: string;
+  payload: unknown;
+  actor: ActorIdentity;
+  originTraceId: string;
+};
+
+export type UpdateInstitutionPermissionInput = {
+  rfc: string;
+  permissionId: string;
+  payload: unknown;
+  actor: ActorIdentity;
+  originTraceId: string;
+};
+
 export type AccountProfileUpdateInput = {
   payload: unknown;
   actor: ActorIdentity;

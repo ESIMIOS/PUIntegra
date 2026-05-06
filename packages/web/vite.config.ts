@@ -67,7 +67,7 @@ export default defineConfig({
 			'/api': {
 				target: LOCAL_FUNCTIONS_EMULATOR_ORIGIN,
 				changeOrigin: true,
-				rewrite: (path) => `${LOCAL_FUNCTIONS_API_PREFIX}${path}`
+				rewrite: (path) => `${LOCAL_FUNCTIONS_API_PREFIX}${path.replace(/^\/api/, '')}`
 			}
 		}
 	}

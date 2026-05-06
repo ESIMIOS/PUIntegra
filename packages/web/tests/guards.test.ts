@@ -170,7 +170,7 @@ describe('route guards', () => {
     expect(router.currentRoute.value.path).toBe(redirectTarget);
   });
 
-  it('redirects to /error/403 on role mismatch', async () => {
+  it('allows institution operator to access app admin pages in readonly mode', async () => {
     const { router, authStore, institutionStore } = createRouterWithStores();
 
     authStore.setRole(ROLE.INSTITUTION_OPERATOR);
@@ -180,7 +180,7 @@ describe('route guards', () => {
 
     await router.push(`/app/${DEFAULT_RFC}/admin/plan`);
 
-    expect(router.currentRoute.value.path).toBe('/error/403');
+    expect(router.currentRoute.value.path).toBe(`/app/${DEFAULT_RFC}/admin/plan`);
   });
 
   it('redirects to /error/403 when institution context does not match route', async () => {

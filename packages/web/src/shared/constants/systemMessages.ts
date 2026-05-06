@@ -144,6 +144,26 @@ const webSystemMessageTree = {
         severity: LOG_SEVERITY.ERROR,
         message: 'Error de comunicación con el servicio. Intenta de nuevo.',
       },
+      appAdminContactUpsertFailed: {
+        code: 'WEB-UI-013',
+        severity: LOG_SEVERITY.ERROR,
+        message: 'No fue posible guardar el contacto institucional. Intenta de nuevo.',
+      },
+      appAdminSharedSecretUpdateFailed: {
+        code: 'WEB-UI-014',
+        severity: LOG_SEVERITY.ERROR,
+        message: 'No fue posible actualizar el secreto compartido institucional. Intenta de nuevo.',
+      },
+      appAdminPermissionCreateFailed: {
+        code: 'WEB-UI-015',
+        severity: LOG_SEVERITY.ERROR,
+        message: 'No fue posible crear el permiso institucional. Verifica los datos e intenta de nuevo.',
+      },
+      appAdminPermissionUpdateFailed: {
+        code: 'WEB-UI-016',
+        severity: LOG_SEVERITY.ERROR,
+        message: 'No fue posible actualizar el permiso institucional. Intenta de nuevo.',
+      },
     },
     institutions: {
       created: {

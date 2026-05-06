@@ -1,10 +1,11 @@
 /**
  * @package web
  * @name navigationCatalog.ts
- * @version 0.0.1
+ * @version 0.0.2
  * @description Define el catálogo único de navegación y contenido de páginas placeholder por dominio.
  * @author @tirsomartinezreyes
  * @changelog
+ * - 0.0.2	(2026-05-05)	Oculta app-request-detail del sidebar para mostrar solo la vista base de solicitudes.	@codex
  * - 0.0.1	(2026-04-10)	Versión inicial del archivo.	@tirsomartinezreyes
  */
 
@@ -141,7 +142,7 @@ export const navigationCatalog = {
       icon: 'assignment',
       description: 'Vista administrativa del plan vigente de la institución.',
       to: (context) => routePaths.appAdminPlan(context.activeRfc),
-      disabled: (context) => !context.isInstitutionAdmin,
+      disabled: (context) => !context.isInstitutionRole,
     },
     {
       id: 'app-admin-contacts',
@@ -149,7 +150,7 @@ export const navigationCatalog = {
       icon: 'contacts',
       description: 'Listado de contactos legales, técnicos y de búsqueda inmediata.',
       to: (context) => routePaths.appAdminContacts(context.activeRfc),
-      disabled: (context) => !context.isInstitutionAdmin,
+      disabled: (context) => !context.isInstitutionRole,
     },
     {
       id: 'app-admin-settings',
@@ -157,7 +158,7 @@ export const navigationCatalog = {
       icon: 'settings',
       description: 'Parámetros sensibles de institución sin exposición de secretos en claro.',
       to: (context) => routePaths.appAdminSettings(context.activeRfc),
-      disabled: (context) => !context.isInstitutionAdmin,
+      disabled: (context) => !context.isInstitutionRole,
     },
     {
       id: 'app-admin-permissions',
@@ -165,7 +166,7 @@ export const navigationCatalog = {
       icon: 'admin_panel_settings',
       description: 'Gestión y filtrado de permisos de acceso institucional.',
       to: (context) => routePaths.appAdminPermissions(context.activeRfc),
-      disabled: (context) => !context.isInstitutionAdmin,
+      disabled: (context) => !context.isInstitutionRole,
     },
     {
       id: 'app-requests',
@@ -181,6 +182,7 @@ export const navigationCatalog = {
       icon: 'article',
       description: 'Detalle operativo de solicitud específica por FUB.',
       to: (context) => routePaths.appRequestDetail(context.activeRfc, context.defaultFub),
+      visible: () => false,
       disabled: (context) => !context.isInstitutionRole,
     },
     {

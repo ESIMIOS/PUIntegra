@@ -614,6 +614,148 @@ describe('auth lifecycle API routes', () => {
   });
 });
 
+describe('app admin institution API routes', () => {
+  it('requires bearer token for app-admin write routes', async () => {
+    const app = createApiApp(createDefaultDependencies());
+
+    const response = await app.request('/api/app/institutions/AAA010101AAA/shared-secret', {
+      method: 'PUT',
+      body: JSON.stringify({ sharedSecret: 'top-secret' }),
+    });
+
+    expect(response.status).toBe(HTTP_STATUS.UNAUTHORIZED);
+    expect(await response.json()).toMatchObject({
+      ok: false,
+      error: {
+        code: 'API-AUTH-001',
+      },
+    });
+  });
+
+  it('rejects reserved RFC values in app-admin write routes', async () => {
+    const app = createApiApp(
+      createDefaultDependencies({
+        verifyBearerToken: vi.fn().mockResolvedValue({
+          userId: 'dev-user-001',
+          email: 'admin@example.test',
+          role: ROLE.INSTITUTION_ADMIN,
+        }),
+        updateInstitutionSharedSecret: vi.fn(),
+      }),
+    );
+
+    const response = await app.request(`/api/app/institutions/${DEFAULT_RFC}/shared-secret`, {
+      method: 'PUT',
+      headers: { authorization: 'Bearer token' },
+      body: JSON.stringify({ sharedSecret: 'top-secret' }),
+    });
+
+    expect(response.status).toBe(HTTP_STATUS.FORBIDDEN);
+    expect(await response.json()).toMatchObject({
+      ok: false,
+      error: {
+        code: 'API-ADMIN-010',
+      },
+    });
+  });
+
+  it('submits contact upsert using normalized route params and actor context', async () => {
+    const upsertInstitutionContact = vi.fn().mockResolvedValue({
+      contact: { type: 'LEGAL' },
+    });
+    const app = createApiApp(
+      createDefaultDependencies({
+        verifyBearerToken: vi.fn().mockResolvedValue({
+          userId: 'dev-user-001',
+          email: 'admin@example.test',
+          role: ROLE.INSTITUTION_ADMIN,
+        }),
+        upsertInstitutionContact,
+      }),
+    );
+
+    const payload = {
+      name: 'Contacto Legal',
+      phone: '+525533748806',
+      contactCURP: 'MART810609HDFRYR03',
+      efirmaCertificate: 'CERT',
+    };
+    const response = await app.request('/api/app/institutions/aaa010101aaa/contacts/legal', {
+      method: 'PUT',
+      headers: { authorization: 'Bearer token' },
+      body: JSON.stringify(payload),
+    });
+
+    expect(response.status).toBe(HTTP_STATUS.OK);
+    expect(upsertInstitutionContact).toHaveBeenCalledWith({
+      rfc: 'AAA010101AAA',
+      contactType: 'LEGAL',
+      payload,
+      actor: {
+        userId: 'dev-user-001',
+        email: 'admin@example.test',
+        role: ROLE.INSTITUTION_ADMIN,
+      },
+      originTraceId: 'generated-trace-id',
+    });
+  });
+
+  it('supports permissions create/update and shared-secret writes through the API boundary', async () => {
+    const createInstitutionPermission = vi.fn().mockResolvedValue({ permission: { permissionId: 'perm-001' } });
+    const updateInstitutionPermission = vi.fn().mockResolvedValue({ permission: { permissionId: 'perm-001' } });
+    const updateInstitutionSharedSecret = vi.fn().mockResolvedValue({
+      sharedSecretConfigured: true,
+      SHA256SharedSecret: 'deadbeef',
+    });
+    const app = createApiApp(
+      createDefaultDependencies({
+        verifyBearerToken: vi.fn().mockResolvedValue({
+          userId: 'dev-user-001',
+          email: 'admin@example.test',
+          role: ROLE.INSTITUTION_ADMIN,
+        }),
+        createInstitutionPermission,
+        updateInstitutionPermission,
+        updateInstitutionSharedSecret,
+      }),
+    );
+
+    const createResponse = await app.request('/api/app/institutions/AAA010101AAA/permissions', {
+      method: 'POST',
+      headers: { authorization: 'Bearer token' },
+      body: JSON.stringify({
+        email: 'new-user@example.test',
+        role: ROLE.INSTITUTION_OPERATOR,
+        status: 'GRANTED',
+      }),
+    });
+    expect(createResponse.status).toBe(HTTP_STATUS.OK);
+
+    const updateResponse = await app.request('/api/app/institutions/AAA010101AAA/permissions/perm-001', {
+      method: 'PATCH',
+      headers: { authorization: 'Bearer token' },
+      body: JSON.stringify({
+        role: ROLE.INSTITUTION_ADMIN,
+        status: 'DENIED',
+      }),
+    });
+    expect(updateResponse.status).toBe(HTTP_STATUS.OK);
+
+    const secretResponse = await app.request('/api/app/institutions/AAA010101AAA/shared-secret', {
+      method: 'PUT',
+      headers: { authorization: 'Bearer token' },
+      body: JSON.stringify({
+        sharedSecret: 'top-secret',
+      }),
+    });
+    expect(secretResponse.status).toBe(HTTP_STATUS.OK);
+
+    expect(createInstitutionPermission).toHaveBeenCalledOnce();
+    expect(updateInstitutionPermission).toHaveBeenCalledOnce();
+    expect(updateInstitutionSharedSecret).toHaveBeenCalledOnce();
+  });
+});
+
 describe('account profile API route', () => {
   it('requires bearer token for self profile updates', async () => {
     const app = createApiApp(createDefaultDependencies());

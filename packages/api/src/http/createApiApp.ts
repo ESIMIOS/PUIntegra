@@ -1,10 +1,11 @@
 /**
  * @package api
  * @name createApiApp.ts
- * @version 0.0.7
+ * @version 0.0.8
  * @description Construye la aplicación Hono de API con dependencias inyectables para pruebas.
  * @author @codex
  * @changelog
+ * - 0.0.8	(2026-05-05)	Refactoriza registro de rutas duales (/api y sin prefijo) con helper reusable.	@codex
  * - 0.0.7	(2026-05-01)	Agrega rutas de actualización de perfil de cuenta autenticada.	@codex
  * - 0.0.6	(2026-04-23)	Extrae handlers HTTP a módulos dedicados para evitar crecimiento por archivo.	@codex
  * - 0.0.5	(2026-04-19)	Usa envelope estándar para respuestas API.	@codex
@@ -26,12 +27,19 @@ import {
   createAccountProfileUpdateHandler,
   createAuthEventHandler,
   createAuthLifecycleEventHandler,
+  createInstitutionContactUpsertHandler,
   createInstitutionOnboardingHandler,
+  createInstitutionPermissionCreateHandler,
+  createInstitutionPermissionUpdateHandler,
   createInstitutionPlanUpdateHandler,
+  createInstitutionSharedSecretUpdateHandler,
   createMfaResetHandler,
   createPasswordRecoveryHandler,
   readOriginTraceId,
 } from './routeHandlers.js';
+import type { Handler } from 'hono';
+
+type HttpMethod = 'get' | 'post' | 'put' | 'patch';
 
 /**
  * @description Construye la app Hono principal.
@@ -48,7 +56,19 @@ export function createApiApp(dependencies: CreateApiAppDependencies) {
   const mfaResetHandler = createMfaResetHandler(dependencies);
   const institutionOnboardingHandler = createInstitutionOnboardingHandler(dependencies);
   const institutionPlanUpdateHandler = createInstitutionPlanUpdateHandler(dependencies);
+  const institutionContactUpsertHandler = createInstitutionContactUpsertHandler(dependencies);
+  const institutionSharedSecretUpdateHandler = createInstitutionSharedSecretUpdateHandler(dependencies);
+  const institutionPermissionCreateHandler = createInstitutionPermissionCreateHandler(dependencies);
+  const institutionPermissionUpdateHandler = createInstitutionPermissionUpdateHandler(dependencies);
   const accountProfileUpdateHandler = createAccountProfileUpdateHandler(dependencies);
+
+  /**
+   * @description Registra una ruta y su alias con prefijo /api para soportar ambos montajes.
+   */
+  function registerDualRoute(method: HttpMethod, path: string, handler: Handler) {
+    app[method](`/api${path}`, handler);
+    app[method](path, handler);
+  }
 
   app.onError((error, context) => {
     const originTraceId = readOriginTraceId(context, dependencies.createOriginTraceId);
@@ -91,28 +111,21 @@ export function createApiApp(dependencies: CreateApiAppDependencies) {
   });
 
   app.get('/health', (context) => context.json(apiOk({ service: 'puintegra-api' })));
-  app.post('/api/auth/events/login', loginHandler);
-  app.post('/api/auth/events/logout', logoutHandler);
-  app.post('/api/auth/lifecycle/account-creation-policy', accountCreationPolicyHandler);
-  app.post('/api/auth/lifecycle/password-recovery', passwordRecoveryHandler);
-  app.post('/api/auth/lifecycle/password-reset-completed', passwordResetCompletedHandler);
-  app.post('/api/auth/lifecycle/email-verification-completed', emailVerificationCompletedHandler);
-  app.post('/api/auth/lifecycle/mfa-enrollment-completed', mfaEnrollmentCompletedHandler);
-  app.post('/api/admin/institutions', institutionOnboardingHandler);
-  app.patch('/api/admin/institutions/:rfc/plan', institutionPlanUpdateHandler);
-  app.post('/api/admin/users/:userId/mfa-reset', mfaResetHandler);
-  app.patch('/api/account/profile', accountProfileUpdateHandler);
-  app.post('/auth/events/login', loginHandler);
-  app.post('/auth/events/logout', logoutHandler);
-  app.post('/auth/lifecycle/account-creation-policy', accountCreationPolicyHandler);
-  app.post('/auth/lifecycle/password-recovery', passwordRecoveryHandler);
-  app.post('/auth/lifecycle/password-reset-completed', passwordResetCompletedHandler);
-  app.post('/auth/lifecycle/email-verification-completed', emailVerificationCompletedHandler);
-  app.post('/auth/lifecycle/mfa-enrollment-completed', mfaEnrollmentCompletedHandler);
-  app.post('/admin/institutions', institutionOnboardingHandler);
-  app.patch('/admin/institutions/:rfc/plan', institutionPlanUpdateHandler);
-  app.post('/admin/users/:userId/mfa-reset', mfaResetHandler);
-  app.patch('/account/profile', accountProfileUpdateHandler);
+  registerDualRoute('post', '/auth/events/login', loginHandler);
+  registerDualRoute('post', '/auth/events/logout', logoutHandler);
+  registerDualRoute('post', '/auth/lifecycle/account-creation-policy', accountCreationPolicyHandler);
+  registerDualRoute('post', '/auth/lifecycle/password-recovery', passwordRecoveryHandler);
+  registerDualRoute('post', '/auth/lifecycle/password-reset-completed', passwordResetCompletedHandler);
+  registerDualRoute('post', '/auth/lifecycle/email-verification-completed', emailVerificationCompletedHandler);
+  registerDualRoute('post', '/auth/lifecycle/mfa-enrollment-completed', mfaEnrollmentCompletedHandler);
+  registerDualRoute('post', '/admin/institutions', institutionOnboardingHandler);
+  registerDualRoute('patch', '/admin/institutions/:rfc/plan', institutionPlanUpdateHandler);
+  registerDualRoute('put', '/app/institutions/:rfc/contacts/:type', institutionContactUpsertHandler);
+  registerDualRoute('put', '/app/institutions/:rfc/shared-secret', institutionSharedSecretUpdateHandler);
+  registerDualRoute('post', '/app/institutions/:rfc/permissions', institutionPermissionCreateHandler);
+  registerDualRoute('patch', '/app/institutions/:rfc/permissions/:permissionId', institutionPermissionUpdateHandler);
+  registerDualRoute('post', '/admin/users/:userId/mfa-reset', mfaResetHandler);
+  registerDualRoute('patch', '/account/profile', accountProfileUpdateHandler);
 
   return app;
 }
