@@ -60,7 +60,7 @@ function normalizeEmail(value: string) {
 function toActor(input: { userId: string; email?: string | null; role?: string | null }) {
   const parsedRole = RoleSchema.safeParse(input.role);
   if (!parsedRole.success || !input.email) {
-    throw new SystemError(apiSystemMessages.admin.institutions.forbiddenRole);
+    throw new SystemError(apiSystemMessages.app.institutions.invalidActorContext);
   }
   return {
     userId: input.userId,
@@ -150,7 +150,7 @@ function assertInstitutionAdminAccess(input: {
   hasGrantedPermissionForRfc: boolean;
 }) {
   if (!input.hasGrantedPermissionForRfc) {
-    throw new SystemError(apiSystemMessages.admin.institutions.forbiddenRole);
+    throw new SystemError(apiSystemMessages.app.institutions.missingInstitutionAdminPermission);
   }
 }
 

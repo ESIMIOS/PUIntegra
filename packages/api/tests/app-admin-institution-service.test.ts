@@ -138,7 +138,7 @@ describe('assertInstitutionAdminAccess', () => {
   });
 
   it('rejects access when RFC-scoped granted institution admin permission is missing', () => {
-    expect(() =>
+    try {
       AppAdminInstitutionService.assertInstitutionAdminAccess({
         actor: {
           userId: 'user-001',
@@ -147,7 +147,12 @@ describe('assertInstitutionAdminAccess', () => {
         },
         rfc: 'MART810609GPA',
         hasGrantedPermissionForRfc: false,
-      }),
-    ).toThrow(SystemError);
+      });
+      expect.fail('Expected assertInstitutionAdminAccess to throw');
+    } catch (error) {
+      expect(error).toBeInstanceOf(SystemError);
+      expect((error as SystemError).code).toBe('API-APP-002');
+      expect((error as SystemError).httpStatus).toBe(HTTP_STATUS.FORBIDDEN);
+    }
   });
 });
