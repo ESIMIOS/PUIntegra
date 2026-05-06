@@ -128,6 +128,31 @@ export const apiSystemMessageTree = {
       },
     },
   },
+  app: {
+    institutions: {
+      invalidActorContext: {
+        code: 'API-APP-001',
+        severity: LOG_SEVERITY.WARNING,
+        message: 'Invalid authenticated actor context for app institution administration.',
+        displayMessage: 'No fue posible validar tu contexto de sesión para administrar la institución.',
+        httpStatus: HTTP_STATUS.FORBIDDEN,
+      },
+      missingInstitutionAdminPermission: {
+        code: 'API-APP-002',
+        severity: LOG_SEVERITY.WARNING,
+        message: 'Missing RFC-scoped granted institution admin permission.',
+        displayMessage: 'No tienes un permiso administrador otorgado para la institución seleccionada.',
+        httpStatus: HTTP_STATUS.FORBIDDEN,
+      },
+      forbiddenRfcContext: {
+        code: 'API-APP-003',
+        severity: LOG_SEVERITY.WARNING,
+        message: 'Permission does not belong to requested RFC context.',
+        displayMessage: 'El permiso no pertenece al RFC seleccionado.',
+        httpStatus: HTTP_STATUS.FORBIDDEN,
+      },
+    },
+  },
   sys: {
     unexpectedFailure: {
       code: 'API-SYS-001',

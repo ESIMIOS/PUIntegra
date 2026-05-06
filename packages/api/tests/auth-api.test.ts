@@ -754,6 +754,40 @@ describe('app admin institution API routes', () => {
     expect(updateInstitutionPermission).toHaveBeenCalledOnce();
     expect(updateInstitutionSharedSecret).toHaveBeenCalledOnce();
   });
+
+  it('returns dedicated app-admin forbidden code when RFC-scoped admin permission is missing', async () => {
+    const app = createApiApp(
+      createDefaultDependencies({
+        verifyBearerToken: vi.fn().mockResolvedValue({
+          userId: 'dev-user-001',
+          email: 'admin@example.test',
+          role: ROLE.SYSTEM_ADMINISTRATOR,
+        }),
+        upsertInstitutionContact: vi
+          .fn()
+          .mockRejectedValue(new SystemError(apiSystemMessages.app.institutions.missingInstitutionAdminPermission)),
+      }),
+    );
+
+    const response = await app.request('/api/app/institutions/AAA010101AAA/contacts/LEGAL', {
+      method: 'PUT',
+      headers: { authorization: 'Bearer token' },
+      body: JSON.stringify({
+        name: 'Contacto Legal',
+        phone: '+525533748806',
+        contactCURP: 'MART810609HDFRYR03',
+        efirmaCertificate: 'CERT',
+      }),
+    });
+
+    expect(response.status).toBe(HTTP_STATUS.FORBIDDEN);
+    expect(await response.json()).toMatchObject({
+      ok: false,
+      error: {
+        code: 'API-APP-002',
+      },
+    });
+  });
 });
 
 describe('account profile API route', () => {

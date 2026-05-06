@@ -20,7 +20,6 @@ import {
   LOG_ORIGIN,
   LogSchema,
   PermissionSchema,
-  ROLE,
   RoleSchema,
   SystemError,
   UPDATE_ORIGIN,
@@ -61,7 +60,7 @@ function normalizeEmail(value: string) {
 function toActor(input: { userId: string; email?: string | null; role?: string | null }) {
   const parsedRole = RoleSchema.safeParse(input.role);
   if (!parsedRole.success || !input.email) {
-    throw new SystemError(apiSystemMessages.admin.institutions.forbiddenRole);
+    throw new SystemError(apiSystemMessages.app.institutions.invalidActorContext);
   }
   return {
     userId: input.userId,
@@ -150,8 +149,8 @@ function assertInstitutionAdminAccess(input: {
   rfc: string;
   hasGrantedPermissionForRfc: boolean;
 }) {
-  if (input.actor.role !== ROLE.INSTITUTION_ADMIN || !input.hasGrantedPermissionForRfc) {
-    throw new SystemError(apiSystemMessages.admin.institutions.forbiddenRole);
+  if (!input.hasGrantedPermissionForRfc) {
+    throw new SystemError(apiSystemMessages.app.institutions.missingInstitutionAdminPermission);
   }
 }
 

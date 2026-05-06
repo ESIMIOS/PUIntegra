@@ -184,7 +184,7 @@ function parseAppActor(input: { userId: string; email?: string | null; role?: st
   const actorEmail = typeof input.email === 'string' ? input.email.toLowerCase() : null;
   const parsedRole = actorRole ? RoleSchema.safeParse(actorRole) : null;
   if (!actorEmail || !parsedRole?.success) {
-    throw new SystemError(apiSystemMessages.admin.institutions.forbiddenRole);
+    throw new SystemError(apiSystemMessages.app.institutions.invalidActorContext);
   }
   return { role: parsedRole.data, email: actorEmail };
 }
@@ -324,7 +324,7 @@ export async function updateInstitutionPermission(input: UpdateInstitutionPermis
   }
   const permission = PermissionSchema.parse(snapshot.data());
   if (permission.RFC !== normalizedRfc) {
-    throw new SystemError(apiSystemMessages.admin.institutions.forbiddenRole);
+    throw new SystemError(apiSystemMessages.app.institutions.forbiddenRfcContext);
   }
   const parsed = buildPermissionUpdateResult({
     permission,
