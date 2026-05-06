@@ -173,6 +173,9 @@ describe('account profile update dependency', () => {
       category: LOG_CATEGORIES.USER_ACCOUNT_SETTINGS_UPDATE,
       userId: 'dev-user-001',
       originTraceId: 'trace-001',
+      execution: {
+        executedByRole: ROLE.INSTITUTION_OPERATOR,
+      },
     });
   });
 

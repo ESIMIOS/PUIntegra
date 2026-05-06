@@ -223,7 +223,7 @@ export async function updateAccountProfile(input: AccountProfileUpdateInput) {
     userId: input.actor.userId,
     execution: {
       executedByUserId: input.actor.userId,
-      executedByUserRole: actor.role,
+      executedByRole: actor.role,
       executedByUserEmail: actor.email,
     },
     impact: {
