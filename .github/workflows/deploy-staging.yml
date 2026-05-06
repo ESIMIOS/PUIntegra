@@ -89,10 +89,22 @@ jobs:
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_STAGING }}
 
-      - name: Deploy to Firebase (staging)
-        run: pnpm exec firebase deploy --config firebase.deploy.json --project "$FIREBASE_PROJECT_ID" --only hosting,functions,firestore,storage --non-interactive
+      - name: Setup gcloud CLI
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ env.FIREBASE_PROJECT_ID }}
+
+      - name: Sync shared-secret master key to Secret Manager (staging)
+        run: |
+          gcloud secrets describe PUINTEGRA_SHARED_SECRET_MASTER_KEY --project "$FIREBASE_PROJECT_ID" >/dev/null 2>&1 || \
+            gcloud secrets create PUINTEGRA_SHARED_SECRET_MASTER_KEY --project "$FIREBASE_PROJECT_ID" --replication-policy=automatic
+          printf '%s' "$PUINTEGRA_SHARED_SECRET_MASTER_KEY" | \
+            gcloud secrets versions add PUINTEGRA_SHARED_SECRET_MASTER_KEY --project "$FIREBASE_PROJECT_ID" --data-file=-
         env:
           PUINTEGRA_SHARED_SECRET_MASTER_KEY: ${{ secrets.PUINTEGRA_SHARED_SECRET_MASTER_KEY_STAGING }}
+
+      - name: Deploy to Firebase (staging)
+        run: pnpm exec firebase deploy --config firebase.deploy.json --project "$FIREBASE_PROJECT_ID" --only hosting,functions,firestore,storage --non-interactive
       - name: Bootstrap system administrator permission (staging)
         run: pnpm --filter @puintegra/api run bootstrap:system-admin
         env:
