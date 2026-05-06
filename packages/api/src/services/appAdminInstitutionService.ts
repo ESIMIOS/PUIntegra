@@ -20,7 +20,6 @@ import {
   LOG_ORIGIN,
   LogSchema,
   PermissionSchema,
-  ROLE,
   RoleSchema,
   SystemError,
   UPDATE_ORIGIN,
@@ -150,7 +149,7 @@ function assertInstitutionAdminAccess(input: {
   rfc: string;
   hasGrantedPermissionForRfc: boolean;
 }) {
-  if (input.actor.role !== ROLE.INSTITUTION_ADMIN || !input.hasGrantedPermissionForRfc) {
+  if (!input.hasGrantedPermissionForRfc) {
     throw new SystemError(apiSystemMessages.admin.institutions.forbiddenRole);
   }
 }

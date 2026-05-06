@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { COMMERCIAL_PLAN, COMMERCIAL_PLAN_STATUS, HTTP_STATUS, ROLE, SystemError, type Institution } from '@puintegra/shared';
-import { buildSharedSecretUpdateResult } from '../src/services/appAdminInstitutionService';
+import { AppAdminInstitutionService, buildSharedSecretUpdateResult } from '../src/services/appAdminInstitutionService';
 
 const ORIGINAL_MASTER_KEY = process.env.PUINTEGRA_SHARED_SECRET_MASTER_KEY;
 
@@ -105,5 +105,49 @@ describe('buildSharedSecretUpdateResult', () => {
     expect(result.institution.SHA256SharedSecret).toBeTruthy();
     expect(result.institution.sharedSecret).toContain('"alg":"aes-256-gcm"');
     expect(result.response.sharedSecretConfigured).toBe(true);
+  });
+});
+
+describe('assertInstitutionAdminAccess', () => {
+  it('allows access when actor has RFC-scoped granted admin permission', () => {
+    expect(() =>
+      AppAdminInstitutionService.assertInstitutionAdminAccess({
+        actor: {
+          userId: 'user-001',
+          email: 'admin@example.com',
+          role: ROLE.INSTITUTION_ADMIN,
+        },
+        rfc: 'MART810609GPA',
+        hasGrantedPermissionForRfc: true,
+      }),
+    ).not.toThrow();
+  });
+
+  it('allows access when actor role is SYSTEM_ADMINISTRATOR but RFC-scoped institution admin permission is granted', () => {
+    expect(() =>
+      AppAdminInstitutionService.assertInstitutionAdminAccess({
+        actor: {
+          userId: 'user-001',
+          email: 'admin@example.com',
+          role: ROLE.SYSTEM_ADMINISTRATOR,
+        },
+        rfc: 'MART810609GPA',
+        hasGrantedPermissionForRfc: true,
+      }),
+    ).not.toThrow();
+  });
+
+  it('rejects access when RFC-scoped granted institution admin permission is missing', () => {
+    expect(() =>
+      AppAdminInstitutionService.assertInstitutionAdminAccess({
+        actor: {
+          userId: 'user-001',
+          email: 'admin@example.com',
+          role: ROLE.INSTITUTION_ADMIN,
+        },
+        rfc: 'MART810609GPA',
+        hasGrantedPermissionForRfc: false,
+      }),
+    ).toThrow(SystemError);
   });
 });
