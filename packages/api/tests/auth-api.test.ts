@@ -176,12 +176,16 @@ describe('admin institution onboarding API route', () => {
   };
 
   it('accepts onboarding only for SYSTEM_ADMINISTRATOR', async () => {
-    const createInstitutionOnboarding = vi.fn().mockResolvedValue({
-      institution: { RFC: 'AAA010101AAA' },
-      permission: { permissionId: 'perm-001' },
-    });
-
     for (const role of roleValues) {
+      const createInstitutionOnboarding = vi.fn().mockImplementation(async () => {
+        if (role !== ROLE.SYSTEM_ADMINISTRATOR) {
+          throw new SystemError(apiSystemMessages.admin.institutions.forbiddenRole);
+        }
+        return {
+          institution: { RFC: 'AAA010101AAA' },
+          permission: { permissionId: 'perm-001' },
+        };
+      });
       const app = createApiApp({
         verifyBearerToken: vi.fn().mockResolvedValue({
           userId: 'dev-user-001',
@@ -315,11 +319,15 @@ describe('admin institution plan API route', () => {
   };
 
   it('accepts plan updates only for SYSTEM_ADMINISTRATOR', async () => {
-    const updateInstitutionPlan = vi.fn().mockResolvedValue({
-      institution: { RFC: 'AAA010101AAA' },
-    });
-
     for (const role of roleValues) {
+      const updateInstitutionPlan = vi.fn().mockImplementation(async () => {
+        if (role !== ROLE.SYSTEM_ADMINISTRATOR) {
+          throw new SystemError(apiSystemMessages.admin.institutions.forbiddenRole);
+        }
+        return {
+          institution: { RFC: 'AAA010101AAA' },
+        };
+      });
       const app = createApiApp({
         verifyBearerToken: vi.fn().mockResolvedValue({
           userId: 'dev-user-001',
@@ -575,9 +583,13 @@ describe('auth lifecycle API routes', () => {
   });
 
   it('allows only system administrators to reset lost MFA access', async () => {
-    const resetUserMfa = vi.fn().mockResolvedValue({ reset: true });
-
     for (const role of roleValues) {
+      const resetUserMfa = vi.fn().mockImplementation(async () => {
+        if (role !== ROLE.SYSTEM_ADMINISTRATOR) {
+          throw new SystemError(apiSystemMessages.auth.lifecycle.forbiddenMfaReset);
+        }
+        return { reset: true };
+      });
       const app = createApiApp(
         createDefaultDependencies({
           verifyBearerToken: vi.fn().mockResolvedValue({
@@ -602,17 +614,20 @@ describe('auth lifecycle API routes', () => {
       } else {
         expect(response.status).toBe(HTTP_STATUS.FORBIDDEN);
       }
+
+      if (role === ROLE.SYSTEM_ADMINISTRATOR) {
+        expect(resetUserMfa).toHaveBeenCalledWith({
+          userId: 'dev-user-001',
+          verificationNote: 'Identidad verificada por mesa de ayuda.',
+          actor: {
+            userId: 'admin-user-001',
+            email: 'admin@example.test',
+            role: ROLE.SYSTEM_ADMINISTRATOR,
+          },
+          originTraceId: 'generated-trace-id',
+        });
+      }
     }
-    expect(resetUserMfa).toHaveBeenCalledWith({
-      userId: 'dev-user-001',
-      verificationNote: 'Identidad verificada por mesa de ayuda.',
-      actor: {
-        userId: 'admin-user-001',
-        email: 'admin@example.test',
-        role: ROLE.SYSTEM_ADMINISTRATOR,
-      },
-      originTraceId: 'generated-trace-id',
-    });
   });
 });
 

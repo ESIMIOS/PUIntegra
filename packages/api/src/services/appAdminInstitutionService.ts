@@ -180,6 +180,25 @@ export function buildContactUpsertResult(input: {
   const payload = AppAdminContactUpsertPayloadSchema.parse({ ...payloadRecord, type: parsedType });
   const previous = input.existingContact;
   const updates = previous?.updates ?? [];
+  const nextUpdateEntry = previous
+    ? {
+        updateOrigin: UPDATE_ORIGIN.USER,
+        updatedByUserId: actor.userId,
+        updatedByUserRole: actor.role,
+        updatedByUserEmail: actor.email,
+        updatedAt: input.now,
+        previousName: previous.name,
+        updatedName: payload.name,
+        previousPhone: previous.phone,
+        updatedPhone: payload.phone,
+        previousContactCURP: previous.contactCURP,
+        updatedContactCURP: payload.contactCURP,
+        previousContactRFC: previous.contactRFC ?? null,
+        updatedContactRFC: payload.contactRFC ?? null,
+        previousEfirmaCertificate: previous.efirmaCertificate ?? null,
+        updatedEfirmaCertificate: payload.efirmaCertificate ?? null,
+      }
+    : null;
   const next = ContactSchema.parse({
     contactId: previous?.contactId ?? input.contactId,
     type: payload.type,
@@ -189,26 +208,7 @@ export function buildContactUpsertResult(input: {
     contactCURP: payload.contactCURP,
     contactRFC: payload.contactRFC ?? null,
     efirmaCertificate: payload.efirmaCertificate ?? null,
-    updates: [
-      ...updates,
-      {
-        updateOrigin: UPDATE_ORIGIN.USER,
-        updatedByUserId: actor.userId,
-        updatedByUserRole: actor.role,
-        updatedByUserEmail: actor.email,
-        updatedAt: input.now,
-        previousName: previous?.name ?? null,
-        updatedName: payload.name,
-        previousPhone: previous?.phone ?? null,
-        updatedPhone: payload.phone,
-        previousContactCURP: previous?.contactCURP ?? null,
-        updatedContactCURP: payload.contactCURP,
-        previousContactRFC: previous?.contactRFC ?? null,
-        updatedContactRFC: payload.contactRFC ?? null,
-        previousEfirmaCertificate: previous?.efirmaCertificate ?? null,
-        updatedEfirmaCertificate: payload.efirmaCertificate ?? null,
-      },
-    ],
+    updates: nextUpdateEntry ? [...updates, nextUpdateEntry] : updates,
     createdAt: previous?.createdAt ?? input.now,
     updatedAt: input.now,
   });

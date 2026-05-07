@@ -9,7 +9,7 @@
  */
 
 import type { Context } from 'hono';
-import { DEFAULT_RFC, ROLE, SYSTEM_RFC, SystemError, HTTP_STATUS } from '@puintegra/shared';
+import { DEFAULT_RFC, SYSTEM_RFC, SystemError, HTTP_STATUS } from '@puintegra/shared';
 import { parseInstitutionOnboardingInput } from '../../services/institutionOnboardingService.js';
 import { parseInstitutionPlanUpdateInput } from '../../services/institutionPlanService.js';
 import { apiSystemMessages } from '../../constants/systemMessages.js';
@@ -29,10 +29,6 @@ export function createInstitutionOnboardingHandler(dependencies: CreateApiAppDep
     }
 
     const verified = await dependencies.verifyBearerToken(token);
-    if (verified.role !== ROLE.SYSTEM_ADMINISTRATOR) {
-      throw new SystemError(apiSystemMessages.admin.institutions.forbiddenRole);
-    }
-
     let payload: unknown;
     try {
       payload = await context.req.json();
@@ -72,10 +68,6 @@ export function createInstitutionPlanUpdateHandler(dependencies: CreateApiAppDep
     }
 
     const verified = await dependencies.verifyBearerToken(token);
-    if (verified.role !== ROLE.SYSTEM_ADMINISTRATOR) {
-      throw new SystemError(apiSystemMessages.admin.institutions.forbiddenRole);
-    }
-
     const rfc = (context.req.param('rfc') ?? '').trim().toUpperCase();
     if (rfc === SYSTEM_RFC) {
       throw new SystemError(apiSystemMessages.admin.institutions.forbiddenOperationOnSystemRfc);
