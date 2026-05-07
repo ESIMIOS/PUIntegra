@@ -37,6 +37,8 @@ export const createUserProfile = auth.user().onCreate(async (authUser, context) 
     const now = Date.now();
     const user = buildUserProfileFromAuthUser(authUser, now);
     const firestore = getAdminFirestore();
+    const userRef = firestore.collection('users').doc(user.userId);
+    const existingUser = await userRef.get();
     const logRef = firestore.collection('logs').doc();
     const log = buildUserCreatedLog({
       id: logRef.id,
@@ -46,7 +48,9 @@ export const createUserProfile = auth.user().onCreate(async (authUser, context) 
     }, now);
     const batch = firestore.batch();
 
-    batch.set(firestore.collection('users').doc(user.userId), user);
+    if (!existingUser.exists) {
+      batch.set(userRef, user);
+    }
     batch.set(logRef, log);
 
     await batch.commit();

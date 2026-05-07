@@ -12,7 +12,6 @@ import {
   LOG_CATEGORIES,
   LOG_ORIGIN,
   LogSchema,
-  RoleSchema,
   SystemError,
   UPDATE_ORIGIN,
   UserSchema,
@@ -28,7 +27,6 @@ type AccountProfilePayload = {
 };
 
 type ValidActor = {
-  role: (typeof RoleSchema)['enum'][keyof (typeof RoleSchema)['enum']];
   email: string;
 };
 
@@ -61,17 +59,15 @@ function normalizePhone(value: unknown): string | null {
 }
 
 function assertValidActor(input: AccountProfileUpdateInput): ValidActor {
-  const actorRole = typeof input.actor.role === 'string' ? input.actor.role : null;
   const actorEmail = typeof input.actor.email === 'string' ? input.actor.email.toLowerCase() : null;
-  const parsedRole = actorRole ? RoleSchema.safeParse(actorRole) : null;
-  if (!actorEmail || !parsedRole?.success) {
+  if (!actorEmail) {
     throw new SystemError(apiSystemMessages.auth.lifecycle.invalidPayload, {
       details: {
         reason: 'actor_identity_missing',
       },
     });
   }
-  return { role: parsedRole.data, email: actorEmail };
+  return { email: actorEmail };
 }
 
 function parseProfilePayload(payload: unknown): {
@@ -201,7 +197,6 @@ export async function updateAccountProfile(input: AccountProfileUpdateInput) {
   const updateEntry = {
     updateOrigin: UPDATE_ORIGIN.USER,
     updatedByUserId: input.actor.userId,
-    updatedByUserRole: actor.role,
     updatedByUserEmail: actor.email,
     updatedAt: now,
     ...(changes.hasNameChange ? { previousName: currentUser.name, updatedName: normalizedName } : {}),
@@ -223,7 +218,6 @@ export async function updateAccountProfile(input: AccountProfileUpdateInput) {
     userId: input.actor.userId,
     execution: {
       executedByUserId: input.actor.userId,
-      executedByRole: actor.role,
       executedByUserEmail: actor.email,
     },
     impact: {

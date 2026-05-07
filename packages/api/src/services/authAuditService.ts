@@ -12,7 +12,7 @@
  * - 0.0.1	(2026-04-19)	Agrega builders para perfil Auth, alta de cuenta, login y logout.	@codex
  */
 
-import { LOG_CATEGORIES, LOG_ORIGIN, LogSchema, RoleSchema, UserSchema, type Log, type User } from "@puintegra/shared";
+import { LOG_CATEGORIES, LOG_ORIGIN, LogSchema, UserSchema, type Log, type User } from "@puintegra/shared";
 import { z } from "zod";
 
 export const AuthEventNameSchema = z.enum(["login", "logout"]);
@@ -110,7 +110,6 @@ export function buildUserProfileFromAuthUser(authUser: AuthUserProfileInput, now
  * @description Construye bitácora de login/logout reportada por la API HTTP autenticada.
  */
 export function buildAuthEventLog(input: AuthEventLogInput, now: number): Log {
-  const parsedRole = RoleSchema.safeParse(input.role);
   return LogSchema.parse({
     id: input.id,
     category: AUTH_EVENT_CATEGORY[input.event],
@@ -120,7 +119,6 @@ export function buildAuthEventLog(input: AuthEventLogInput, now: number): Log {
     userId: input.userId,
     execution: {
       executedByUserId: input.userId,
-      executedByRole: parsedRole.success ? parsedRole.data : null,
       executedByUserEmail: input.email ?? null,
     },
     impact: {},
