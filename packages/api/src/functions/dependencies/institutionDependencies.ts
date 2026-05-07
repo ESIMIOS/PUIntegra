@@ -49,21 +49,33 @@ import type {
  * @description Crea institución y permiso bootstrap de forma auditada para backoffice.
  */
 export async function createInstitutionOnboarding(input: CreateInstitutionOnboardingInput) {
-  const actorRole = typeof input.actor.role === 'string' ? input.actor.role : null;
   const actorEmail = typeof input.actor.email === 'string' ? input.actor.email.toLowerCase() : null;
-  const parsedRole = actorRole ? RoleSchema.safeParse(actorRole) : null;
-  if (!actorEmail || !parsedRole?.success) {
+  if (!actorEmail) {
     throw new SystemError(apiSystemMessages.admin.institutions.forbiddenRole.code);
   }
 
   const firestore = getAdminFirestore();
+  const systemAdminPermission = await firestore
+    .collection('permissions')
+    .where('email', '==', actorEmail)
+    .where('status', '==', PERMISSION_STATUS.GRANTED)
+    .where('role', '==', ROLE.SYSTEM_ADMINISTRATOR)
+    .where('RFC', '==', SYSTEM_RFC)
+    .limit(1)
+    .get();
+  if (systemAdminPermission.empty) {
+    throw new SystemError(apiSystemMessages.admin.institutions.forbiddenRole, {
+      displayMessage: `El usuario ${actorEmail} no tiene permisos para crear instituciones.`,
+    });
+  }
+
   const normalizedPayload = parseInstitutionOnboardingInput(input.payload);
   const parsed = buildInstitutionOnboardingRecords({
     rawInput: normalizedPayload,
     actor: {
       userId: input.actor.userId,
       email: actorEmail,
-      role: parsedRole.data,
+      role: ROLE.SYSTEM_ADMINISTRATOR,
     },
     now: Date.now(),
     originTraceId: input.originTraceId,
@@ -93,20 +105,6 @@ export async function createInstitutionOnboarding(input: CreateInstitutionOnboar
     });
   }
 
-  const roleValidationSnapshot = await firestore
-    .collection('permissions')
-    .where('email', '==', actorEmail)
-    .where('status', '==', PERMISSION_STATUS.GRANTED)
-    .where('role', '==', ROLE.SYSTEM_ADMINISTRATOR)
-    .where('RFC', '==', SYSTEM_RFC)
-    .limit(1)
-    .get();
-  if (roleValidationSnapshot.empty) {
-    throw new SystemError(apiSystemMessages.admin.institutions.forbiddenRole, {
-      displayMessage: `El usuario ${actorEmail} no tiene permisos para crear instituciones.`,
-    });
-  }
-
   const batch = firestore.batch();
   batch.set(firestore.collection('institutions').doc(parsed.institution.RFC), parsed.institution);
   batch.set(firestore.collection('permissions').doc(parsed.permission.permissionId), parsed.permission);
@@ -122,14 +120,24 @@ export async function createInstitutionOnboarding(input: CreateInstitutionOnboar
  * @description Actualiza el plan institucional con historial y bitácora en una escritura atómica.
  */
 export async function updateInstitutionPlan(input: UpdateInstitutionPlanInput) {
-  const actorRole = typeof input.actor.role === 'string' ? input.actor.role : null;
   const actorEmail = typeof input.actor.email === 'string' ? input.actor.email.toLowerCase() : null;
-  const parsedRole = actorRole ? RoleSchema.safeParse(actorRole) : null;
-  if (!actorEmail || !parsedRole?.success) {
+  if (!actorEmail) {
     throw new SystemError(apiSystemMessages.admin.institutions.forbiddenRole.code);
   }
 
   const firestore = getAdminFirestore();
+  const systemAdminPermission = await firestore
+    .collection('permissions')
+    .where('email', '==', actorEmail)
+    .where('status', '==', PERMISSION_STATUS.GRANTED)
+    .where('role', '==', ROLE.SYSTEM_ADMINISTRATOR)
+    .where('RFC', '==', SYSTEM_RFC)
+    .limit(1)
+    .get();
+  if (systemAdminPermission.empty) {
+    throw new SystemError(apiSystemMessages.admin.institutions.forbiddenRole);
+  }
+
   const normalizedRfc = input.rfc.trim().toUpperCase();
   const normalizedPayload = parseInstitutionPlanUpdateInput(input.payload);
   const institutionRef = firestore.collection('institutions').doc(normalizedRfc);
@@ -146,7 +154,7 @@ export async function updateInstitutionPlan(input: UpdateInstitutionPlanInput) {
     actor: {
       userId: input.actor.userId,
       email: actorEmail,
-      role: parsedRole.data,
+      role: ROLE.SYSTEM_ADMINISTRATOR,
     },
     now: Date.now(),
     originTraceId: input.originTraceId,
@@ -162,9 +170,9 @@ export async function updateInstitutionPlan(input: UpdateInstitutionPlanInput) {
 }
 
 /**
- * @description Verifica que el actor tenga permiso GRANTED como INSTITUTION_ADMIN para el RFC objetivo.
+ * @description Obtiene permiso RFC-scoped GRANTED del actor para mutaciones app-admin.
  */
-async function assertAppInstitutionAdminGrantedRole(input: { rfc: string; email: string }) {
+async function resolveGrantedAppInstitutionPermission(input: { rfc: string; email: string }) {
   const granted = await getAdminFirestore()
     .collection('permissions')
     .where('RFC', '==', input.rfc)
@@ -173,7 +181,10 @@ async function assertAppInstitutionAdminGrantedRole(input: { rfc: string; email:
     .where('role', '==', ROLE.INSTITUTION_ADMIN)
     .limit(1)
     .get();
-  return !granted.empty;
+  if (granted.empty) {
+    return null;
+  }
+  return PermissionSchema.parse(granted.docs[0].data());
 }
 
 /**
@@ -190,15 +201,36 @@ function parseAppActor(input: { userId: string; email?: string | null; role?: st
 }
 
 /**
+ * @description Construye actor efectivo para mutaciones app-admin con rol explícito proveniente del permiso RFC-scoped.
+ */
+function toEffectiveRfcAdminActor(input: { userId: string; email: string; role: string }) {
+  const parsedRole = RoleSchema.safeParse(input.role);
+  if (!parsedRole.success || parsedRole.data !== ROLE.INSTITUTION_ADMIN) {
+    throw new SystemError(apiSystemMessages.app.institutions.missingInstitutionAdminPermission);
+  }
+  return {
+    userId: input.userId,
+    email: input.email,
+    role: parsedRole.data,
+  } as const;
+}
+
+/**
  * @description Crea o reemplaza el contacto canónico por tipo para una institución en dominio app.
  */
 export async function upsertInstitutionContact(input: UpsertInstitutionContactInput) {
   const normalizedRfc = input.rfc.trim().toUpperCase();
   const actor = parseAppActor(input.actor);
+  const grantedPermission = await resolveGrantedAppInstitutionPermission({ rfc: normalizedRfc, email: actor.email });
   AppAdminInstitutionService.assertInstitutionAdminAccess({
     actor: { userId: input.actor.userId, email: actor.email, role: actor.role },
     rfc: normalizedRfc,
-    hasGrantedPermissionForRfc: await assertAppInstitutionAdminGrantedRole({ rfc: normalizedRfc, email: actor.email }),
+    hasGrantedPermissionForRfc: !!grantedPermission,
+  });
+  const effectiveActor = toEffectiveRfcAdminActor({
+    userId: input.actor.userId,
+    email: actor.email,
+    role: grantedPermission?.role ?? '',
   });
 
   const firestore = getAdminFirestore();
@@ -214,7 +246,7 @@ export async function upsertInstitutionContact(input: UpsertInstitutionContactIn
     contactType: input.contactType,
     rfc: normalizedRfc,
     payload: input.payload,
-    actor: input.actor,
+    actor: effectiveActor,
     originTraceId: input.originTraceId,
     now: Date.now(),
     contactId: firestore.collection('contacts').doc().id,
@@ -235,10 +267,16 @@ export async function upsertInstitutionContact(input: UpsertInstitutionContactIn
 export async function updateInstitutionSharedSecret(input: UpdateInstitutionSharedSecretInput) {
   const normalizedRfc = input.rfc.trim().toUpperCase();
   const actor = parseAppActor(input.actor);
+  const grantedPermission = await resolveGrantedAppInstitutionPermission({ rfc: normalizedRfc, email: actor.email });
   AppAdminInstitutionService.assertInstitutionAdminAccess({
     actor: { userId: input.actor.userId, email: actor.email, role: actor.role },
     rfc: normalizedRfc,
-    hasGrantedPermissionForRfc: await assertAppInstitutionAdminGrantedRole({ rfc: normalizedRfc, email: actor.email }),
+    hasGrantedPermissionForRfc: !!grantedPermission,
+  });
+  const effectiveActor = toEffectiveRfcAdminActor({
+    userId: input.actor.userId,
+    email: actor.email,
+    role: grantedPermission?.role ?? '',
   });
 
   const firestore = getAdminFirestore();
@@ -253,7 +291,7 @@ export async function updateInstitutionSharedSecret(input: UpdateInstitutionShar
     institution: InstitutionSchema.parse(snapshot.data()),
     rfc: normalizedRfc,
     payload: input.payload,
-    actor: input.actor,
+    actor: effectiveActor,
     originTraceId: input.originTraceId,
     now: Date.now(),
     logId: firestore.collection('logs').doc().id,
@@ -271,10 +309,16 @@ export async function updateInstitutionSharedSecret(input: UpdateInstitutionShar
 export async function createInstitutionPermission(input: CreateInstitutionPermissionInput) {
   const normalizedRfc = input.rfc.trim().toUpperCase();
   const actor = parseAppActor(input.actor);
+  const grantedPermission = await resolveGrantedAppInstitutionPermission({ rfc: normalizedRfc, email: actor.email });
   AppAdminInstitutionService.assertInstitutionAdminAccess({
     actor: { userId: input.actor.userId, email: actor.email, role: actor.role },
     rfc: normalizedRfc,
-    hasGrantedPermissionForRfc: await assertAppInstitutionAdminGrantedRole({ rfc: normalizedRfc, email: actor.email }),
+    hasGrantedPermissionForRfc: !!grantedPermission,
+  });
+  const effectiveActor = toEffectiveRfcAdminActor({
+    userId: input.actor.userId,
+    email: actor.email,
+    role: grantedPermission?.role ?? '',
   });
 
   const firestore = getAdminFirestore();
@@ -289,7 +333,7 @@ export async function createInstitutionPermission(input: CreateInstitutionPermis
   const parsed = buildPermissionCreateResult({
     rfc: normalizedRfc,
     payload: input.payload,
-    actor: input.actor,
+    actor: effectiveActor,
     originTraceId: input.originTraceId,
     now: Date.now(),
     permissionId,
@@ -308,10 +352,16 @@ export async function createInstitutionPermission(input: CreateInstitutionPermis
 export async function updateInstitutionPermission(input: UpdateInstitutionPermissionInput) {
   const normalizedRfc = input.rfc.trim().toUpperCase();
   const actor = parseAppActor(input.actor);
+  const grantedPermission = await resolveGrantedAppInstitutionPermission({ rfc: normalizedRfc, email: actor.email });
   AppAdminInstitutionService.assertInstitutionAdminAccess({
     actor: { userId: input.actor.userId, email: actor.email, role: actor.role },
     rfc: normalizedRfc,
-    hasGrantedPermissionForRfc: await assertAppInstitutionAdminGrantedRole({ rfc: normalizedRfc, email: actor.email }),
+    hasGrantedPermissionForRfc: !!grantedPermission,
+  });
+  const effectiveActor = toEffectiveRfcAdminActor({
+    userId: input.actor.userId,
+    email: actor.email,
+    role: grantedPermission?.role ?? '',
   });
 
   const firestore = getAdminFirestore();
@@ -329,7 +379,7 @@ export async function updateInstitutionPermission(input: UpdateInstitutionPermis
   const parsed = buildPermissionUpdateResult({
     permission,
     payload: input.payload,
-    actor: input.actor,
+    actor: effectiveActor,
     originTraceId: input.originTraceId,
     now: Date.now(),
     logId: firestore.collection('logs').doc().id,

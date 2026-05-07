@@ -152,6 +152,7 @@ describe('buildSharedSecretUpdateResult', () => {
     expect(result.institution.sharedSecret).toContain('"alg":"aes-256-gcm"');
     expect(result.response.sharedSecretConfigured).toBe(true);
     expect(result.log.execution.executedByRole).toBe(ROLE.INSTITUTION_ADMIN);
+    expect(result.institution.updates.at(-1)?.updatedByUserRole).toBe(ROLE.INSTITUTION_ADMIN);
   });
 });
 
@@ -181,6 +182,7 @@ describe('app-admin audit log execution role', () => {
     });
 
     expect(result.log.execution.executedByRole).toBe(ROLE.INSTITUTION_ADMIN);
+    expect(result.contact.updates).toHaveLength(0);
   });
 
   it('sets executedByRole for contact update', () => {
@@ -206,6 +208,8 @@ describe('app-admin audit log execution role', () => {
     });
 
     expect(result.log.execution.executedByRole).toBe(ROLE.INSTITUTION_ADMIN);
+    expect(result.contact.updates).toHaveLength(1);
+    expect(result.contact.updates[0]?.updatedByUserRole).toBe(ROLE.INSTITUTION_ADMIN);
   });
 
   it('sets executedByRole for permission creation', () => {
@@ -248,6 +252,7 @@ describe('app-admin audit log execution role', () => {
     });
 
     expect(result.log.execution.executedByRole).toBe(ROLE.INSTITUTION_ADMIN);
+    expect(result.permission.updates.at(-1)?.updatedByUserRole).toBe(ROLE.INSTITUTION_ADMIN);
   });
 });
 

@@ -8,7 +8,7 @@
  * - 0.0.1	(2026-05-01)	Extrae operaciones auth/lifecycle desde apiDependencies para reducir complejidad.	@codex
  */
 
-import { PERMISSION_STATUS, ROLE, SystemError } from '@puintegra/shared';
+import { PERMISSION_STATUS, ROLE, SYSTEM_RFC, SystemError } from '@puintegra/shared';
 import { apiSystemMessages } from '../../constants/systemMessages.js';
 import {
   AUTH_LIFECYCLE_EVENT_CATEGORY,
@@ -143,8 +143,19 @@ export async function requestPasswordRecovery(input: AuthLifecyclePolicyInput) {
  * @description Restablece MFA por asistencia administrativa y audita el evento.
  */
 export async function resetUserMfa(input: ResetUserMfaInput) {
-  const actorRole = typeof input.actor.role === 'string' ? input.actor.role : null;
-  if (actorRole !== ROLE.SYSTEM_ADMINISTRATOR) {
+  const actorEmail = typeof input.actor.email === 'string' ? input.actor.email.toLowerCase() : null;
+  if (!actorEmail) {
+    throw new SystemError(apiSystemMessages.auth.lifecycle.forbiddenMfaReset);
+  }
+  const actorPermission = await getAdminFirestore()
+    .collection('permissions')
+    .where('email', '==', actorEmail)
+    .where('status', '==', PERMISSION_STATUS.GRANTED)
+    .where('role', '==', ROLE.SYSTEM_ADMINISTRATOR)
+    .where('RFC', '==', SYSTEM_RFC)
+    .limit(1)
+    .get();
+  if (actorPermission.empty) {
     throw new SystemError(apiSystemMessages.auth.lifecycle.forbiddenMfaReset);
   }
 
