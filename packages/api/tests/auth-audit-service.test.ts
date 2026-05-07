@@ -2,7 +2,6 @@ import {
   LOG_CATEGORIES,
   LOG_ORIGIN,
   LogSchema,
-  ROLE,
   UserSchema
 } from '@puintegra/shared';
 import { describe, expect, it } from 'vitest';
@@ -60,7 +59,6 @@ describe('auth audit service', () => {
       originTraceId: 'execution-id-login',
       userId: 'dev-user-001',
       email: 'admin@example.test',
-      role: ROLE.INSTITUTION_ADMIN,
     }, 1710000000000);
     const logoutLog = buildAuthEventLog({
       id: 'server-log-id-logout',
@@ -68,7 +66,6 @@ describe('auth audit service', () => {
       originTraceId: 'execution-id-logout',
       userId: 'dev-user-001',
       email: 'admin@example.test',
-      role: ROLE.INSTITUTION_ADMIN,
     }, 1710000000001);
 
     expect(LogSchema.parse(loginLog)).toMatchObject({
@@ -77,10 +74,7 @@ describe('auth audit service', () => {
       origin: LOG_ORIGIN.SYSTEM_HTTP_API_CALL,
       originTraceId: 'execution-id-login',
       RFC: null,
-      userId: 'dev-user-001',
-      execution: {
-        executedByRole: ROLE.INSTITUTION_ADMIN,
-      },
+      userId: 'dev-user-001'
     });
     expect(LogSchema.parse(logoutLog)).toMatchObject({
       id: 'server-log-id-logout',
@@ -88,11 +82,10 @@ describe('auth audit service', () => {
       origin: LOG_ORIGIN.SYSTEM_HTTP_API_CALL,
       originTraceId: 'execution-id-logout',
       RFC: null,
-      userId: 'dev-user-001',
-      execution: {
-        executedByRole: ROLE.INSTITUTION_ADMIN,
-      },
+      userId: 'dev-user-001'
     });
+    expect(Object.hasOwn(loginLog.execution, 'executedByRole')).toBe(false);
+    expect(Object.hasOwn(logoutLog.execution, 'executedByRole')).toBe(false);
   });
 
   it('builds account creation audit logs from Auth onCreate events', () => {
