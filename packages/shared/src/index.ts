@@ -59,6 +59,19 @@ export { UserUpdateSchema, UserSchema } from './schemas/user.schema';
 export type { UserUpdate, User } from './schemas/user.schema';
 
 export {
+  AppAdminContactUpsertPayloadSchema,
+  AppAdminSharedSecretUpdatePayloadSchema,
+  AppAdminPermissionCreatePayloadSchema,
+  AppAdminPermissionUpdatePayloadSchema,
+} from './schemas/app-admin.schema';
+export type {
+  AppAdminContactUpsertPayload,
+  AppAdminSharedSecretUpdatePayload,
+  AppAdminPermissionCreatePayload,
+  AppAdminPermissionUpdatePayload,
+} from './schemas/app-admin.schema';
+
+export {
   COMMERCIAL_PLAN,
   CommercialPlanValues,
   CommercialPlanSchema,
@@ -227,6 +240,7 @@ export {
   puiDateToUtcMilliseconds,
   optionalPuiDateToUtcMilliseconds,
   utcMillisecondsToPuiDate,
+  friendlyRelativeTimeEs,
 } from './utils/puiDateUtils';
 
 export {

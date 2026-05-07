@@ -58,14 +58,14 @@ describe('auth audit service', () => {
       event: 'login',
       originTraceId: 'execution-id-login',
       userId: 'dev-user-001',
-      email: 'admin@example.test'
+      email: 'admin@example.test',
     }, 1710000000000);
     const logoutLog = buildAuthEventLog({
       id: 'server-log-id-logout',
       event: 'logout',
       originTraceId: 'execution-id-logout',
       userId: 'dev-user-001',
-      email: 'admin@example.test'
+      email: 'admin@example.test',
     }, 1710000000001);
 
     expect(LogSchema.parse(loginLog)).toMatchObject({
@@ -84,6 +84,8 @@ describe('auth audit service', () => {
       RFC: null,
       userId: 'dev-user-001'
     });
+    expect(Object.hasOwn(loginLog.execution, 'executedByRole')).toBe(false);
+    expect(Object.hasOwn(logoutLog.execution, 'executedByRole')).toBe(false);
   });
 
   it('builds account creation audit logs from Auth onCreate events', () => {

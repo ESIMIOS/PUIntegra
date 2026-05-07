@@ -174,12 +174,16 @@ describe('admin institution onboarding API route', () => {
   };
 
   it('accepts onboarding only for SYSTEM_ADMINISTRATOR', async () => {
-    const createInstitutionOnboarding = vi.fn().mockResolvedValue({
-      institution: { RFC: 'AAA010101AAA' },
-      permission: { permissionId: 'perm-001' },
-    });
-
     for (const role of roleValues) {
+      const createInstitutionOnboarding = vi.fn().mockImplementation(async () => {
+        if (role !== ROLE.SYSTEM_ADMINISTRATOR) {
+          throw new SystemError(apiSystemMessages.admin.institutions.forbiddenRole);
+        }
+        return {
+          institution: { RFC: 'AAA010101AAA' },
+          permission: { permissionId: 'perm-001' },
+        };
+      });
       const app = createApiApp({
         verifyBearerToken: vi.fn().mockResolvedValue({
           userId: 'dev-user-001',
@@ -313,11 +317,15 @@ describe('admin institution plan API route', () => {
   };
 
   it('accepts plan updates only for SYSTEM_ADMINISTRATOR', async () => {
-    const updateInstitutionPlan = vi.fn().mockResolvedValue({
-      institution: { RFC: 'AAA010101AAA' },
-    });
-
     for (const role of roleValues) {
+      const updateInstitutionPlan = vi.fn().mockImplementation(async () => {
+        if (role !== ROLE.SYSTEM_ADMINISTRATOR) {
+          throw new SystemError(apiSystemMessages.admin.institutions.forbiddenRole);
+        }
+        return {
+          institution: { RFC: 'AAA010101AAA' },
+        };
+      });
       const app = createApiApp({
         verifyBearerToken: vi.fn().mockResolvedValue({
           userId: 'dev-user-001',
@@ -573,9 +581,13 @@ describe('auth lifecycle API routes', () => {
   });
 
   it('allows only system administrators to reset lost MFA access', async () => {
-    const resetUserMfa = vi.fn().mockResolvedValue({ reset: true });
-
     for (const role of roleValues) {
+      const resetUserMfa = vi.fn().mockImplementation(async () => {
+        if (role !== ROLE.SYSTEM_ADMINISTRATOR) {
+          throw new SystemError(apiSystemMessages.auth.lifecycle.forbiddenMfaReset);
+        }
+        return { reset: true };
+      });
       const app = createApiApp(
         createDefaultDependencies({
           verifyBearerToken: vi.fn().mockResolvedValue({
@@ -600,16 +612,195 @@ describe('auth lifecycle API routes', () => {
       } else {
         expect(response.status).toBe(HTTP_STATUS.FORBIDDEN);
       }
+
+      if (role === ROLE.SYSTEM_ADMINISTRATOR) {
+        expect(resetUserMfa).toHaveBeenCalledWith({
+          userId: 'dev-user-001',
+          verificationNote: 'Identidad verificada por mesa de ayuda.',
+          actor: {
+            userId: 'admin-user-001',
+            email: 'admin@example.test',
+            role: ROLE.SYSTEM_ADMINISTRATOR,
+          },
+          originTraceId: 'generated-trace-id',
+        });
+      }
     }
-    expect(resetUserMfa).toHaveBeenCalledWith({
-      userId: 'dev-user-001',
-      verificationNote: 'Identidad verificada por mesa de ayuda.',
+  });
+});
+
+describe('app admin institution API routes', () => {
+  it('requires bearer token for app-admin write routes', async () => {
+    const app = createApiApp(createDefaultDependencies());
+
+    const response = await app.request('/api/app/institutions/AAA010101AAA/shared-secret', {
+      method: 'PUT',
+      body: JSON.stringify({ sharedSecret: 'top-secret' }),
+    });
+
+    expect(response.status).toBe(HTTP_STATUS.UNAUTHORIZED);
+    expect(await response.json()).toMatchObject({
+      ok: false,
+      error: {
+        code: 'API-AUTH-001',
+      },
+    });
+  });
+
+  it('rejects reserved RFC values in app-admin write routes', async () => {
+    const app = createApiApp(
+      createDefaultDependencies({
+        verifyBearerToken: vi.fn().mockResolvedValue({
+          userId: 'dev-user-001',
+          email: 'admin@example.test',
+          role: ROLE.INSTITUTION_ADMIN,
+        }),
+        updateInstitutionSharedSecret: vi.fn(),
+      }),
+    );
+
+    const response = await app.request(`/api/app/institutions/${DEFAULT_RFC}/shared-secret`, {
+      method: 'PUT',
+      headers: { authorization: 'Bearer token' },
+      body: JSON.stringify({ sharedSecret: 'top-secret' }),
+    });
+
+    expect(response.status).toBe(HTTP_STATUS.FORBIDDEN);
+    expect(await response.json()).toMatchObject({
+      ok: false,
+      error: {
+        code: 'API-ADMIN-010',
+      },
+    });
+  });
+
+  it('submits contact upsert using normalized route params and actor context', async () => {
+    const upsertInstitutionContact = vi.fn().mockResolvedValue({
+      contact: { type: 'LEGAL' },
+    });
+    const app = createApiApp(
+      createDefaultDependencies({
+        verifyBearerToken: vi.fn().mockResolvedValue({
+          userId: 'dev-user-001',
+          email: 'admin@example.test',
+          role: ROLE.INSTITUTION_ADMIN,
+        }),
+        upsertInstitutionContact,
+      }),
+    );
+
+    const payload = {
+      name: 'Contacto Legal',
+      phone: '+525533748806',
+      contactCURP: 'MART810609HDFRYR03',
+      efirmaCertificate: 'CERT',
+    };
+    const response = await app.request('/api/app/institutions/aaa010101aaa/contacts/legal', {
+      method: 'PUT',
+      headers: { authorization: 'Bearer token' },
+      body: JSON.stringify(payload),
+    });
+
+    expect(response.status).toBe(HTTP_STATUS.OK);
+    expect(upsertInstitutionContact).toHaveBeenCalledWith({
+      rfc: 'AAA010101AAA',
+      contactType: 'LEGAL',
+      payload,
       actor: {
-        userId: 'admin-user-001',
+        userId: 'dev-user-001',
         email: 'admin@example.test',
-        role: ROLE.SYSTEM_ADMINISTRATOR,
+        role: ROLE.INSTITUTION_ADMIN,
       },
       originTraceId: 'generated-trace-id',
+    });
+  });
+
+  it('supports permissions create/update and shared-secret writes through the API boundary', async () => {
+    const createInstitutionPermission = vi.fn().mockResolvedValue({ permission: { permissionId: 'perm-001' } });
+    const updateInstitutionPermission = vi.fn().mockResolvedValue({ permission: { permissionId: 'perm-001' } });
+    const updateInstitutionSharedSecret = vi.fn().mockResolvedValue({
+      sharedSecretConfigured: true,
+      SHA256SharedSecret: 'deadbeef',
+    });
+    const app = createApiApp(
+      createDefaultDependencies({
+        verifyBearerToken: vi.fn().mockResolvedValue({
+          userId: 'dev-user-001',
+          email: 'admin@example.test',
+          role: ROLE.INSTITUTION_ADMIN,
+        }),
+        createInstitutionPermission,
+        updateInstitutionPermission,
+        updateInstitutionSharedSecret,
+      }),
+    );
+
+    const createResponse = await app.request('/api/app/institutions/AAA010101AAA/permissions', {
+      method: 'POST',
+      headers: { authorization: 'Bearer token' },
+      body: JSON.stringify({
+        email: 'new-user@example.test',
+        role: ROLE.INSTITUTION_OPERATOR,
+        status: 'GRANTED',
+      }),
+    });
+    expect(createResponse.status).toBe(HTTP_STATUS.OK);
+
+    const updateResponse = await app.request('/api/app/institutions/AAA010101AAA/permissions/perm-001', {
+      method: 'PATCH',
+      headers: { authorization: 'Bearer token' },
+      body: JSON.stringify({
+        role: ROLE.INSTITUTION_ADMIN,
+        status: 'DENIED',
+      }),
+    });
+    expect(updateResponse.status).toBe(HTTP_STATUS.OK);
+
+    const secretResponse = await app.request('/api/app/institutions/AAA010101AAA/shared-secret', {
+      method: 'PUT',
+      headers: { authorization: 'Bearer token' },
+      body: JSON.stringify({
+        sharedSecret: 'top-secret',
+      }),
+    });
+    expect(secretResponse.status).toBe(HTTP_STATUS.OK);
+
+    expect(createInstitutionPermission).toHaveBeenCalledOnce();
+    expect(updateInstitutionPermission).toHaveBeenCalledOnce();
+    expect(updateInstitutionSharedSecret).toHaveBeenCalledOnce();
+  });
+
+  it('returns dedicated app-admin forbidden code when RFC-scoped admin permission is missing', async () => {
+    const app = createApiApp(
+      createDefaultDependencies({
+        verifyBearerToken: vi.fn().mockResolvedValue({
+          userId: 'dev-user-001',
+          email: 'admin@example.test',
+          role: ROLE.SYSTEM_ADMINISTRATOR,
+        }),
+        upsertInstitutionContact: vi
+          .fn()
+          .mockRejectedValue(new SystemError(apiSystemMessages.app.institutions.missingInstitutionAdminPermission)),
+      }),
+    );
+
+    const response = await app.request('/api/app/institutions/AAA010101AAA/contacts/LEGAL', {
+      method: 'PUT',
+      headers: { authorization: 'Bearer token' },
+      body: JSON.stringify({
+        name: 'Contacto Legal',
+        phone: '+525533748806',
+        contactCURP: 'MART810609HDFRYR03',
+        efirmaCertificate: 'CERT',
+      }),
+    });
+
+    expect(response.status).toBe(HTTP_STATUS.FORBIDDEN);
+    expect(await response.json()).toMatchObject({
+      ok: false,
+      error: {
+        code: 'API-APP-002',
+      },
     });
   });
 });

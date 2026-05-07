@@ -174,6 +174,9 @@ describe('account profile update dependency', () => {
       userId: 'dev-user-001',
       originTraceId: 'trace-001',
     });
+    const persistedUpdates = state.userDoc.updates as Array<Record<string, unknown>>;
+    expect(Object.hasOwn(persistedUpdates[0] ?? {}, 'updatedByUserRole')).toBe(false);
+    expect(Object.hasOwn((state.logs[0] as { execution?: Record<string, unknown> }).execution ?? {}, 'executedByRole')).toBe(false);
   });
 
   it('rolls back firebase displayName when firestore persistence fails after auth sync', async () => {

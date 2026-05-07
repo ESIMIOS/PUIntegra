@@ -9,7 +9,7 @@
  */
 
 import type { Context } from 'hono';
-import { ROLE, SystemError } from '@puintegra/shared';
+import { SystemError } from '@puintegra/shared';
 import { type AuthEventName, type AuthLifecycleEventName } from '../../services/authAuditService.js';
 import { apiOk } from '../apiResponse.js';
 import type { CreateApiAppDependencies } from './types.js';
@@ -138,10 +138,6 @@ export function createMfaResetHandler(dependencies: CreateApiAppDependencies) {
     }
 
     const verified = await dependencies.verifyBearerToken(token);
-    if (verified.role !== ROLE.SYSTEM_ADMINISTRATOR) {
-      throw new SystemError(apiSystemMessages.auth.lifecycle.forbiddenMfaReset);
-    }
-
     const parsedPayload = MfaResetPayloadSchema.safeParse(await readJsonPayload(context));
     if (!parsedPayload.success) {
       throw new SystemError(apiSystemMessages.auth.lifecycle.invalidPayload, {

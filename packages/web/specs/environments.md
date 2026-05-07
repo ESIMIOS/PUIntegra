@@ -88,6 +88,15 @@ The local Auth Emulator password is deterministic development data, currently `l
 | Variable | Purpose |
 |---|---|
 | `PUINTEGRA_EMULATOR_INSTITUTION_SHARED_SECRET` | Shared secret stored in the seeded local institution document |
+| `PUINTEGRA_SHARED_SECRET_MASTER_KEY` | Backend master key used by API routes to derive per-institution encryption keys for shared-secret at-rest protection. Can be raw text (32+ bytes) or base64 whose decoded bytes are at least 32 bytes. |
+
+### Backend master key management
+
+- `PUINTEGRA_SHARED_SECRET_MASTER_KEY` is a server-side secret and must never use a `VITE_` prefix.
+- The key is required by API runtime paths that update institution shared secrets (`PUT /api/app/institutions/:rfc/shared-secret`).
+- Development and emulator setup must define this key in root env files consumed by API scripts and functions runtime.
+- Staging and production must inject this key through secure CI or platform secret mechanisms; do not commit real values.
+- Keep one canonical variable name across documentation and deployment automation: `PUINTEGRA_SHARED_SECRET_MASTER_KEY`.
 
 ---
 

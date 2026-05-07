@@ -19,17 +19,17 @@ jobs:
       cancel-in-progress: false
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - uses: pnpm/action-setup@08c4be7e2e672a47d11bd04269e27e5f3e8529cb # v6.0.0
         # version read automatically from packageManager field in package.json
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
           node-version: 24
           cache: pnpm
 
-      - uses: actions/setup-java@v5
+      - uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
         with:
           distribution: temurin
           java-version: 21
@@ -82,16 +82,40 @@ jobs:
           echo "FIREBASE_PROJECT_ID=$FIREBASE_PROJECT_ID" >> "$GITHUB_ENV"
           echo "GCLOUD_PROJECT=$FIREBASE_PROJECT_ID" >> "$GITHUB_ENV"
 
-      - name: Authenticate Firebase
+      - name: Authenticate GCP (staging)
+        uses: google-github-actions/auth@c200f3691d83b41bf9bbd8638997a462592937ed # v2.1.13
+        with:
+          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_STAGING }}
+
+      - name: Setup gcloud CLI
+        uses: google-github-actions/setup-gcloud@77e7a554d41e2ee56fc945c52dfd3f33d12def9a # v2.1.4
+        with:
+          project_id: ${{ env.FIREBASE_PROJECT_ID }}
+
+      - name: Sync shared-secret master key to Secret Manager (staging)
         run: |
-          printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/firebase-service-account.json"
-          echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/firebase-service-account.json" >> "$GITHUB_ENV"
+          set -euo pipefail
+          SECRET_NAME="PUINTEGRA_SHARED_SECRET_MASTER_KEY"
+
+          if ! gcloud secrets describe "$SECRET_NAME" --project "$FIREBASE_PROJECT_ID" >/dev/null 2>&1; then
+            printf '%s' "$PUINTEGRA_SHARED_SECRET_MASTER_KEY" | \
+              gcloud secrets create "$SECRET_NAME" --project "$FIREBASE_PROJECT_ID" --replication-policy=automatic --data-file=-
+            exit 0
+          fi
+
+          CURRENT_VALUE="$(gcloud secrets versions access latest --secret="$SECRET_NAME" --project "$FIREBASE_PROJECT_ID")"
+          if [ "$CURRENT_VALUE" = "$PUINTEGRA_SHARED_SECRET_MASTER_KEY" ]; then
+            echo "Secret unchanged. Skipping new version."
+            exit 0
+          fi
+
+          printf '%s' "$PUINTEGRA_SHARED_SECRET_MASTER_KEY" | \
+            gcloud secrets versions add "$SECRET_NAME" --project "$FIREBASE_PROJECT_ID" --data-file=-
         env:
-          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_STAGING }}
+          PUINTEGRA_SHARED_SECRET_MASTER_KEY: ${{ secrets.PUINTEGRA_SHARED_SECRET_MASTER_KEY_STAGING }}
 
       - name: Deploy to Firebase (staging)
         run: pnpm exec firebase deploy --config firebase.deploy.json --project "$FIREBASE_PROJECT_ID" --only hosting,functions,firestore,storage --non-interactive
-
       - name: Bootstrap system administrator permission (staging)
         run: pnpm --filter @puintegra/api run bootstrap:system-admin
         env:

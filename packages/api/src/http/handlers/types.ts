@@ -59,6 +59,32 @@ export type CreateApiAppDependencies = {
     actor: VerifiedBearerToken;
     originTraceId: string;
   }) => Promise<unknown>;
+  upsertInstitutionContact?: (input: {
+    rfc: string;
+    contactType: string;
+    payload: unknown;
+    actor: VerifiedBearerToken;
+    originTraceId: string;
+  }) => Promise<unknown>;
+  updateInstitutionSharedSecret?: (input: {
+    rfc: string;
+    payload: unknown;
+    actor: VerifiedBearerToken;
+    originTraceId: string;
+  }) => Promise<unknown>;
+  createInstitutionPermission?: (input: {
+    rfc: string;
+    payload: unknown;
+    actor: VerifiedBearerToken;
+    originTraceId: string;
+  }) => Promise<unknown>;
+  updateInstitutionPermission?: (input: {
+    rfc: string;
+    permissionId: string;
+    payload: unknown;
+    actor: VerifiedBearerToken;
+    originTraceId: string;
+  }) => Promise<unknown>;
   updateAccountProfile?: (input: {
     payload: unknown;
     actor: VerifiedBearerToken;

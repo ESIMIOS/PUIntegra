@@ -39,6 +39,7 @@ type AuthEventLogInput = {
   originTraceId: string;
   userId: string;
   email?: string | null;
+  role?: string | null;
 };
 
 type UserCreatedLogInput = {
