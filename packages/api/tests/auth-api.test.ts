@@ -23,9 +23,20 @@ vi.mock('firebase-functions/v2', () => ({
 
 function createDefaultDependencies(overrides: Partial<Parameters<typeof createApiApp>[0]> = {}) {
   return {
+    enforceThrottle: vi.fn().mockResolvedValue(undefined),
     verifyBearerToken: vi.fn(),
     recordAuthEvent: vi.fn(),
+    checkAccountCreationPolicy: vi.fn().mockResolvedValue({ eligible: true }),
+    requestPasswordRecovery: vi.fn().mockResolvedValue({ accepted: true }),
+    recordAuthLifecycleEvent: vi.fn().mockResolvedValue({ recorded: true }),
+    resetUserMfa: vi.fn().mockResolvedValue({ reset: true }),
     createInstitutionOnboarding: vi.fn(),
+    updateInstitutionPlan: vi.fn().mockResolvedValue({ institution: { RFC: 'AAA010101AAA' } }),
+    upsertInstitutionContact: vi.fn().mockResolvedValue({ contact: { contactId: 'contact-001' } }),
+    updateInstitutionSharedSecret: vi.fn().mockResolvedValue({ updatedAt: 1710000000000 }),
+    createInstitutionPermission: vi.fn().mockResolvedValue({ permission: { permissionId: 'perm-001' } }),
+    updateInstitutionPermission: vi.fn().mockResolvedValue({ permission: { permissionId: 'perm-001' } }),
+    updateAccountProfile: vi.fn().mockResolvedValue({ userId: 'dev-user-001' }),
     createOriginTraceId: vi.fn().mockReturnValue('generated-trace-id'),
     ...overrides,
   } as Parameters<typeof createApiApp>[0];
@@ -470,7 +481,6 @@ describe('auth lifecycle API routes', () => {
     expect(checkAccountCreationPolicy).toHaveBeenCalledWith({
       email: 'owner@example.test',
       originTraceId: 'generated-trace-id',
-      requestKey: expect.any(String),
     });
   });
 
@@ -525,7 +535,6 @@ describe('auth lifecycle API routes', () => {
     expect(requestPasswordRecovery).toHaveBeenCalledWith({
       email: 'owner@example.test',
       originTraceId: 'generated-trace-id',
-      requestKey: expect.any(String),
     });
     expect(JSON.stringify(requestPasswordRecovery.mock.calls)).not.toContain('Never log this');
     expect(JSON.stringify(requestPasswordRecovery.mock.calls)).not.toContain('secret-code');
@@ -534,9 +543,17 @@ describe('auth lifecycle API routes', () => {
   it('rate-limits password recovery safely', async () => {
     const app = createApiApp(
       createDefaultDependencies({
-        requestPasswordRecovery: vi
-          .fn()
-          .mockRejectedValue(new SystemError(apiSystemMessages.auth.lifecycle.rateLimited)),
+        enforceThrottle: vi.fn().mockRejectedValue(
+          new SystemError(apiSystemMessages.throttle.overQuota, {
+            details: {
+              endpointKey: 'auth.lifecycle.password-recovery',
+              dimensionKey: 'email',
+              maxRequests: 5,
+              windowMs: 900000,
+              retryAfterSeconds: 120,
+            },
+          }),
+        ),
       }),
     );
 
@@ -549,7 +566,7 @@ describe('auth lifecycle API routes', () => {
     expect(await response.json()).toMatchObject({
       ok: false,
       error: {
-        code: 'API-AUTH-011',
+        code: 'API-THROTTLE-001',
         displayMessage: 'Recibimos demasiados intentos. Espera unos minutos antes de volver a intentar.',
       },
     });

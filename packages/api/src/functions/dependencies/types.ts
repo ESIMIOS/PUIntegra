@@ -8,6 +8,7 @@
  * - 0.0.1	(2026-05-01)	Define entradas compartidas para auth, instituciones y perfil de cuenta.	@codex
  */
 
+import type { ApiThrottleDimensionKey, ApiThrottleEndpointKey } from '@puintegra/shared';
 import type { AuthEventName, AuthLifecycleEventName } from '../../services/authAuditService.js';
 
 export type ActorIdentity = {
@@ -26,7 +27,17 @@ export type AuthEventWriteInput = {
 export type AuthLifecyclePolicyInput = {
   email: string;
   originTraceId: string;
-  requestKey: string;
+};
+
+export type ApiThrottleSubject = {
+  subjectKey: string;
+  subject: Record<string, string>;
+};
+
+export type EnforceApiThrottleInput = {
+  endpointKey: ApiThrottleEndpointKey;
+  subjects: Partial<Record<ApiThrottleDimensionKey, ApiThrottleSubject>>;
+  originTraceId: string;
 };
 
 export type AuthLifecycleEventWriteInput = {

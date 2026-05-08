@@ -9,6 +9,7 @@
  */
 
 import type { AuthEventName, AuthLifecycleEventName } from '../../services/authAuditService.js';
+import type { ApiThrottleSubject, EnforceApiThrottleInput } from '../../functions/dependencies/types.js';
 
 export type VerifiedBearerToken = {
   userId: string;
@@ -24,8 +25,9 @@ export type RecordAuthEventInput = VerifiedBearerToken & {
 export type AuthLifecyclePolicyInput = {
   email: string;
   originTraceId: string;
-  requestKey: string;
 };
+
+export type { ApiThrottleSubject, EnforceApiThrottleInput };
 
 export type RecordAuthLifecycleEventInput = {
   event: AuthLifecycleEventName;
@@ -43,6 +45,7 @@ export type ResetUserMfaInput = {
 
 export type CreateApiAppDependencies = {
   verifyBearerToken: (token: string) => Promise<VerifiedBearerToken>;
+  enforceThrottle?: (input: EnforceApiThrottleInput) => Promise<void>;
   recordAuthEvent: (input: RecordAuthEventInput) => Promise<unknown>;
   checkAccountCreationPolicy?: (input: AuthLifecyclePolicyInput) => Promise<unknown>;
   requestPasswordRecovery?: (input: AuthLifecyclePolicyInput) => Promise<unknown>;

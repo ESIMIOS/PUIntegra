@@ -9,7 +9,7 @@
  */
 
 import type { Context } from 'hono';
-import { SystemError } from '@puintegra/shared';
+import { API_THROTTLE_DIMENSION, API_THROTTLE_ENDPOINT, SystemError } from '@puintegra/shared';
 import { type AuthEventName, type AuthLifecycleEventName } from '../../services/authAuditService.js';
 import { apiOk } from '../apiResponse.js';
 import type { CreateApiAppDependencies } from './types.js';
@@ -18,11 +18,12 @@ import {
   parseEmailPayload,
   parseLifecycleCompletionPayload,
   readBearerToken,
+  readClientIp,
   readJsonPayload,
   readOriginTraceId,
-  readRequestKey,
 } from './shared.js';
 import { apiSystemMessages } from '../../constants/systemMessages.js';
+import { buildThrottleSubject, enforceThrottle } from './throttle.js';
 
 function requireDependency<T>(dependency: T | undefined, dependencyName: string): T {
   if (!dependency) {
@@ -43,6 +44,17 @@ export function createAuthEventHandler(dependencies: CreateApiAppDependencies, e
     }
 
     const verified = await dependencies.verifyBearerToken(token);
+    const clientIp = readClientIp(context);
+    await enforceThrottle(dependencies, {
+      endpointKey: event === 'login'
+        ? API_THROTTLE_ENDPOINT.AUTH_EVENTS_LOGIN
+        : API_THROTTLE_ENDPOINT.AUTH_EVENTS_LOGOUT,
+      originTraceId,
+      subjects: {
+        [API_THROTTLE_DIMENSION.IP]: buildThrottleSubject([['ip', clientIp]]),
+        [API_THROTTLE_DIMENSION.USER]: buildThrottleSubject([['user', verified.userId]]),
+      },
+    });
     await dependencies.recordAuthEvent({
       event,
       originTraceId,
@@ -72,10 +84,18 @@ export function createAccountCreationPolicyHandler(dependencies: CreateApiAppDep
       dependencies.checkAccountCreationPolicy,
       'checkAccountCreationPolicy',
     );
+    const clientIp = readClientIp(context);
+    await enforceThrottle(dependencies, {
+      endpointKey: API_THROTTLE_ENDPOINT.AUTH_LIFECYCLE_ACCOUNT_CREATION_POLICY,
+      originTraceId,
+      subjects: {
+        [API_THROTTLE_DIMENSION.IP]: buildThrottleSubject([['ip', clientIp]]),
+        [API_THROTTLE_DIMENSION.EMAIL]: buildThrottleSubject([['email', payload.email]]),
+      },
+    });
     const result = await checkAccountCreationPolicy({
       email: payload.email,
       originTraceId,
-      requestKey: readRequestKey(context, payload.email),
     });
 
     return context.json(apiOk(result, { originTraceId }));
@@ -90,10 +110,18 @@ export function createPasswordRecoveryHandler(dependencies: CreateApiAppDependen
     const originTraceId = readOriginTraceId(context, dependencies.createOriginTraceId);
     const payload = parseEmailPayload(await readJsonPayload(context));
     const requestPasswordRecovery = requireDependency(dependencies.requestPasswordRecovery, 'requestPasswordRecovery');
+    const clientIp = readClientIp(context);
+    await enforceThrottle(dependencies, {
+      endpointKey: API_THROTTLE_ENDPOINT.AUTH_LIFECYCLE_PASSWORD_RECOVERY,
+      originTraceId,
+      subjects: {
+        [API_THROTTLE_DIMENSION.IP]: buildThrottleSubject([['ip', clientIp]]),
+        [API_THROTTLE_DIMENSION.EMAIL]: buildThrottleSubject([['email', payload.email]]),
+      },
+    });
     await requestPasswordRecovery({
       email: payload.email,
       originTraceId,
-      requestKey: readRequestKey(context, payload.email),
     });
 
     return context.json(
@@ -115,6 +143,26 @@ export function createAuthLifecycleEventHandler(dependencies: CreateApiAppDepend
   return async (context: Context) => {
     const originTraceId = readOriginTraceId(context, dependencies.createOriginTraceId);
     const payload = parseLifecycleCompletionPayload(await readJsonPayload(context));
+    const clientIp = readClientIp(context);
+    const endpointKey =
+      event === 'password-update'
+        ? API_THROTTLE_ENDPOINT.AUTH_LIFECYCLE_PASSWORD_RESET_COMPLETED
+        : event === 'email-verification'
+          ? API_THROTTLE_ENDPOINT.AUTH_LIFECYCLE_EMAIL_VERIFICATION_COMPLETED
+          : API_THROTTLE_ENDPOINT.AUTH_LIFECYCLE_MFA_ENROLLMENT_COMPLETED;
+    await enforceThrottle(dependencies, {
+      endpointKey,
+      originTraceId,
+      subjects: {
+        [API_THROTTLE_DIMENSION.IP]: buildThrottleSubject([['ip', clientIp]]),
+        [API_THROTTLE_DIMENSION.USER]: payload.userId
+          ? buildThrottleSubject([['user', payload.userId]])
+          : undefined,
+        [API_THROTTLE_DIMENSION.EMAIL]: payload.email
+          ? buildThrottleSubject([['email', payload.email]])
+          : undefined,
+      },
+    });
     await dependencies.recordAuthLifecycleEvent?.({
       event,
       originTraceId,
@@ -138,6 +186,7 @@ export function createMfaResetHandler(dependencies: CreateApiAppDependencies) {
     }
 
     const verified = await dependencies.verifyBearerToken(token);
+    const clientIp = readClientIp(context);
     const parsedPayload = MfaResetPayloadSchema.safeParse(await readJsonPayload(context));
     if (!parsedPayload.success) {
       throw new SystemError(apiSystemMessages.auth.lifecycle.invalidPayload, {
@@ -153,6 +202,15 @@ export function createMfaResetHandler(dependencies: CreateApiAppDependencies) {
     }
 
     const resetUserMfa = requireDependency(dependencies.resetUserMfa, 'resetUserMfa');
+    await enforceThrottle(dependencies, {
+      endpointKey: API_THROTTLE_ENDPOINT.AUTH_ADMIN_MFA_RESET,
+      originTraceId,
+      subjects: {
+        [API_THROTTLE_DIMENSION.IP]: buildThrottleSubject([['ip', clientIp]]),
+        [API_THROTTLE_DIMENSION.USER]: buildThrottleSubject([['user', verified.userId]]),
+        [API_THROTTLE_DIMENSION.TARGET_USER]: buildThrottleSubject([['targetUser', userId]]),
+      },
+    });
     const result = await resetUserMfa({
       userId,
       verificationNote: parsedPayload.data.verificationNote,

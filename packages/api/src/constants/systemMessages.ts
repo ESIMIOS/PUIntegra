@@ -40,13 +40,6 @@ export const apiSystemMessageTree = {
         displayMessage: 'No pudimos crear la cuenta con esos datos. Revisa la invitación institucional o solicita apoyo.',
         httpStatus: HTTP_STATUS.CONFLICT,
       },
-      rateLimited: {
-        code: 'API-AUTH-011',
-        severity: LOG_SEVERITY.WARNING,
-        message: 'Auth lifecycle operation was rate limited.',
-        displayMessage: 'Recibimos demasiados intentos. Espera unos minutos antes de volver a intentar.',
-        httpStatus: HTTP_STATUS.UNPROCESSABLE_CONTENT,
-      },
       forbiddenMfaReset: {
         code: 'API-AUTH-012',
         severity: LOG_SEVERITY.WARNING,
@@ -54,6 +47,15 @@ export const apiSystemMessageTree = {
         displayMessage: 'Tu rol actual no tiene permisos para restablecer MFA.',
         httpStatus: HTTP_STATUS.FORBIDDEN,
       },
+    },
+  },
+  throttle: {
+    overQuota: {
+      code: 'API-THROTTLE-001',
+      severity: LOG_SEVERITY.WARNING,
+      message: 'API throttle quota exceeded.',
+      displayMessage: 'Recibimos demasiados intentos. Espera unos minutos antes de volver a intentar.',
+      httpStatus: HTTP_STATUS.UNPROCESSABLE_CONTENT,
     },
   },
   admin: {

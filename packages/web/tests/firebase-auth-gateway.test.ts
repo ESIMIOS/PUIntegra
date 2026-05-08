@@ -275,6 +275,39 @@ describe('firebase auth gateway', () => {
     }));
   });
 
+  it('preserves backend throttle displayMessage for password recovery 422 responses', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            ok: false,
+            error: {
+              code: 'API-THROTTLE-001',
+              message: 'API throttle quota exceeded.',
+              uiMessageKey: 'api.throttle.over_quota',
+              displayMessage: 'Recibimos demasiados intentos. Espera unos minutos antes de volver a intentar.',
+              details: {
+                endpointKey: 'auth.lifecycle.password-recovery',
+                dimensionKey: 'email',
+                retryAfterSeconds: 120,
+              },
+            },
+          }),
+          {
+            status: 422,
+            headers: { 'content-type': 'application/json' },
+          },
+        ),
+      ),
+    );
+
+    await expect(requestPasswordRecovery('owner@example.test')).rejects.toMatchObject({
+      code: 'API-THROTTLE-001',
+      displayMessage: 'Recibimos demasiados intentos. Espera unos minutos antes de volver a intentar.',
+    });
+  });
+
   it('validates and confirms password reset codes', async () => {
     mocks.verifyPasswordResetCode.mockResolvedValue('owner@example.test');
 

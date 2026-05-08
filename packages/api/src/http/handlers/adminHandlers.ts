@@ -9,13 +9,14 @@
  */
 
 import type { Context } from 'hono';
-import { DEFAULT_RFC, SYSTEM_RFC, SystemError, HTTP_STATUS } from '@puintegra/shared';
+import { API_THROTTLE_DIMENSION, API_THROTTLE_ENDPOINT, DEFAULT_RFC, SYSTEM_RFC, SystemError, HTTP_STATUS } from '@puintegra/shared';
 import { parseInstitutionOnboardingInput } from '../../services/institutionOnboardingService.js';
 import { parseInstitutionPlanUpdateInput } from '../../services/institutionPlanService.js';
 import { apiSystemMessages } from '../../constants/systemMessages.js';
 import { apiOk } from '../apiResponse.js';
 import type { CreateApiAppDependencies } from './types.js';
-import { readBearerToken, readOriginTraceId } from './shared.js';
+import { readBearerToken, readClientIp, readOriginTraceId } from './shared.js';
+import { buildThrottleSubject, enforceThrottle } from './throttle.js';
 
 /**
  * @description Crea handler de onboarding institucional de backoffice.
@@ -89,6 +90,16 @@ export function createInstitutionPlanUpdateHandler(dependencies: CreateApiAppDep
     if (!dependencies.updateInstitutionPlan) {
       throw new Error('updateInstitutionPlan dependency is not configured.');
     }
+    const clientIp = readClientIp(context);
+    await enforceThrottle(dependencies, {
+      endpointKey: API_THROTTLE_ENDPOINT.ADMIN_INSTITUTIONS_PLAN_UPDATE,
+      originTraceId,
+      subjects: {
+        [API_THROTTLE_DIMENSION.IP]: buildThrottleSubject([['ip', clientIp]]),
+        [API_THROTTLE_DIMENSION.USER]: buildThrottleSubject([['user', verified.userId]]),
+        [API_THROTTLE_DIMENSION.RFC]: buildThrottleSubject([['rfc', rfc.toLowerCase()]]),
+      },
+    });
 
     const updated = await dependencies.updateInstitutionPlan({
       rfc,

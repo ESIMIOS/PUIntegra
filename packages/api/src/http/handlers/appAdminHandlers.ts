@@ -9,11 +9,19 @@
  */
 
 import type { Context } from 'hono';
-import { DEFAULT_RFC, SYSTEM_RFC, SystemError } from '@puintegra/shared';
+import {
+  API_THROTTLE_DIMENSION,
+  API_THROTTLE_ENDPOINT,
+  AppAdminPermissionCreatePayloadSchema,
+  DEFAULT_RFC,
+  SYSTEM_RFC,
+  SystemError,
+} from '@puintegra/shared';
 import { apiSystemMessages } from '../../constants/systemMessages.js';
 import { apiOk } from '../apiResponse.js';
 import type { CreateApiAppDependencies } from './types.js';
-import { readBearerToken, readJsonPayload, readOriginTraceId } from './shared.js';
+import { readBearerToken, readClientIp, readJsonPayload, readOriginTraceId } from './shared.js';
+import { buildThrottleSubject, enforceThrottle } from './throttle.js';
 
 function readInstitutionRfc(context: Context) {
   return (context.req.param('rfc') ?? '').trim().toUpperCase();
@@ -47,6 +55,22 @@ export function createInstitutionContactUpsertHandler(dependencies: CreateApiApp
     }
     const payload = await readJsonPayload(context);
     const contactType = (context.req.param('type') ?? '').trim().toUpperCase();
+    if (!contactType) {
+      throw new SystemError(apiSystemMessages.auth.lifecycle.invalidPayload, {
+        details: { field: 'type', reason: 'missing_contact_type' },
+      });
+    }
+    const clientIp = readClientIp(context);
+    await enforceThrottle(dependencies, {
+      endpointKey: API_THROTTLE_ENDPOINT.APP_INSTITUTIONS_CONTACTS_UPSERT,
+      originTraceId,
+      subjects: {
+        [API_THROTTLE_DIMENSION.IP]: buildThrottleSubject([['ip', clientIp]]),
+        [API_THROTTLE_DIMENSION.USER]: buildThrottleSubject([['user', verified.userId]]),
+        [API_THROTTLE_DIMENSION.RFC]: buildThrottleSubject([['rfc', rfc.toLowerCase()]]),
+        [API_THROTTLE_DIMENSION.CONTACT_TYPE]: buildThrottleSubject([['contactType', contactType]]),
+      },
+    });
     const result = await dependencies.upsertInstitutionContact({
       rfc,
       contactType,
@@ -68,6 +92,16 @@ export function createInstitutionSharedSecretUpdateHandler(dependencies: CreateA
       throw new Error('updateInstitutionSharedSecret dependency is not configured.');
     }
     const payload = await readJsonPayload(context);
+    const clientIp = readClientIp(context);
+    await enforceThrottle(dependencies, {
+      endpointKey: API_THROTTLE_ENDPOINT.APP_INSTITUTIONS_SHARED_SECRET_UPDATE,
+      originTraceId,
+      subjects: {
+        [API_THROTTLE_DIMENSION.IP]: buildThrottleSubject([['ip', clientIp]]),
+        [API_THROTTLE_DIMENSION.USER]: buildThrottleSubject([['user', verified.userId]]),
+        [API_THROTTLE_DIMENSION.RFC]: buildThrottleSubject([['rfc', rfc.toLowerCase()]]),
+      },
+    });
     const result = await dependencies.updateInstitutionSharedSecret({
       rfc,
       payload,
@@ -88,6 +122,24 @@ export function createInstitutionPermissionCreateHandler(dependencies: CreateApi
       throw new Error('createInstitutionPermission dependency is not configured.');
     }
     const payload = await readJsonPayload(context);
+    const parsedPayload = AppAdminPermissionCreatePayloadSchema.safeParse(payload);
+    if (!parsedPayload.success) {
+      throw new SystemError(apiSystemMessages.auth.lifecycle.invalidPayload, {
+        details: { issues: parsedPayload.error.issues },
+      });
+    }
+    const targetEmail = parsedPayload.data.email.trim().toLowerCase();
+    const clientIp = readClientIp(context);
+    await enforceThrottle(dependencies, {
+      endpointKey: API_THROTTLE_ENDPOINT.APP_INSTITUTIONS_PERMISSIONS_CREATE,
+      originTraceId,
+      subjects: {
+        [API_THROTTLE_DIMENSION.IP]: buildThrottleSubject([['ip', clientIp]]),
+        [API_THROTTLE_DIMENSION.USER]: buildThrottleSubject([['user', verified.userId]]),
+        [API_THROTTLE_DIMENSION.RFC]: buildThrottleSubject([['rfc', rfc.toLowerCase()]]),
+        [API_THROTTLE_DIMENSION.TARGET_EMAIL]: buildThrottleSubject([['targetEmail', targetEmail]]),
+      },
+    });
     const result = await dependencies.createInstitutionPermission({
       rfc,
       payload,
@@ -114,6 +166,17 @@ export function createInstitutionPermissionUpdateHandler(dependencies: CreateApi
       throw new Error('updateInstitutionPermission dependency is not configured.');
     }
     const payload = await readJsonPayload(context);
+    const clientIp = readClientIp(context);
+    await enforceThrottle(dependencies, {
+      endpointKey: API_THROTTLE_ENDPOINT.APP_INSTITUTIONS_PERMISSIONS_UPDATE,
+      originTraceId,
+      subjects: {
+        [API_THROTTLE_DIMENSION.IP]: buildThrottleSubject([['ip', clientIp]]),
+        [API_THROTTLE_DIMENSION.USER]: buildThrottleSubject([['user', verified.userId]]),
+        [API_THROTTLE_DIMENSION.RFC]: buildThrottleSubject([['rfc', rfc.toLowerCase()]]),
+        [API_THROTTLE_DIMENSION.PERMISSION]: buildThrottleSubject([['permissionId', permissionId]]),
+      },
+    });
     const result = await dependencies.updateInstitutionPermission({
       rfc,
       permissionId,
