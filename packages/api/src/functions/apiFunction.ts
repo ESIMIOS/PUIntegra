@@ -16,27 +16,13 @@ import { randomUUID } from 'node:crypto';
 import { onRequest } from 'firebase-functions/v2/https';
 import { createApiApp } from '../http/createApiApp.js';
 import { createApiDependencies } from './apiDependencies.js';
+import { toFetchRequest } from './fetchRequestBridge.js';
 import '../emulator/loadRootEnv.js';
 
 const app = createApiApp({
   ...createApiDependencies(),
   createOriginTraceId: randomUUID
 });
-
-/**
- * @description Construye una Request Fetch preservando método, headers y body.
- */
-function toFetchRequest(request: Parameters<Parameters<typeof onRequest>[0]>[0]) {
-  const protocol = request.protocol || 'http';
-  const host = request.get('host') || 'localhost';
-  const requestUrl = new URL(request.path || request.url, `${protocol}://${host}`);
-  const body = request.method === 'GET' || request.method === 'HEAD' ? undefined : new Uint8Array(request.rawBody);
-  return new Request(requestUrl, {
-    method: request.method,
-    headers: request.headers as HeadersInit,
-    body
-  });
-}
 
 export const api = onRequest(
   { invoker: 'public', secrets: ['PUINTEGRA_SHARED_SECRET_MASTER_KEY'] },

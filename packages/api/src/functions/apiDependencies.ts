@@ -19,6 +19,7 @@ import {
   resetUserMfa,
   verifyBearerToken,
 } from './dependencies/authDependencies.js';
+import { enforceApiThrottle as enforceThrottle } from './dependencies/throttleDependencies.js';
 import {
   createInstitutionOnboarding,
   createInstitutionPermission,
@@ -35,6 +36,7 @@ import { updateAccountProfile } from './dependencies/accountProfileDependencies.
 export function createApiDependencies() {
   return {
     verifyBearerToken,
+    enforceThrottle,
     recordAuthEvent,
     checkAccountCreationPolicy,
     createInstitutionOnboarding,

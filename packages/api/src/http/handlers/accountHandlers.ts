@@ -9,11 +9,12 @@
  */
 
 import type { Context } from 'hono';
-import { SystemError } from '@puintegra/shared';
+import { API_THROTTLE_DIMENSION, API_THROTTLE_ENDPOINT, SystemError } from '@puintegra/shared';
 import { apiSystemMessages } from '../../constants/systemMessages.js';
 import { apiOk } from '../apiResponse.js';
 import type { CreateApiAppDependencies } from './types.js';
-import { AccountProfilePayloadSchema, readBearerToken, readJsonPayload, readOriginTraceId } from './shared.js';
+import { AccountProfilePayloadSchema, readBearerToken, readClientIp, readJsonPayload, readOriginTraceId } from './shared.js';
+import { buildThrottleSubject, enforceThrottle } from './throttle.js';
 
 /**
  * @description Crea handler autenticado para edición de perfil de cuenta propia.
@@ -27,6 +28,7 @@ export function createAccountProfileUpdateHandler(dependencies: CreateApiAppDepe
     }
 
     const verified = await dependencies.verifyBearerToken(token);
+    const clientIp = readClientIp(context);
     if (!dependencies.updateAccountProfile) {
       throw new Error('updateAccountProfile dependency is not configured.');
     }
@@ -39,6 +41,15 @@ export function createAccountProfileUpdateHandler(dependencies: CreateApiAppDepe
         },
       });
     }
+
+    await enforceThrottle(dependencies, {
+      endpointKey: API_THROTTLE_ENDPOINT.AUTH_ACCOUNT_PROFILE_UPDATE,
+      originTraceId,
+      subjects: {
+        [API_THROTTLE_DIMENSION.IP]: buildThrottleSubject([['ip', clientIp]]),
+        [API_THROTTLE_DIMENSION.USER]: buildThrottleSubject([['user', verified.userId]]),
+      },
+    });
 
     const updated = await dependencies.updateAccountProfile({
       payload: parsedPayload.data,

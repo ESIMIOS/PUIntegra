@@ -88,6 +88,7 @@ export async function seedEmulators() {
   await writeCollection('requests', 'requestId', emulatorSeedData.requests);
   await writeCollection('findings', 'findingId', emulatorSeedData.findings);
   await writeCollection('logs', 'id', emulatorSeedData.logs);
+  await writeCollection('apiThrottleConfigs', 'endpointKey', emulatorSeedData.apiThrottleConfigs);
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {

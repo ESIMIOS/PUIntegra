@@ -1,4 +1,5 @@
 import {
+  ApiThrottleConfigSchema,
   ContactSchema,
   FindingSchema,
   InstitutionSchema,
@@ -22,6 +23,7 @@ describe('emulator seed data', () => {
     expect(() => emulatorSeedData.requests.forEach((record) => RequestSchema.parse(record))).not.toThrow();
     expect(() => emulatorSeedData.findings.forEach((record) => FindingSchema.parse(record))).not.toThrow();
     expect(() => emulatorSeedData.logs.forEach((record) => LogSchema.parse(record))).not.toThrow();
+    expect(() => emulatorSeedData.apiThrottleConfigs.forEach((record) => ApiThrottleConfigSchema.parse(record))).not.toThrow();
   });
 
   it('keeps system RFC out of tenant institutions', () => {
@@ -41,5 +43,10 @@ describe('emulator seed data', () => {
 
   it('seeds permissions by email without userId linkage', () => {
     expect(emulatorSeedData.permissions.every((record) => !('userId' in record))).toBe(true);
+  });
+
+  it('seeds distributed API throttle configs for all rollout endpoints', () => {
+    expect(emulatorSeedData.apiThrottleConfigs.length).toBeGreaterThan(0);
+    expect(emulatorSeedData.apiThrottleConfigs.every((record) => record.dimensions.length > 0)).toBe(true);
   });
 });

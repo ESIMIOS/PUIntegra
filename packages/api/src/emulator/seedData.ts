@@ -14,6 +14,8 @@
  */
 
 import {
+  API_THROTTLE_DIMENSION,
+  API_THROTTLE_ENDPOINT,
   COMMERCIAL_PLAN,
   COMMERCIAL_PLAN_STATUS,
   DEFAULT_FUB,
@@ -209,6 +211,133 @@ const logs = Array.from({ length: 125 }, (_, index) => {
   };
 });
 
+const apiThrottleConfigs = [
+  {
+    endpointKey: API_THROTTLE_ENDPOINT.AUTH_EVENTS_LOGIN,
+    dimensions: [
+      { dimensionKey: API_THROTTLE_DIMENSION.IP, maxRequests: 30, windowMs: 300000 },
+      { dimensionKey: API_THROTTLE_DIMENSION.USER, maxRequests: 20, windowMs: 300000 },
+    ],
+    updatedAt: NOW,
+  },
+  {
+    endpointKey: API_THROTTLE_ENDPOINT.AUTH_EVENTS_LOGOUT,
+    dimensions: [
+      { dimensionKey: API_THROTTLE_DIMENSION.IP, maxRequests: 30, windowMs: 300000 },
+      { dimensionKey: API_THROTTLE_DIMENSION.USER, maxRequests: 20, windowMs: 300000 },
+    ],
+    updatedAt: NOW,
+  },
+  {
+    endpointKey: API_THROTTLE_ENDPOINT.AUTH_LIFECYCLE_ACCOUNT_CREATION_POLICY,
+    dimensions: [
+      { dimensionKey: API_THROTTLE_DIMENSION.IP, maxRequests: 20, windowMs: 300000 },
+      { dimensionKey: API_THROTTLE_DIMENSION.EMAIL, maxRequests: 5, windowMs: 900000 },
+    ],
+    updatedAt: NOW,
+  },
+  {
+    endpointKey: API_THROTTLE_ENDPOINT.AUTH_LIFECYCLE_PASSWORD_RECOVERY,
+    dimensions: [
+      { dimensionKey: API_THROTTLE_DIMENSION.IP, maxRequests: 20, windowMs: 300000 },
+      { dimensionKey: API_THROTTLE_DIMENSION.EMAIL, maxRequests: 5, windowMs: 900000 },
+    ],
+    updatedAt: NOW,
+  },
+  {
+    endpointKey: API_THROTTLE_ENDPOINT.AUTH_LIFECYCLE_PASSWORD_RESET_COMPLETED,
+    dimensions: [
+      { dimensionKey: API_THROTTLE_DIMENSION.IP, maxRequests: 20, windowMs: 600000 },
+      { dimensionKey: API_THROTTLE_DIMENSION.USER, maxRequests: 10, windowMs: 600000 },
+      { dimensionKey: API_THROTTLE_DIMENSION.EMAIL, maxRequests: 10, windowMs: 600000 },
+    ],
+    updatedAt: NOW,
+  },
+  {
+    endpointKey: API_THROTTLE_ENDPOINT.AUTH_LIFECYCLE_EMAIL_VERIFICATION_COMPLETED,
+    dimensions: [
+      { dimensionKey: API_THROTTLE_DIMENSION.IP, maxRequests: 20, windowMs: 600000 },
+      { dimensionKey: API_THROTTLE_DIMENSION.USER, maxRequests: 10, windowMs: 600000 },
+      { dimensionKey: API_THROTTLE_DIMENSION.EMAIL, maxRequests: 10, windowMs: 600000 },
+    ],
+    updatedAt: NOW,
+  },
+  {
+    endpointKey: API_THROTTLE_ENDPOINT.AUTH_LIFECYCLE_MFA_ENROLLMENT_COMPLETED,
+    dimensions: [
+      { dimensionKey: API_THROTTLE_DIMENSION.IP, maxRequests: 20, windowMs: 600000 },
+      { dimensionKey: API_THROTTLE_DIMENSION.USER, maxRequests: 10, windowMs: 600000 },
+      { dimensionKey: API_THROTTLE_DIMENSION.EMAIL, maxRequests: 10, windowMs: 600000 },
+    ],
+    updatedAt: NOW,
+  },
+  {
+    endpointKey: API_THROTTLE_ENDPOINT.AUTH_ADMIN_MFA_RESET,
+    dimensions: [
+      { dimensionKey: API_THROTTLE_DIMENSION.IP, maxRequests: 10, windowMs: 900000 },
+      { dimensionKey: API_THROTTLE_DIMENSION.USER, maxRequests: 5, windowMs: 900000 },
+      { dimensionKey: API_THROTTLE_DIMENSION.TARGET_USER, maxRequests: 3, windowMs: 900000 },
+    ],
+    updatedAt: NOW,
+  },
+  {
+    endpointKey: API_THROTTLE_ENDPOINT.AUTH_ACCOUNT_PROFILE_UPDATE,
+    dimensions: [
+      { dimensionKey: API_THROTTLE_DIMENSION.IP, maxRequests: 30, windowMs: 600000 },
+      { dimensionKey: API_THROTTLE_DIMENSION.USER, maxRequests: 20, windowMs: 600000 },
+    ],
+    updatedAt: NOW,
+  },
+  {
+    endpointKey: API_THROTTLE_ENDPOINT.ADMIN_INSTITUTIONS_PLAN_UPDATE,
+    dimensions: [
+      { dimensionKey: API_THROTTLE_DIMENSION.IP, maxRequests: 30, windowMs: 600000 },
+      { dimensionKey: API_THROTTLE_DIMENSION.USER, maxRequests: 20, windowMs: 600000 },
+      { dimensionKey: API_THROTTLE_DIMENSION.RFC, maxRequests: 20, windowMs: 600000 },
+    ],
+    updatedAt: NOW,
+  },
+  {
+    endpointKey: API_THROTTLE_ENDPOINT.APP_INSTITUTIONS_CONTACTS_UPSERT,
+    dimensions: [
+      { dimensionKey: API_THROTTLE_DIMENSION.IP, maxRequests: 30, windowMs: 600000 },
+      { dimensionKey: API_THROTTLE_DIMENSION.USER, maxRequests: 20, windowMs: 600000 },
+      { dimensionKey: API_THROTTLE_DIMENSION.RFC, maxRequests: 20, windowMs: 600000 },
+      { dimensionKey: API_THROTTLE_DIMENSION.CONTACT_TYPE, maxRequests: 10, windowMs: 600000 },
+    ],
+    updatedAt: NOW,
+  },
+  {
+    endpointKey: API_THROTTLE_ENDPOINT.APP_INSTITUTIONS_SHARED_SECRET_UPDATE,
+    dimensions: [
+      { dimensionKey: API_THROTTLE_DIMENSION.IP, maxRequests: 10, windowMs: 900000 },
+      { dimensionKey: API_THROTTLE_DIMENSION.USER, maxRequests: 10, windowMs: 900000 },
+      { dimensionKey: API_THROTTLE_DIMENSION.RFC, maxRequests: 10, windowMs: 900000 },
+    ],
+    updatedAt: NOW,
+  },
+  {
+    endpointKey: API_THROTTLE_ENDPOINT.APP_INSTITUTIONS_PERMISSIONS_CREATE,
+    dimensions: [
+      { dimensionKey: API_THROTTLE_DIMENSION.IP, maxRequests: 20, windowMs: 600000 },
+      { dimensionKey: API_THROTTLE_DIMENSION.USER, maxRequests: 20, windowMs: 600000 },
+      { dimensionKey: API_THROTTLE_DIMENSION.RFC, maxRequests: 20, windowMs: 600000 },
+      { dimensionKey: API_THROTTLE_DIMENSION.TARGET_EMAIL, maxRequests: 5, windowMs: 600000 },
+    ],
+    updatedAt: NOW,
+  },
+  {
+    endpointKey: API_THROTTLE_ENDPOINT.APP_INSTITUTIONS_PERMISSIONS_UPDATE,
+    dimensions: [
+      { dimensionKey: API_THROTTLE_DIMENSION.IP, maxRequests: 20, windowMs: 600000 },
+      { dimensionKey: API_THROTTLE_DIMENSION.USER, maxRequests: 20, windowMs: 600000 },
+      { dimensionKey: API_THROTTLE_DIMENSION.RFC, maxRequests: 20, windowMs: 600000 },
+      { dimensionKey: API_THROTTLE_DIMENSION.PERMISSION, maxRequests: 10, windowMs: 600000 },
+    ],
+    updatedAt: NOW,
+  },
+] as const;
+
 export const emulatorSeedData = {
   institutions: [institution],
   permissions,
@@ -216,4 +345,5 @@ export const emulatorSeedData = {
   requests,
   findings,
   logs,
+  apiThrottleConfigs,
 } as const;

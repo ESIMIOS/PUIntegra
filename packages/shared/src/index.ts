@@ -10,6 +10,16 @@ export {
   SECONDS_TO_CLOSE_SESSION_FOR_INACTIVITY,
   SECONDS_TO_SHOW_INACTIVITY_ALERT,
 } from './constants/access';
+export {
+  API_THROTTLE_ENDPOINT,
+  API_THROTTLE_DIMENSION,
+  API_THROTTLE_DEFAULT_DIMENSIONS,
+  API_THROTTLE_DEFAULT_MAX_REQUESTS,
+  API_THROTTLE_DEFAULT_WINDOW_MS,
+  API_THROTTLE_COUNTER_TTL_BUFFER_MS,
+  apiThrottleEndpointValues,
+  apiThrottleDimensionValues,
+} from './constants/api-throttling';
 
 export {
   SYSTEM_PACKAGE_NAME,
@@ -39,6 +49,18 @@ export { SystemError, isSystemError, getSystemError, formatUiErrorString } from 
 export type { SystemErrorOptions } from './errors/system-app-error';
 
 export { RoleSchema, AuthenticatedRoleSchema } from './schemas/access.schema';
+export {
+  ApiThrottleConfigSchema,
+  ApiThrottleConfigDimensionSchema,
+  ApiThrottleDimensionKeySchema,
+  ApiThrottleEndpointKeySchema,
+} from './schemas/api-throttle.schema';
+export type {
+  ApiThrottleConfig,
+  ApiThrottleConfigDimension,
+  ApiThrottleDimensionKey,
+  ApiThrottleEndpointKey,
+} from './schemas/api-throttle.schema';
 
 export {
   TimestampMillisecondsUtcSchema,

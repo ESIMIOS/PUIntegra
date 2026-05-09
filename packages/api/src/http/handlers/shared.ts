@@ -41,12 +41,62 @@ export function readBearerToken(authorization: string | undefined) {
 }
 
 /**
- * @description Resuelve una llave de rate-limit sin exponer datos sensibles.
+ * @description Lee la IP cliente desde encabezados de proxy conocidos.
  */
-export function readRequestKey(context: Context, email: string) {
-  const forwardedFor = context.req.header('x-forwarded-for')?.split(',')[0]?.trim();
-  const clientId = forwardedFor || context.req.header('x-real-ip') || 'unknown-client';
-  return `${clientId}:${email}`;
+export function readClientIp(context: Context) {
+  const requestHost = new URL(context.req.url).hostname.toLowerCase();
+  const parseCandidate = (value: string | undefined) => {
+    const normalized = value?.trim();
+    if (!normalized) {
+      return null;
+    }
+
+    const bracketedIpv6 = new RegExp(/^\[([^\]]+)\](?::\d+)?$/).exec(normalized);
+    let withoutPort = normalized.replaceAll(/^\[|\]$/g, '');
+    if (bracketedIpv6) {
+      withoutPort = bracketedIpv6[1];
+    } else if (/^[0-9.]+:\d+$/.test(normalized)) {
+      withoutPort = normalized.replaceAll(/:\d+$/, '');
+    }
+    const withoutIpv6Prefix = withoutPort.startsWith('::ffff:')
+      ? withoutPort.slice('::ffff:'.length)
+      : withoutPort;
+    const loopbackNormalized = withoutIpv6Prefix === '::1'
+      ? '127.0.0.1'
+      : withoutIpv6Prefix;
+    return loopbackNormalized.length > 0 ? loopbackNormalized : null;
+  };
+  const forwardedFor = parseCandidate(context.req.header('x-forwarded-for')?.split(',')[0]);
+  if (forwardedFor) {
+    return forwardedFor;
+  }
+
+  const forwarded = context.req.header('forwarded');
+  const forwardedMatch = forwarded?.match(/for=(?:"?\[?)([^;\],"]+)/i);
+  const forwardedIp = parseCandidate(forwardedMatch?.[1]);
+  if (forwardedIp) {
+    return forwardedIp;
+  }
+
+  const proxyHeaders = [
+    context.req.header('x-real-ip'),
+    context.req.header('cf-connecting-ip'),
+    context.req.header('fastly-client-ip'),
+    context.req.header('x-client-ip'),
+    context.req.header('x-appengine-user-ip'),
+  ];
+  for (const headerValue of proxyHeaders) {
+    const clientIp = parseCandidate(headerValue);
+    if (clientIp) {
+      return clientIp;
+    }
+  }
+
+  if (requestHost === 'localhost' || requestHost === '127.0.0.1') {
+    return '127.0.0.1';
+  }
+
+  return 'unknown-client';
 }
 
 /**

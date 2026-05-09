@@ -23,28 +23,6 @@ import type {
   ResetUserMfaInput,
 } from './types.js';
 
-const RATE_LIMIT_WINDOW_MS = 5 * 60 * 1000;
-const RATE_LIMIT_MAX_ATTEMPTS = 5;
-const rateLimitBuckets = new Map<string, { count: number; resetAt: number }>();
-
-/**
- * @description Aplica una cuota simple en memoria para proteger flujos públicos en runtime API.
- */
-function assertRateLimit(scope: string, requestKey: string) {
-  const now = Date.now();
-  const key = `${scope}:${requestKey}`;
-  const bucket = rateLimitBuckets.get(key);
-  if (!bucket || bucket.resetAt <= now) {
-    rateLimitBuckets.set(key, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
-    return;
-  }
-
-  if (bucket.count >= RATE_LIMIT_MAX_ATTEMPTS) {
-    throw new SystemError(apiSystemMessages.auth.lifecycle.rateLimited);
-  }
-  bucket.count += 1;
-}
-
 /**
  * @description Verifica el token Firebase enviado por el cliente web.
  */
@@ -98,7 +76,6 @@ export async function recordAuthLifecycleEvent(input: AuthLifecycleEventWriteInp
  * @description Verifica elegibilidad de creación de cuenta sin modificar Firebase Auth.
  */
 export async function checkAccountCreationPolicy(input: AuthLifecyclePolicyInput) {
-  assertRateLimit('account-create', input.requestKey);
   const firestore = getAdminFirestore();
   const permissions = await firestore
     .collection('permissions')
@@ -130,7 +107,6 @@ export async function checkAccountCreationPolicy(input: AuthLifecyclePolicyInput
  * @description Registra solicitud neutral de recuperación y aplica cuota por correo/IP.
  */
 export async function requestPasswordRecovery(input: AuthLifecyclePolicyInput) {
-  assertRateLimit('password-recovery', input.requestKey);
   await recordAuthLifecycleEvent({
     event: 'password-recovery-request',
     originTraceId: input.originTraceId,
