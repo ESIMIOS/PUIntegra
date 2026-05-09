@@ -81,7 +81,7 @@ vi.mock('firebase-functions/v2', () => ({
 }));
 
 vi.mock('../src/functions/dependencies/runtime.js', () => ({
-  getAdminFirestore: () => runtimeMock.firestore as FakeFirestore,
+  getAdminFirestore: () => runtimeMock.firestore,
 }));
 
 const { enforceApiThrottle } = await import('../src/functions/dependencies/throttleDependencies');

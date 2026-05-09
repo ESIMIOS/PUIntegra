@@ -9,7 +9,9 @@
  */
 
 import type { AuthEventName, AuthLifecycleEventName } from '../../services/authAuditService.js';
-import type { ApiThrottleSubject, EnforceApiThrottleInput } from '../../functions/dependencies/types.js';
+import { type EnforceApiThrottleInput } from '../../functions/dependencies/types.js';
+
+export { type ApiThrottleSubject, type EnforceApiThrottleInput } from '../../functions/dependencies/types.js';
 
 export type VerifiedBearerToken = {
   userId: string;
@@ -26,8 +28,6 @@ export type AuthLifecyclePolicyInput = {
   email: string;
   originTraceId: string;
 };
-
-export type { ApiThrottleSubject, EnforceApiThrottleInput };
 
 export type RecordAuthLifecycleEventInput = {
   event: AuthLifecycleEventName;

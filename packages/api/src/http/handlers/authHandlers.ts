@@ -10,6 +10,7 @@
 
 import type { Context } from 'hono';
 import { API_THROTTLE_DIMENSION, API_THROTTLE_ENDPOINT, SystemError } from '@puintegra/shared';
+import type { ApiThrottleEndpointKey } from '@puintegra/shared';
 import { type AuthEventName, type AuthLifecycleEventName } from '../../services/authAuditService.js';
 import { apiOk } from '../apiResponse.js';
 import type { CreateApiAppDependencies } from './types.js';
@@ -144,12 +145,12 @@ export function createAuthLifecycleEventHandler(dependencies: CreateApiAppDepend
     const originTraceId = readOriginTraceId(context, dependencies.createOriginTraceId);
     const payload = parseLifecycleCompletionPayload(await readJsonPayload(context));
     const clientIp = readClientIp(context);
-    const endpointKey =
-      event === 'password-update'
-        ? API_THROTTLE_ENDPOINT.AUTH_LIFECYCLE_PASSWORD_RESET_COMPLETED
-        : event === 'email-verification'
-          ? API_THROTTLE_ENDPOINT.AUTH_LIFECYCLE_EMAIL_VERIFICATION_COMPLETED
-          : API_THROTTLE_ENDPOINT.AUTH_LIFECYCLE_MFA_ENROLLMENT_COMPLETED;
+    let endpointKey: ApiThrottleEndpointKey = API_THROTTLE_ENDPOINT.AUTH_LIFECYCLE_MFA_ENROLLMENT_COMPLETED;
+    if (event === 'password-update') {
+      endpointKey = API_THROTTLE_ENDPOINT.AUTH_LIFECYCLE_PASSWORD_RESET_COMPLETED;
+    } else if (event === 'email-verification') {
+      endpointKey = API_THROTTLE_ENDPOINT.AUTH_LIFECYCLE_EMAIL_VERIFICATION_COMPLETED;
+    }
     await enforceThrottle(dependencies, {
       endpointKey,
       originTraceId,

@@ -114,7 +114,7 @@ function resolveMasterKeyBytes() {
   const raw = readMasterKeyRaw();
   const asBase64 = Buffer.from(raw, 'base64');
   const parsed =
-    asBase64.length >= 32 && asBase64.toString('base64').replace(/=+$/, '') === raw.replace(/=+$/, '')
+    asBase64.length >= 32 && asBase64.toString('base64').replace(/=+$/, '') === raw.replace(/=+$/, '') //NOSONAR - RegExp requerida
       ? asBase64
       : Buffer.from(raw, 'utf8');
   if (parsed.length < 32) {

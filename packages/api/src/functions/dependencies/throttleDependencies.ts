@@ -143,7 +143,7 @@ export async function enforceApiThrottle(input: EnforceApiThrottleInput) {
       configuredDimensions: config.dimensions.map(({ dimensionKey }) => dimensionKey),
     });
     throw new SystemError(apiSystemMessages.sys.unexpectedFailure, {
-      displayMessage: 'Throttle subject configuration is incomplete for this route.',
+      displayMessage: 'La configuración de throttling es incompleta para esta ruta.',
     });
   }
 }

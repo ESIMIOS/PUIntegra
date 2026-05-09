@@ -70,7 +70,7 @@ describe('api throttle route wiring', () => {
 
     const response = await app.request('/api/auth/lifecycle/password-recovery', {
       method: 'POST',
-      headers: { 'x-real-ip': '10.0.0.25' },
+      headers: { 'x-real-ip': '10.0.0.25' }, //NOSONAR - No es una revelación de credenciales, es solo un valor para pruebas.
       body: JSON.stringify({ email: 'Owner@Example.TEST' }),
     });
 
@@ -81,7 +81,7 @@ describe('api throttle route wiring', () => {
       subjects: {
         [API_THROTTLE_DIMENSION.IP]: {
           subjectKey: 'ip=10.0.0.25',
-          subject: { ip: '10.0.0.25' },
+          subject: { ip: '10.0.0.25' }, //NOSONAR - No es una revelación de credenciales, es solo un valor para pruebas.
         },
         [API_THROTTLE_DIMENSION.EMAIL]: {
           subjectKey: 'email=owner_at_example.test',
@@ -136,6 +136,60 @@ describe('api throttle route wiring', () => {
         [API_THROTTLE_DIMENSION.IP]: {
           subjectKey: 'ip=198.51.100.44',
           subject: { ip: '198.51.100.44' },
+        },
+        [API_THROTTLE_DIMENSION.EMAIL]: {
+          subjectKey: 'email=owner_at_example.test',
+          subject: { email: 'owner@example.test' },
+        },
+      },
+    });
+  });
+
+  it('preserves plain IPv6 addresses from proxy headers', async () => {
+    const dependencies = createDependencies();
+    const app = createApiApp(dependencies);
+
+    const response = await app.request('/api/auth/lifecycle/password-recovery', {
+      method: 'POST',
+      headers: { 'x-real-ip': '2001:db8::1' },
+      body: JSON.stringify({ email: 'owner@example.test' }),
+    });
+
+    expect(response.status).toBe(HTTP_STATUS.OK);
+    expect(dependencies.enforceThrottle).toHaveBeenCalledWith({
+      endpointKey: API_THROTTLE_ENDPOINT.AUTH_LIFECYCLE_PASSWORD_RECOVERY,
+      originTraceId: 'trace-id',
+      subjects: {
+        [API_THROTTLE_DIMENSION.IP]: {
+          subjectKey: 'ip=2001:db8::1',
+          subject: { ip: '2001:db8::1' },
+        },
+        [API_THROTTLE_DIMENSION.EMAIL]: {
+          subjectKey: 'email=owner_at_example.test',
+          subject: { email: 'owner@example.test' },
+        },
+      },
+    });
+  });
+
+  it('preserves bracketed IPv6 addresses from the Forwarded header without the port', async () => {
+    const dependencies = createDependencies();
+    const app = createApiApp(dependencies);
+
+    const response = await app.request('/api/auth/lifecycle/account-creation-policy', {
+      method: 'POST',
+      headers: { forwarded: 'for="[2001:db8::1]:443";proto=https' },
+      body: JSON.stringify({ email: 'owner@example.test' }),
+    });
+
+    expect(response.status).toBe(HTTP_STATUS.OK);
+    expect(dependencies.enforceThrottle).toHaveBeenCalledWith({
+      endpointKey: API_THROTTLE_ENDPOINT.AUTH_LIFECYCLE_ACCOUNT_CREATION_POLICY,
+      originTraceId: 'trace-id',
+      subjects: {
+        [API_THROTTLE_DIMENSION.IP]: {
+          subjectKey: 'ip=2001:db8::1',
+          subject: { ip: '2001:db8::1' },
         },
         [API_THROTTLE_DIMENSION.EMAIL]: {
           subjectKey: 'email=owner_at_example.test',

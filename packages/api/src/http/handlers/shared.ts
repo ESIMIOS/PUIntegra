@@ -46,13 +46,18 @@ export function readBearerToken(authorization: string | undefined) {
 export function readClientIp(context: Context) {
   const requestHost = new URL(context.req.url).hostname.toLowerCase();
   const parseCandidate = (value: string | undefined) => {
-    const normalized = value?.trim().replaceAll(/^\[|\]$/g, '');
+    const normalized = value?.trim();
     if (!normalized) {
       return null;
     }
-    const withoutPort = normalized.startsWith('::')
-      ? normalized
-      : normalized.replace(/:\d+$/, '');
+
+    const bracketedIpv6 = new RegExp(/^\[([^\]]+)\](?::\d+)?$/).exec(normalized);
+    let withoutPort = normalized.replaceAll(/^\[|\]$/g, '');
+    if (bracketedIpv6) {
+      withoutPort = bracketedIpv6[1];
+    } else if (/^[0-9.]+:\d+$/.test(normalized)) {
+      withoutPort = normalized.replaceAll(/:\d+$/, '');
+    }
     const withoutIpv6Prefix = withoutPort.startsWith('::ffff:')
       ? withoutPort.slice('::ffff:'.length)
       : withoutPort;
