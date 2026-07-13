@@ -13,11 +13,11 @@
     "lint": "eslint src/**/*.ts"
   },
   "devDependencies": {
-    "@eslint/js": "9.39.4",
-    "@typescript-eslint/eslint-plugin": "8.59.1",
-    "@typescript-eslint/parser": "8.59.1",
+    "@eslint/js": "9.39.5",
+    "@typescript-eslint/eslint-plugin": "8.63.0",
+    "@typescript-eslint/parser": "8.63.0",
     "@vitest/coverage-v8": "1.6.1",
-    "eslint": "9.39.4",
+    "eslint": "9.39.5",
     "typescript": "5.9.3",
     "vitest": "1.6.1"
   },
